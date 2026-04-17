@@ -1,2 +1,2 @@
 [target.x86_64-pc-windows-gnu]
-rustflags = ["-C", "link-arg=/TIMESTAMP:0"]
+rustflags = ["-C", "link-arg=-Wl,-Brepro"]
