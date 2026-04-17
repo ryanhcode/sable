@@ -64,18 +64,6 @@ publishMods {
         minecraftVersions.add(minecraft_version)
     }*/
 
-    github {
-        repository = "ryanhcode/sable"
-        accessToken = providers.environmentVariable("GITHUB_TOKEN")
-        tagName = "mc$minecraft_version-$project.version-$project.name"
-        commitish = "main"
-
-        file.unset()
-        file.unsetConvention()
-
-        allowEmptyFiles = true
-    }
-
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         projectId = "T9PomCSv"
@@ -90,5 +78,17 @@ publishMods {
         }
 
         embeds("veil")
+    }
+
+    github {
+        repository = "ryanhcode/sable"
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        tagName = "mc$minecraft_version-$project.version-$project.name"
+        commitish = "main"
+
+        file.unset()
+        file.unsetConvention()
+
+        allowEmptyFiles = true
     }
 }
