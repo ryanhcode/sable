@@ -54,7 +54,7 @@ publishMods {
     changelog = changelogFile.text
 
     version = "$project.version+mc$minecraft_version"
-    displayName = "$mod_name $project.version for mc$minecraft_version"
+    displayName = "$mod_name $project.name $project.version for mc$minecraft_version"
     modLoaders.add(project.name)
 
     /*curseforge {
