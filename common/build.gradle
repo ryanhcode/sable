@@ -57,11 +57,19 @@ tasks.register('compileRust', Exec) {
     finalizedBy copyRustNativesDev
 }
 
-tasks.register('compileRustMac', Exec) {
+tasks.register('compileRustMacAArch64', Exec) {
     group = 'rust'
     workingDir rustProjectDir
     commandLine dockerCommand
     args 'cargo', 'zigbuild', '--release', '--target', 'aarch64-apple-darwin'
+    dependsOn createContainersDirectory
+}
+
+tasks.register('compileRustMacX86', Exec) {
+    group = 'rust'
+    workingDir rustProjectDir
+    commandLine dockerCommand
+    args 'cargo', 'zigbuild', '--release', '--target', 'x86_64-apple-darwin'
     dependsOn createContainersDirectory
 }
 
@@ -93,7 +101,7 @@ tasks.register('buildRustNatives') {
     group = 'build'
     description = 'Compiles all Rust natives and moves them to resources.'
 
-    dependsOn compileRustMac, compileRustLinux, compileRustLinuxAArch64, compileRustWindows
+    dependsOn compileRustMacAArch64, compileRustMacX86, compileRustLinux, compileRustLinuxAArch64, compileRustWindows
     finalizedBy copyRustNatives
 }
 
@@ -105,6 +113,7 @@ tasks.register('copyRustNatives', Copy) {
 
     def moves = [
             [src: "target/aarch64-apple-darwin/release/libsable_rapier.dylib", dest: "sable_rapier_aarch64_macos.dylib"],
+            [src: "target/x86_64-apple-darwin/release/libsable_rapier.dylib", dest: "sable_rapier_x86_64_macos.dylib"],
             [src: "target/x86_64-unknown-linux-gnu/release/libsable_rapier.so", dest: "sable_rapier_x86_64_linux.so"],
             [src: "target/aarch64-unknown-linux-gnu/release/libsable_rapier.so", dest: "sable_rapier_aarch64_linux.so"],
             [src: "target/x86_64-pc-windows-gnu/release/sable_rapier.dll", dest: "sable_rapier_x86_64_windows.dll"]

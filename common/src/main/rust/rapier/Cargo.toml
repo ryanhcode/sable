@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 jni = "0.21.1"
-rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = ["simd-nightly", "parallel"] }
+rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = [
+    "simd-nightly",
+    "parallel",
+] }
 #rapier3d = { version = "0.26.1", features = [ "simd-stable" ] }
 log = "0.4.22"
 fern = { version = "0.6.2", features = ["colored"] }
@@ -31,4 +34,5 @@ harness = false
 criterion = "0.8.2"
 
 [profile.release]
+lto = "thin"
 codegen-units = 1
