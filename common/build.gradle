@@ -69,7 +69,7 @@ tasks.register('compileRustLinuxAArch64', Exec) {
     group = 'rust'
     workingDir rustProjectDir
     commandLine dockerCommand
-    args 'cargo', 'zigbuild', '--release', '--target', 'aarch64-unknown-linux-gnu'
+    args 'cargo', 'zigbuild', '--release', '--target', 'aarch64-unknown-linux-gnu.2.17'
     dependsOn createContainersDirectory
 }
 
