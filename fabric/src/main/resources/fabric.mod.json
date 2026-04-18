@@ -38,6 +38,7 @@
     "fabric-convention-tags-v2": ">=${fabric_version}"
   },
   "breaks": {
+    "scalablelux": "*",
     "sablecompanion": "<${sable_companion_version}"
   }
 }
