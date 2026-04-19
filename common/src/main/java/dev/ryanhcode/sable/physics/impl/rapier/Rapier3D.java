@@ -370,6 +370,56 @@ public class Rapier3D {
                                                 double localOrientationWB);
 
     /**
+     * Adds a generic constraint between two objects.
+     *
+     * @param id                 the object ID
+     * @param otherId            the other object ID
+     * @param localAnchorXA      the local anchor X on the first object
+     * @param localAnchorYA      the local anchor Y on the first object
+     * @param localAnchorZA      the local anchor Z on the first object
+     * @param localOrientationXA the local orientation X of the first object
+     * @param localOrientationYA the local orientation Y of the first object
+     * @param localOrientationZA the local orientation Z of the first object
+     * @param localOrientationWA the local orientation W of the first object
+     * @param localAnchorXB      the local anchor X on the second object
+     * @param localAnchorYB      the local anchor Y on the second object
+     * @param localAnchorZB      the local anchor Z on the second object
+     * @param localOrientationXB the local orientation X of the second object
+     * @param localOrientationYB the local orientation Y of the second object
+     * @param localOrientationZB the local orientation Z of the second object
+     * @param localOrientationWB the local orientation W of the second object
+     * @param lockedAxesMask     bit mask of locked axes; bit {@code n} corresponds to {@link dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis#ordinal()}
+     */
+    @ApiStatus.Internal
+    public static native long addGenericConstraint(final int dimensionID,
+                                                   int id,
+                                                   int otherId,
+                                                   double localAnchorXA,
+                                                   double localAnchorYA,
+                                                   double localAnchorZA,
+                                                   double localOrientationXA,
+                                                   double localOrientationYA,
+                                                   double localOrientationZA,
+                                                   double localOrientationWA,
+                                                   double localAnchorXB,
+                                                   double localAnchorYB,
+                                                   double localAnchorZB,
+                                                   double localOrientationXB,
+                                                   double localOrientationYB,
+                                                   double localOrientationZB,
+                                                   double localOrientationWB,
+                                                   int lockedAxesMask);
+
+    /**
+     * Rewrites the local frame on one side of a constraint. The frame is applied to the underlying joint each tick.
+     *
+     * @param handle      the handle of the constraint
+     * @param side        {@code 0} for the first body's frame, {@code 1} for the second body's frame
+     */
+    @ApiStatus.Internal
+    public static native void setConstraintFrame(final int dimensionID, long handle, int side, double localPosX, double localPosY, double localPosZ, double localOrientationX, double localOrientationY, double localOrientationZ, double localOrientationW);
+
+    /**
      * Sets if contacts are enabled between the two bodies in the constraint
      *
      * @param handle the handle of the constraint
