@@ -47,7 +47,7 @@ public class LinkWildcardNetworkHandlerMixin {
         at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V"),
         remap = false)
     private static void sable$attachLevelToNetwork(final Consumer<?> instance, final Object t, final Operation<Void> original, @Local(argsOnly = true) final LevelAccessor levelAccessor) {
-        if (levelAccessor instanceof final Level level)
+        if (t != null && levelAccessor instanceof final Level level)
             original.call(instance, new LevelAttachedRedstoneLinkableNetwork(level, (Set<IRedstoneLinkable>) t));
         original.call(instance, t);
     }
