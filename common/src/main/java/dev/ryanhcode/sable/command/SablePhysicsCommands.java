@@ -223,11 +223,17 @@ public class SablePhysicsCommands {
         }
 
         if(axis) {
-            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex("commands.sable.physics.rotation.add.success", ctx, subLevels, 1,
+            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex(
+                    add ? "commands.sable.physics.rotation.add.success"
+                            : "commands.sable.physics.rotation.set.success",
+                    ctx, subLevels, 1,
                     getGlobalComponent(global), rotationAxis.x + ", " + rotationAxis.y + ", "+ rotationAxis.z + ", " + rotationAngle);
         }else
         {
-            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex("commands.sable.physics.rotation.add.success", ctx, subLevels, 1,
+            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex(
+                    add ? "commands.sable.physics.rotation.add.success"
+                            : "commands.sable.physics.rotation.set.success",
+                    ctx, subLevels, 1,
                     getGlobalComponent(global), rotation2.x + ", " + rotation2.y);
         }
         return 0;
