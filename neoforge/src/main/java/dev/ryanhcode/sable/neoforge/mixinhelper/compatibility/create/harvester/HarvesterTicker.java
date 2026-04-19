@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester;
 
 import com.simibubi.create.content.contraptions.actors.harvester.HarvesterMovementBehaviour;
+import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.behavior_compatibility.harvester_block_entity.DummyMovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -13,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 public class HarvesterTicker<T extends BlockEntity & HarvesterLerpedSpeed> implements BlockEntityTicker<T> {
 
     public static final HarvesterMovementBehaviour blockEntityBehaviour = new HarvesterMovementBehaviour();
+    public static final DummyMovementContext dummyMovementContext = new DummyMovementContext();
 
     @Override
     public void tick(final Level level, final BlockPos arg2, final BlockState arg3, final T be) {

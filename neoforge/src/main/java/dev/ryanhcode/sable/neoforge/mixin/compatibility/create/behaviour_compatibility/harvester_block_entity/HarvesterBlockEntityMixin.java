@@ -7,17 +7,15 @@ import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.block.BlockEntitySubLevelActor;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester.HarvesterLerpedSpeed;
-import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester.HarvesterMovementBehaviourExtension;
+import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester.HarvesterTicker;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-
-import static dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester.HarvesterTicker.blockEntityBehaviour;
 
 @Mixin(HarvesterBlockEntity.class)
 public abstract class HarvesterBlockEntityMixin extends CachedRenderBBBlockEntity implements HarvesterLerpedSpeed, BlockEntitySubLevelActor {
@@ -46,30 +44,23 @@ public abstract class HarvesterBlockEntityMixin extends CachedRenderBBBlockEntit
     @Override
     public void sable$tick(final ServerSubLevel subLevel) {
         final ActiveSableCompanion helper = Sable.HELPER;
-        final Vec3 center = this.getBlockPos().getCenter();
-        BlockPos gatheredPos = helper.runIncludingSubLevels(this.getLevel(), center, false, helper.getContaining(this), (sublevel, pos) -> {
-            if (blockEntityBehaviour.isValidCrop(this.getLevel(), pos, this.getLevel().getBlockState(pos))) {
+        final Position center = this.getBlockPos().getCenter();
+        BlockPos gatheredPos = helper.runIncludingSubLevels(this.level, center, false, helper.getContaining(this), (sublevel, pos) -> {
+            if (HarvesterTicker.blockEntityBehaviour.isValidCrop(this.level, pos, this.level.getBlockState(pos))) {
                 return pos;
-            } else {
-                return null;
             }
+
+            return null;
         });
 
         if (gatheredPos == null) {
-            gatheredPos = BlockPos.containing(helper.projectOutOfSubLevel(this.getLevel(), center));
+            gatheredPos = BlockPos.containing(helper.projectOutOfSubLevel(this.level, center));
         }
 
         if (!this.sable$previousPos.equals(gatheredPos)) {
             this.sable$previousPos = gatheredPos;
-
-            final HarvesterMovementBehaviourExtension duck = (HarvesterMovementBehaviourExtension) blockEntityBehaviour;
-            duck.sable$setManualLevel(this.getLevel());
-            duck.sable$setSelfPos(this.getBlockPos());
-
-            blockEntityBehaviour.visitNewPosition(null, this.sable$previousPos);
-
-            duck.sable$setManualLevel(null);
-            duck.sable$setSelfPos(null);
+            HarvesterTicker.dummyMovementContext.update(this.level, this.getBlockPos(), this.getBlockState(), null);
+            HarvesterTicker.blockEntityBehaviour.visitNewPosition(HarvesterTicker.dummyMovementContext, this.sable$previousPos);
         }
     }
 
