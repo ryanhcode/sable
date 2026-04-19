@@ -120,7 +120,7 @@ tasks.register('copyRustNatives', Copy) {
     ]
 
     moves.forEach { map ->
-        from(file("$rustProjectDir/${map.src}")) {
+        from(file("$rustRootDir/${map.src}")) {
             rename { map.dest }
         }
     }
@@ -138,7 +138,7 @@ tasks.register('copyRustNativesDev', Copy) {
             [src: "target/debug/sable_rapier.dll", dest: "sable_rapier_x86_64_windows.dll"]
     ]
     moves.forEach { map ->
-        from(file("$rustProjectDir/${map.src}")) {
+        from(file("$rustRootDir/${map.src}")) {
             rename { map.dest }
         }
     }
