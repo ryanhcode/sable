@@ -634,6 +634,6 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
             joint.pos_b = position;
             joint.rotation_b = Some(rotation);
         }
-        _ => {}
+        _ => panic!("Invalid constraint frame side: {}", side)
     }
 }
