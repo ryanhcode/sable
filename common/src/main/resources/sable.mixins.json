@@ -190,6 +190,7 @@
     "portal.EntityMixin",
     "portal.NetherPortalBlockMixin",
     "prevent_freezing.BiomeMixin",
+    "prevent_overgrowth.VineBlockMixin",
     "punching.ItemInvoker",
     "recoil.ProjectileDispenseBehaviorMixin",
     "respawn_point.ServerPlayerMixin",
