@@ -155,6 +155,7 @@
     "compatibility.create.turntable.TurntableBlockMixin",
     "compatibility.create.vertical_gearbox.VerticalGearboxItemMixin",
     "compatibility.create.zapper.ZapperItemMixin",
+    "compatibility.create_connected.LinkWildcardNetworkHandlerMixin",
     "compatibility.pmweather.AnemometerBlockEntityMixin",
     "compatibility.pmweather.AnemometerBlockMixin",
     "compatibility.pmweather.PMWeatherMixin",

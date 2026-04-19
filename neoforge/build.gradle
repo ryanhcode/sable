@@ -74,6 +74,7 @@ dependencies {
 
     compileOnly "maven.modrinth:distanthorizons:$rootProject.distant_horizons_version"
     compileOnly "maven.modrinth:backpacks-for-dummies:$rootProject.backpacks_for_dummies_version"
+    compileOnly "maven.modrinth:create-connected:$rootProject.create_connected_version"
 
     implementation("com.simibubi.create:create-${minecraft_version}:${create_version}") { transitive = false }
     implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
