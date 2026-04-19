@@ -587,16 +587,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 
             handle,
 
-            fixed: false,
+            fixed: true,
             contacts_enabled: true,
         },
     );
 
     handle_long
 }
-
-const FRAME_SIDE_FIRST: jint = 0;
-const FRAME_SIDE_SECOND: jint = 1;
 
 #[no_mangle]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintFrame<
@@ -629,11 +626,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     );
 
     match side {
-        FRAME_SIDE_FIRST => {
+        0 => {
             joint.pos_a = position;
             joint.rotation_a = Some(rotation);
         }
-        FRAME_SIDE_SECOND => {
+        1 => {
             joint.pos_b = position;
             joint.rotation_b = Some(rotation);
         }

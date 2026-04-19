@@ -411,10 +411,10 @@ public class Rapier3D {
                                                    int lockedAxesMask);
 
     /**
-     * Rewrites the local frame on one side of a constraint. The frame is applied to the underlying joint each tick.
+     * Sets the local frame on one side of a constraint.
      *
-     * @param handle      the handle of the constraint
-     * @param side        {@code 0} for the first body's frame, {@code 1} for the second body's frame
+     * @param handle the handle of the constraint
+     * @param side   {@code 0} for the first body, {@code 1} for the second body
      */
     @ApiStatus.Internal
     public static native void setConstraintFrame(final int dimensionID, long handle, int side, double localPosX, double localPosY, double localPosZ, double localOrientationX, double localOrientationY, double localOrientationZ, double localOrientationW);
