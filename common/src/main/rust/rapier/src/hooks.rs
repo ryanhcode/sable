@@ -1,16 +1,16 @@
 use jni::objects::{JDoubleArray, JObject, JValue};
 use jni::signature::ReturnType;
 use jni::sys::{jdouble, jint, jvalue};
-use marten::level::VoxelColliderData;
 use marten::Real;
+use marten::level::VoxelColliderData;
 use rapier3d::geometry::{Collider, SolverContact};
 use rapier3d::math::{Pose, Vec3, Vector};
 use rapier3d::na::Vector3;
 use rapier3d::pipeline::{ContactModificationContext, PhysicsHooks};
 
 use crate::collider::LevelCollider;
-use crate::{get_physics_state, get_scene_mut, get_scene_ref};
 use crate::scene::LevelColliderID;
+use crate::{get_physics_state, get_scene_mut, get_scene_ref};
 
 pub struct SablePhysicsHooks;
 
@@ -30,18 +30,8 @@ impl PhysicsHooks for SablePhysicsHooks {
                 panic!("No collider B!");
             };
 
-            let level_collider_a =
-                if let Some(level_collider_a) = collider_a.shape().as_shape::<LevelCollider>() {
-                    Some(level_collider_a)
-                } else {
-                    None
-                };
-            let level_collider_b =
-                if let Some(level_collider_b) = collider_b.shape().as_shape::<LevelCollider>() {
-                    Some(level_collider_b)
-                } else {
-                    None
-                };
+            let level_collider_a = collider_a.shape().as_shape::<LevelCollider>();
+            let level_collider_b = collider_b.shape().as_shape::<LevelCollider>();
 
             if level_collider_a.is_none() && level_collider_b.is_none() {
                 continue;
@@ -88,7 +78,7 @@ impl PhysicsHooks for SablePhysicsHooks {
                     true,
                 );
                 tangent_velo += add_velo;
-                remove = remove | remove_a;
+                remove |= remove_a;
                 friction_multiplier *= friction_mult;
                 restitution = restitution.max(block_restitution);
             }
@@ -104,7 +94,7 @@ impl PhysicsHooks for SablePhysicsHooks {
                     false,
                 );
                 tangent_velo -= add_velo;
-                remove = remove | remove_b;
+                remove |= remove_b;
                 friction_multiplier *= friction_mult;
                 restitution = restitution.max(block_restitution);
             }
@@ -128,24 +118,24 @@ impl SablePhysicsHooks {
         collider_a: &Collider,
         level_collider_a: Option<&LevelCollider>,
     ) -> Vector {
-        if let Some(level_collider_a) = level_collider_a {
-            if level_collider_a.id.is_some() {
-                let scene_id = level_collider_a.scene_id;
-                let scene = get_scene_ref(scene_id);
+        if let Some(level_collider_a) = level_collider_a
+            && level_collider_a.id.is_some()
+        {
+            let scene_id = level_collider_a.scene_id;
+            let scene = get_scene_ref(scene_id);
 
-                let collider_info =
-                    &scene.level_colliders[&(level_collider_a.id.unwrap() as LevelColliderID)];
+            let collider_info =
+                &scene.level_colliders[&(level_collider_a.id.unwrap() as LevelColliderID)];
 
-                if let Some(fake_velo) = collider_info.fake_velocities {
-                    let transform = collider_a.position();
-                    return transform.transform_vector(fake_velo.velocity_at_point(
-                        transform.inverse_transform_point(contact.point),
-                        Vector::ZERO,
-                    ));
-                };
-            }
+            if let Some(fake_velo) = collider_info.fake_velocities {
+                let transform = collider_a.position();
+                return transform.transform_vector(fake_velo.velocity_at_point(
+                    transform.inverse_transform_point(contact.point),
+                    Vector::ZERO,
+                ));
+            };
         }
-        return Vector::new(0.0, 0.0, 0.0);
+        Vector::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -165,14 +155,14 @@ fn handle_block_params(
 
     let mut tangent_velo: Vector = Vector::ZERO;
 
-    if collider_info.is_some() {
-        if let Some(fake_velo) = collider_info.unwrap().fake_velocities {
-            tangent_velo += isometry.transform_vector(fake_velo.velocity_at_point(
-                isometry.inverse_transform_point(global_point.clone()),
-                Vector::ZERO,
-            ));
-        };
-    }
+    if collider_info.is_some()
+        && let Some(fake_velo) = collider_info.unwrap().fake_velocities
+    {
+        tangent_velo += isometry.transform_vector(fake_velo.velocity_at_point(
+            isometry.inverse_transform_point(*global_point),
+            Vector::ZERO,
+        ));
+    };
 
     // Get manifold info from the map
     let Some(manifold_info) = scene.manifold_info_map.list.get(&manifold_index) else {
@@ -235,9 +225,9 @@ fn handle_block_params(
         JValue::Int(block_coord.x as jint),
         JValue::Int(block_coord.y as jint),
         JValue::Int(block_coord.z as jint),
-        JValue::Double(block_coord_d.x.into()),
-        JValue::Double(block_coord_d.y.into()),
-        JValue::Double(block_coord_d.z.into()),
+        JValue::Double(block_coord_d.x),
+        JValue::Double(block_coord_d.y),
+        JValue::Double(block_coord_d.z),
         JValue::Double(velocity as jdouble),
     ];
 

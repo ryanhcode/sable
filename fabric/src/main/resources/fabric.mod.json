@@ -37,6 +37,14 @@
     "fabric-resource-loader-v0": ">=${fabric_version}",
     "fabric-convention-tags-v2": ">=${fabric_version}"
   },
+  "custom": {
+    "lithium:options": {
+      "mixin.entity.collisions.unpushable_cramming": false,
+      "mixin.world.chunk_access": false,
+      "mixin.world.chunk_ticking": false,
+      "mixin.world.tick_scheduler": false
+    }
+  },
   "breaks": {
     "scalablelux": "*",
     "sablecompanion": "<${sable_companion_version}"

@@ -1,4 +1,6 @@
- - Improve Lithium compatibility
- - Various mixin compatibility improvements
- - Improve logging when Sable Rapier natives fail to load
- - Add Sable Rapier support for AArch64 Linux machines
+ - Fix items being blurry and red on some Intel systems
+ - Ship natives so Intel Macs can load Sable Rapier
+ - Fix compatibility issues with Lithium causing crashes on sub-level loading
+ - Fix block entities not rendering on sub-levels with Sodium Extras installed
+ - Fix a duplication bug with assembling un-generated loot chests
+ - Allow paddling on sub-levels in Creative mode

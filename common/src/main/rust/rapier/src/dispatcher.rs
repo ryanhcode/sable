@@ -4,7 +4,7 @@ use rapier3d::geometry::{ContactManifoldData, Shape};
 use rapier3d::glamx::Pose3;
 use rapier3d::math::Vector;
 use rapier3d::na::Vector3;
-use rapier3d::parry::query::details::{contact_manifold_cuboid_cuboid_shapes, NormalConstraints};
+use rapier3d::parry::query::details::{NormalConstraints, contact_manifold_cuboid_cuboid_shapes};
 use rapier3d::parry::query::{
     ClosestPoints, Contact, ContactManifold, ContactManifoldsWorkspace, DefaultQueryDispatcher,
     NonlinearRigidMotion, PersistentQueryDispatcher, QueryDispatcher, ShapeCastHit,
@@ -15,9 +15,9 @@ use rapier3d::prelude::{Aabb, Real};
 
 use crate::algo::find_collision_pairs;
 use crate::scene::{ChunkAccess, LevelColliderID, SableManifoldInfo};
-use crate::{get_physics_state, get_scene_ref, ActiveLevelColliderInfo, PhysicsState};
+use crate::{ActiveLevelColliderInfo, PhysicsState, get_physics_state, get_scene_ref};
 use marten::level::VoxelPhysicsState::{Edge, Face, Interior};
-use marten::level::{VoxelPhysicsState, NEEDS_HOOKS_USER_DATA};
+use marten::level::{NEEDS_HOOKS_USER_DATA, VoxelPhysicsState};
 use std::sync::atomic::Ordering;
 
 /// The distance we scale collision points local to the box collider for before we check interior collisions
@@ -32,7 +32,7 @@ const INTERIOR_COLLISION_CHECK_DISTANCE: f64 = 0.015;
 
 type IVec3 = Vector3<i32>;
 
-pub struct SableDispatcher {}
+pub struct SableDispatcher;
 
 impl SableDispatcher {
     /// Computes the local, inclusive block bounds of a global aabb with inflation
@@ -56,12 +56,6 @@ impl SableDispatcher {
         );
 
         (local_min, local_max)
-    }
-}
-
-impl Default for SableDispatcher {
-    fn default() -> Self {
-        Self {}
     }
 }
 
@@ -257,11 +251,13 @@ impl SableDispatcher {
         let physics_state = unsafe { get_physics_state() };
         let scene = get_scene_ref(g1.scene_id);
 
-        let collider_info = g1.id.map(|id| &scene.level_colliders[&(id as LevelColliderID)]);
+        let collider_info = g1
+            .id
+            .map(|id| &scene.level_colliders[&(id as LevelColliderID)]);
         let center_of_mass_1 =
             collider_info.map_or(Vector3::zeros(), |b| b.center_of_mass.unwrap());
 
-        let mut local_aabb = g2.compute_aabb(&pos12);
+        let mut local_aabb = g2.compute_aabb(pos12);
 
         let margin: Real = 0.1;
         local_aabb.maxs += Vector::splat(prediction + margin);
@@ -273,12 +269,13 @@ impl SableDispatcher {
 
         let mut manifold_index = 0;
 
-        let chunk_access: &dyn ChunkAccess =
-            if collider_info.is_some() && collider_info.unwrap().has_own_chunks() {
-                collider_info.unwrap()
-            } else {
-                scene
-            };
+        let chunk_access: &dyn ChunkAccess = if let Some(info) = collider_info
+            && info.has_own_chunks()
+        {
+            info
+        } else {
+            scene
+        };
 
         for x in local_min.x..=local_max.x {
             for y in local_min.y..=local_max.y {
@@ -333,7 +330,7 @@ impl SableDispatcher {
                         );
 
                         // Translate to match the center of the current block
-                        let mut block_isometry = pos12.clone();
+                        let mut block_isometry = *pos12;
                         block_isometry.translation -= center;
 
                         if !swap {
@@ -373,19 +370,17 @@ impl SableDispatcher {
                         manifolds[manifold_index].data.user_data =
                             voxel_collider_data.get_user_data();
 
-                        if collider_info.is_some() {
-                            if let Some(_velocities) = collider_info.unwrap().fake_velocities {
-                                manifolds[manifold_index].data.user_data |= NEEDS_HOOKS_USER_DATA;
-                            }
+                        if collider_info.is_some()
+                            && let Some(_velocities) = collider_info.unwrap().fake_velocities
+                        {
+                            manifolds[manifold_index].data.user_data |= NEEDS_HOOKS_USER_DATA;
                         }
 
                         for point in &mut manifolds[manifold_index].points {
-                            if !swap {
-                                point.local_p1 =
-                                    point.local_p1 + Vector::new(center.x, center.y, center.z);
-                            } else {
-                                point.local_p2 =
-                                    point.local_p2 - Vector::new(center.x, center.y, center.z);
+                            let diff = Vector::new(center.x, center.y, center.z);
+                            match swap {
+                                true => point.local_p2 -= diff,
+                                false => point.local_p1 += diff,
                             }
                         }
 
@@ -411,18 +406,21 @@ impl SableDispatcher {
         let physics_state = unsafe { get_physics_state() };
         let scene = get_scene_ref(g1.scene_id);
 
-        let collider_info_1 = g1.id.map(|id| &scene.level_colliders[&(id as LevelColliderID)]);
+        let collider_info_1 = g1
+            .id
+            .map(|id| &scene.level_colliders[&(id as LevelColliderID)]);
         let collider_info_2 = &scene.level_colliders[&(g2.id.unwrap() as LevelColliderID)];
         let center_of_mass_1 =
             collider_info_1.map_or(Vector3::zeros(), |b| b.center_of_mass.unwrap());
         let center_of_mass_2 = collider_info_2.center_of_mass.unwrap();
 
-        let chunk_access_1: &dyn ChunkAccess =
-            if collider_info_1.is_some() && collider_info_1.unwrap().has_own_chunks() {
-                collider_info_1.unwrap()
-            } else {
-                scene
-            };
+        let chunk_access_1: &dyn ChunkAccess = if let Some(info) = collider_info_1
+            && info.has_own_chunks()
+        {
+            info
+        } else {
+            scene
+        };
 
         let chunk_access_2: &dyn ChunkAccess = if collider_info_2.has_own_chunks() {
             collider_info_2
@@ -498,7 +496,7 @@ impl SableDispatcher {
                 );
 
                 // Translate to match the center of the current block
-                let mut block_isometry = pos12.clone();
+                let mut block_isometry = *pos12;
                 block_isometry.translation -= Vector::new(center.x, center.y, center.z);
 
                 // let block_bounds = Aabb::new(
@@ -574,7 +572,7 @@ impl SableDispatcher {
                     );
 
                     // combine block isometries
-                    let mut combined_block_isometry = block_isometry.clone();
+                    let mut combined_block_isometry = block_isometry;
 
                     let transformed = combined_block_isometry.rotation.mul_vec3(Vector::new(
                         other_center.x,
@@ -619,7 +617,7 @@ impl SableDispatcher {
                             .manifold_info_map
                             .counter
                             .fetch_add(1, Ordering::Relaxed);
-                        
+
                         scene.manifold_info_map.list.insert(
                             index,
                             if swap {
@@ -646,9 +644,8 @@ impl SableDispatcher {
                         if let Some(_velocities) = collider_info_2.fake_velocities {
                             new_manifold.data.user_data |= NEEDS_HOOKS_USER_DATA;
                         }
-
-                        if collider_info_1.is_some()
-                            && collider_info_1.unwrap().fake_velocities.is_some()
+                        if let Some(info) = collider_info_1
+                            && info.fake_velocities.is_some()
                         {
                             new_manifold.data.user_data |= NEEDS_HOOKS_USER_DATA;
                         }
@@ -656,10 +653,9 @@ impl SableDispatcher {
                         manifolds[manifold_index] = new_manifold;
 
                         for point in &mut manifolds[manifold_index].points {
-                            point.local_p1 =
-                                point.local_p1 + Vector::new(center.x, center.y, center.z);
-                            point.local_p2 = point.local_p2
-                                + Vector::new(other_center.x, other_center.y, other_center.z);
+                            point.local_p1 += Vector::new(center.x, center.y, center.z);
+                            point.local_p2 +=
+                                Vector::new(other_center.x, other_center.y, other_center.z);
                         }
 
                         manifold_index += 1;
@@ -673,15 +669,11 @@ impl SableDispatcher {
             for manifold in manifolds.iter_mut() {
                 for point in &mut manifold.points {
                     // swap positions
-                    let temp_p1 = point.local_p1.clone();
-                    point.local_p1 = point.local_p2.clone();
-                    point.local_p2 = temp_p1;
+                    std::mem::swap(&mut point.local_p1, &mut point.local_p2);
                 }
 
                 // swap normals
-                let temp_n1 = manifold.local_n1.clone();
-                manifold.local_n1 = manifold.local_n2.clone();
-                manifold.local_n2 = temp_n1;
+                std::mem::swap(&mut manifold.local_n1, &mut manifold.local_n2);
             }
         }
 
@@ -770,7 +762,7 @@ impl SableDispatcher {
 }
 
 fn to_f64(vec: Vector) -> Vector3<f64> {
-    return Vector3::new(vec.x as f64, vec.y as f64, vec.z as f64);
+    Vector3::new(vec.x as f64, vec.y as f64, vec.z as f64)
 }
 
 fn get_block_pos(vec: Vector3<f64>) -> IVec3 {
@@ -805,16 +797,16 @@ fn is_interior_collision<ManifoldData: Default + Clone, ContactData: Default + C
                 to_f64(point.local_p1 * 0.997 + Vector::new(center.x, center.y, center.z))
                     + center_of_mass_1;
 
-            let normal1 = to_f64(manifold.local_n1.into());
+            let normal1 = to_f64(manifold.local_n1);
             let displaced_p1 = world_p1 + normal1 * 0.01;
 
-            if is_inside_voxel_collider(chunk_access_1, &physics_state, block_a, displaced_p1) {
+            if is_inside_voxel_collider(chunk_access_1, physics_state, block_a, displaced_p1) {
                 return false;
             }
         }
 
         if collider_info_2.local_bounds_min.unwrap() != collider_info_2.local_bounds_max.unwrap() {
-            let normal2 = to_f64(manifold.local_n2.into());
+            let normal2 = to_f64(manifold.local_n2);
 
             // we have to "pull in the points" a tiny bit incase they're outside of the block slightly off-normal
             let world_p2 = to_f64(
@@ -824,12 +816,12 @@ fn is_interior_collision<ManifoldData: Default + Clone, ContactData: Default + C
 
             let displaced_p2 = world_p2 + normal2 * INTERIOR_COLLISION_CHECK_DISTANCE;
 
-            if is_inside_voxel_collider(chunk_access_2, &physics_state, block_b, displaced_p2) {
+            if is_inside_voxel_collider(chunk_access_2, physics_state, block_b, displaced_p2) {
                 return false;
             }
         }
 
-        return true;
+        true
     });
 
     false

@@ -58,6 +58,7 @@
     "compatibility.flywheel.ShaderSourcesMixin",
     "compatibility.flywheel.VisualManagerImplMixin",
     "compatibility.pmweather.RadarRendererMixin",
+    "compatibility.sodiumextras.EmbyToolsMixin",
     "dynamic_directional_shading.SectionCompilerMixin",
     "sound.MovingSoundInstanceDelegateMixin"
   ],

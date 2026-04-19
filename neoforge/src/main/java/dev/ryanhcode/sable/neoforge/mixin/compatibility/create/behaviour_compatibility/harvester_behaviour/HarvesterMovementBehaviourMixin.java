@@ -25,5 +25,4 @@ public class HarvesterMovementBehaviourMixin {
             original.call(null, pos);
         }
     }
-
 }

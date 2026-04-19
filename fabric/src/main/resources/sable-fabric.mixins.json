@@ -4,6 +4,13 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "plugin": "dev.ryanhcode.sable.plugin.SableMixinPlugin",
+  "client": [
+    "camera_rotation.CameraMixin",
+    "compatibility.sodiumextras.EmbyToolsMixin",
+    "dynamic_directional_shading.SectionCompilerMixin",
+    "fix_bundle_packet.ClientPacketListenerMixin",
+    "sound.MovingSoundInstanceDelegateMixin"
+  ],
   "mixins": [
     "assembly.LevelChunkMixin",
     "assembly.LevelMixin",
@@ -11,11 +18,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "client": [
-    "camera_rotation.CameraMixin",
-    "dynamic_directional_shading.SectionCompilerMixin",
-    "fix_bundle_packet.ClientPacketListenerMixin",
-    "sound.MovingSoundInstanceDelegateMixin"
-  ]
+  }
 }

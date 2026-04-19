@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.harvester.H
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,7 +47,7 @@ public class HarvesterBlockEntityUsageMixin implements HarvesterMovementBehaviou
         this.sable$manualLevel = new WeakReference<>(level);
     }
 
-    @Redirect(method = "visitNewPosition", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;world:Lnet/minecraft/world/level/Level;"))
+    @Redirect(method = "visitNewPosition", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;world:Lnet/minecraft/world/level/Level;", opcode = Opcodes.GETFIELD))
     public Level sable$replaceWorld(final MovementContext instance) {
         if (instance == null) { // we're only going to be passing in null from our mixin, so this is valid
             return this.sable$getManualLevel();

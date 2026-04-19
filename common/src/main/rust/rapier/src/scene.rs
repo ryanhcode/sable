@@ -5,8 +5,8 @@ use crate::rope::RopeMap;
 use crate::{ActiveLevelColliderInfo, ReportedCollision};
 use dashmap::DashMap;
 use jni::JavaVM;
-use marten::level::{ChunkSection, OctreeChunkSection};
 use marten::Real;
+use marten::level::{ChunkSection, OctreeChunkSection};
 use rapier3d::dynamics::{
     CCDSolver, ImpulseJointSet, IslandManager, MultibodyJointSet, RigidBodyHandle, RigidBodySet,
 };
@@ -28,9 +28,9 @@ pub trait ChunkAccess {
 #[inline(always)]
 pub fn pack_section_pos(i: i32, j: i32, k: i32) -> i64 {
     let mut l: i64 = 0;
-    l = l | ((i as i64 & 4194303i64) << 42);
-    l = l | ((j as i64 & 1048575i64) << 0);
-    return l | (k as i64 & 4194303i64) << 20;
+    l |= (i as i64 & 4194303i64) << 42;
+    l |= j as i64 & 1048575i64;
+    l | (k as i64 & 4194303i64) << 20
 }
 
 pub type ChunkMap = HashMap<i64, ChunkSection>;
@@ -82,7 +82,7 @@ pub struct PhysicsScene {
     /// Universal angular drag applied to all bodies
     pub manifold_info_map: SableManifoldInfoMap,
 }
-
+#[derive(Default)]
 pub struct SableManifoldInfoMap {
     pub list: DashMap<usize, SableManifoldInfo>,
     pub counter: AtomicUsize,
@@ -95,28 +95,19 @@ pub struct SableManifoldInfo {
     pub col_b: usize,
 }
 
-impl SableManifoldInfoMap {
-    pub fn new() -> SableManifoldInfoMap {
-        return SableManifoldInfoMap {
-            list: DashMap::new(),
-            counter: AtomicUsize::new(0),
-        };
-    }
-}
-
 impl ChunkAccess for PhysicsScene {
     fn get_chunk_mut(&mut self, x: i32, y: i32, z: i32) -> Option<&mut ChunkSection> {
-        return self.main_level_chunks.get_mut(&pack_section_pos(x, y, z));
+        self.main_level_chunks.get_mut(&pack_section_pos(x, y, z))
     }
 
     fn get_chunk(&self, x: i32, y: i32, z: i32) -> Option<&ChunkSection> {
-        return self.main_level_chunks.get(&pack_section_pos(x, y, z));
+        self.main_level_chunks.get(&pack_section_pos(x, y, z))
     }
 }
 
 impl PhysicsScene {
     pub fn get_octree_chunk(&self, x: i32, y: i32, z: i32) -> Option<&OctreeChunkSection> {
-        return self.octree_chunks.get(&pack_section_pos(x, y, z));
+        self.octree_chunks.get(&pack_section_pos(x, y, z))
     }
 
     pub fn get_octree_chunk_mut(
@@ -125,6 +116,6 @@ impl PhysicsScene {
         y: i32,
         z: i32,
     ) -> Option<&mut OctreeChunkSection> {
-        return self.octree_chunks.get_mut(&pack_section_pos(x, y, z));
+        self.octree_chunks.get_mut(&pack_section_pos(x, y, z))
     }
 }

@@ -16,6 +16,7 @@ logoFile = "icon.png"
 "mixin.entity.collisions.unpushable_cramming" = false
 "mixin.world.chunk_access" = false
 "mixin.world.chunk_ticking" = false
+"mixin.world.tick_scheduler" = false
 
 [[dependencies.sable]]
 modId = "neoforge"

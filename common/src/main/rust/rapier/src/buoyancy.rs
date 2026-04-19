@@ -1,6 +1,6 @@
 use crate::scene::ChunkAccess;
 use crate::{
-    algo::{find_collision_pairs, DEFAULT_COLLISION_PARALLEL_CUTOFF},
+    algo::{DEFAULT_COLLISION_PARALLEL_CUTOFF, find_collision_pairs},
     get_physics_state_mut,
     scene::PhysicsScene,
 };
@@ -20,7 +20,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
             continue;
         }
         let info = info.unwrap();
-        let Some(body) = scene.rigid_body_set.get_mut(body_handle.clone()) else {
+        let Some(body) = scene.rigid_body_set.get_mut(*body_handle) else {
             panic!("No body with given handle!");
         };
 
@@ -44,7 +44,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
             DEFAULT_COLLISION_PARALLEL_CUTOFF,
             true,
         );
-        let vels: RigidBodyVelocity<Real> = body.vels().clone();
+        let vels: RigidBodyVelocity<Real> = *body.vels();
 
         let complex = (local_bounds_max - local_bounds_min).sum() < 10;
         for (static_pos, dynamic_pos) in pairs.iter() {
@@ -68,10 +68,10 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                         local_pos.y + y as Real * 0.25,
                         local_pos.z + z as Real * 0.25,
                     );
-                    do_drag(body, &vels, &static_pos, &local_pos, 0.25, 1.0);
+                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0);
                 }
             } else {
-                do_drag(body, &vels, &static_pos, &local_pos, 0.5, 1.0);
+                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0);
             }
         }
         let scene = state.scenes.get_mut(&scene.scene_id).unwrap();
@@ -125,7 +125,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                     );
                     do_float(
                         body,
-                        &static_pos,
+                        static_pos,
                         &local_pos,
                         0.25,
                         voxel_collider_data.volume,
@@ -134,7 +134,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
             } else {
                 do_float(
                     body,
-                    &static_pos,
+                    static_pos,
                     &local_pos,
                     0.5,
                     voxel_collider_data.volume,

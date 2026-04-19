@@ -1,15 +1,15 @@
 use std::cmp::min;
 
-use marten::level::OCTREE_CHUNK_SHIFT;
 use marten::Real;
+use marten::level::OCTREE_CHUNK_SHIFT;
 use rapier3d::glamx::Pose3;
 use rapier3d::math::Vector;
 use rapier3d::na::{SimdComplexField, Vector3};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelRefIterator, ParallelExtend};
 
-use crate::scene::{pack_section_pos, PhysicsScene};
-use crate::{get_scene_mut, ActiveLevelColliderInfo};
+use crate::scene::{PhysicsScene, pack_section_pos};
+use crate::{ActiveLevelColliderInfo, get_scene_mut};
 
 pub const DEFAULT_COLLISION_PARALLEL_CUTOFF: usize = 256;
 
@@ -129,9 +129,9 @@ pub fn find_collision_pairs(
                     });
                 }
 
-                return (Some(local_next_level), None);
+                (Some(local_next_level), None)
             } else {
-                return (None, None);
+                (None, None)
             }
         };
 
@@ -144,17 +144,11 @@ pub fn find_collision_pairs(
         let (a_parts, b_parts): (Vec<_>, Vec<_>) = next_level_data.into_iter().unzip();
 
         // filter out none's and add them
-        for parts in b_parts {
-            if let Some(local_pairs) = parts {
-                pairs.extend(local_pairs);
-            }
+        for local_pairs in b_parts.into_iter().flatten() {
+            pairs.extend(local_pairs);
         }
 
-        current_level = a_parts
-            .into_iter()
-            .filter_map(|opt| opt)
-            .flatten()
-            .collect();
+        current_level = a_parts.into_iter().flatten().flatten().collect();
     }
 
     pairs
@@ -196,16 +190,16 @@ fn get_overlapping_nodes(
         let other_min = other_handle.local_bounds_min.unwrap();
 
         let min_pos = Vector3::new(
-            ((min_block_pos.x - other_min.x) as i32) >> log2,
-            ((min_block_pos.y - other_min.y) as i32) >> log2,
-            ((min_block_pos.z - other_min.z) as i32) >> log2,
+            (min_block_pos.x - other_min.x) >> log2,
+            (min_block_pos.y - other_min.y) >> log2,
+            (min_block_pos.z - other_min.z) >> log2,
         )
         .map(|x| x.max(0));
 
         let max_pos = Vector3::new(
-            ((max_block_pos.x - other_min.x) as i32) >> log2,
-            ((max_block_pos.y - other_min.y) as i32) >> log2,
-            ((max_block_pos.z - other_min.z) as i32) >> log2,
+            (max_block_pos.x - other_min.x) >> log2,
+            (max_block_pos.y - other_min.y) >> log2,
+            (max_block_pos.z - other_min.z) >> log2,
         );
 
         let Some(oct) = &other_handle.octree else {
@@ -238,7 +232,7 @@ fn get_overlapping_nodes(
         if cancel_early {
             return (false, None);
         } else {
-            return (blocks.as_ref().unwrap().len() > 0, blocks);
+            return (!blocks.as_ref().unwrap().is_empty(), blocks);
         }
     }
 
@@ -307,8 +301,8 @@ fn get_overlapping_nodes(
     }
 
     if cancel_early {
-        return (false, None);
+        (false, None)
     } else {
-        return (blocks.as_ref().unwrap().len() > 0, blocks);
+        (!blocks.as_ref().unwrap().is_empty(), blocks)
     }
 }

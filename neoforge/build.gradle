@@ -89,6 +89,7 @@ dependencies {
 
     compileOnly "maven.modrinth:sodium:$sodium_version"
     compileOnly("maven.modrinth:iris:$iris_version") { transitive = false }
+    compileOnly("maven.modrinth:sodium-extras:neoforge-${minecraft_version}-$sodiumextras_version") { transitive = false }
 
     jarJar(api("foundry.veil:veil-neoforge-${project.minecraft_version}:${project.veil_version}") {
         exclude group: "maven.modrinth"

@@ -21,6 +21,7 @@ dependencies {
 
     modCompileOnly "maven.modrinth:sodium:$rootProject.sodium_version"
     modCompileOnly "maven.modrinth:distanthorizons:$rootProject.distant_horizons_version"
+    modCompileOnly "maven.modrinth:sodium-extras:fabric-${minecraft_version}-$sodiumextras_version"
 
     include(modApi("foundry.veil:veil-fabric-${project.minecraft_version}:${project.veil_version}"))
 

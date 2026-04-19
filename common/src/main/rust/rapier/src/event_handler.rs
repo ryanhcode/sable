@@ -1,5 +1,5 @@
 use crate::collider::LevelCollider;
-use crate::{ReportedCollision, PHYSICS_STATE};
+use crate::{PHYSICS_STATE, ReportedCollision};
 use rapier3d::dynamics::RigidBodySet;
 use rapier3d::geometry::{ColliderSet, CollisionEvent, ContactPair};
 use rapier3d::na::Vector3;

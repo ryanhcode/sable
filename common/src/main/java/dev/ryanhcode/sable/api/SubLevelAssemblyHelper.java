@@ -28,6 +28,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Clearable;
+import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
@@ -347,6 +348,9 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("z", newPos.getZ());
                 }
 
+                if (blockEntity instanceof final RandomizableContainer container) {
+                    container.setLootTable(null);
+                }
                 if (blockEntity instanceof final Clearable clearable) {
                     clearable.clearContent();
                 }

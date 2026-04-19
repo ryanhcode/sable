@@ -32,16 +32,16 @@ use crate::event_handler::SableEventHandler;
 use crate::groups::LEVEL_GROUP;
 use crate::joints::SableJointSet;
 use crate::rope::RopeMap;
-use crate::scene::{pack_section_pos, ChunkAccess, ChunkMap, SableManifoldInfoMap};
+use crate::scene::{ChunkAccess, ChunkMap, SableManifoldInfoMap, pack_section_pos};
 use crate::voxel_collider::VoxelColliderMap;
 use hooks::SablePhysicsHooks;
+use marten::Real;
 use marten::level::VoxelPhysicsState::Interior;
 use marten::level::{
-    BlockState, ChunkSection, OctreeChunkSection, VoxelPhysicsState, ALL_VOXEL_PHYSICS_STATES,
-    CHUNK_SHIFT, OCTREE_CHUNK_SHIFT, OCTREE_CHUNK_SIZE,
+    ALL_VOXEL_PHYSICS_STATES, BlockState, CHUNK_SHIFT, ChunkSection, OCTREE_CHUNK_SHIFT,
+    OCTREE_CHUNK_SIZE, OctreeChunkSection, VoxelPhysicsState,
 };
 use marten::octree::SubLevelOctree;
-use marten::Real;
 use rapier3d::na::{Matrix3, Vector3 as NaVector3};
 use rapier3d::parry::query::{DefaultQueryDispatcher, QueryDispatcher};
 use rapier3d::prelude::*;
@@ -62,19 +62,17 @@ pub struct ActiveLevelColliderInfo {
 
 impl ChunkAccess for ActiveLevelColliderInfo {
     fn get_chunk_mut(&mut self, x: i32, y: i32, z: i32) -> Option<&mut ChunkSection> {
-        return self
-            .chunk_map
+        self.chunk_map
             .as_mut()
             .unwrap()
-            .get_mut(&pack_section_pos(x, y, z));
+            .get_mut(&pack_section_pos(x, y, z))
     }
 
     fn get_chunk(&self, x: i32, y: i32, z: i32) -> Option<&ChunkSection> {
-        return self
-            .chunk_map
+        self.chunk_map
             .as_ref()
             .unwrap()
-            .get(&pack_section_pos(x, y, z));
+            .get(&pack_section_pos(x, y, z))
     }
 }
 
@@ -86,7 +84,7 @@ pub fn get_scene<'a>(scene_id: jint) -> &'a PhysicsScene {
         physics_state.as_ref().unwrap().scenes.get(&scene_id)
     };
 
-    return scene.unwrap();
+    scene.unwrap()
 }
 
 pub fn get_scene_mut<'a>(scene_id: jint) -> &'a mut PhysicsScene {
@@ -97,7 +95,7 @@ pub fn get_scene_mut<'a>(scene_id: jint) -> &'a mut PhysicsScene {
         physics_state.as_mut().unwrap().scenes.get_mut(&scene_id)
     };
 
-    return scene.unwrap();
+    scene.unwrap()
 }
 
 impl ActiveLevelColliderInfo {
@@ -170,7 +168,7 @@ impl ActiveLevelColliderInfo {
                             for x in 0..16 {
                                 for y in 0..16 {
                                     for z in 0..16 {
-                                        let block_owned = chunk_section.get_block(x, y, z).clone();
+                                        let block_owned = chunk_section.get_block(x, y, z);
                                         if block_owned.1 == VoxelPhysicsState::Empty {
                                             continue;
                                         }
@@ -271,15 +269,16 @@ pub struct ReportedCollision {
 
 /// The current physics engine state, set during initialization.
 pub static mut PHYSICS_STATE: Option<PhysicsState> = None;
+//TODO: safer static state
 
 #[inline(always)]
 pub unsafe fn get_physics_state_mut() -> &'static mut PhysicsState {
-    PHYSICS_STATE.as_mut().expect("No physics state!")
+    unsafe { PHYSICS_STATE.as_mut().expect("No physics state!") }
 }
 
 #[inline(always)]
 pub unsafe fn get_physics_state() -> &'static PhysicsState {
-    PHYSICS_STATE.as_ref().expect("No physics state!")
+    unsafe { PHYSICS_STATE.as_ref().expect("No physics state!") }
 }
 
 #[inline(always)]
@@ -314,7 +313,7 @@ pub fn get_rigid_body(scene: &PhysicsScene, id: LevelColliderID) -> &RigidBody {
     &scene.rigid_body_set[*handle]
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_initialize<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -324,7 +323,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
     z: jdouble,
     universal_drag: jdouble,
 ) {
-    if let None = unsafe { &PHYSICS_STATE } {
+    if unsafe { &PHYSICS_STATE }.is_none() {
         let colors = ColoredLevelConfig::new()
             .info(Color::Green)
             .error(Color::Red)
@@ -389,7 +388,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
                 island_manager: IslandManager::new(),
                 broad_phase: DefaultBroadPhase::new(),
                 narrow_phase: NarrowPhase::with_query_dispatcher(
-                    SableDispatcher::default().chain(DefaultQueryDispatcher),
+                    SableDispatcher.chain(DefaultQueryDispatcher),
                 ),
                 impulse_joint_set: ImpulseJointSet::new(),
                 multibody_joint_set: MultibodyJointSet::new(),
@@ -401,13 +400,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
                 reported_collisions: Vec::with_capacity(16),
                 joint_set: SableJointSet::new(),
                 ground_handle: None,
-                rope_map: RopeMap::new(),
+                rope_map: RopeMap::default(),
                 level_colliders: HashMap::<LevelColliderID, ActiveLevelColliderInfo>::new(),
                 rigid_bodies: HashMap::<LevelColliderID, RigidBodyHandle>::new(),
                 current_step_vm: None,
                 gravity: Vector::new(x as Real, y as Real, z as Real),
                 universal_drag: universal_drag as Real,
-                manifold_info_map: SableManifoldInfoMap::new(),
+                manifold_info_map: SableManifoldInfoMap::default(),
             };
 
             scene.collider_set.insert(collider);
@@ -422,7 +421,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
 }
 
 /// Computes buoyancy
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tick<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -444,7 +443,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
 }
 
 /// Steps physics
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_step<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -462,7 +461,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
                 panic!("No scene with given ID!");
             };
 
-            scene.manifold_info_map = SableManifoldInfoMap::new();
+            scene.manifold_info_map = SableManifoldInfoMap::default();
 
             scene.pipeline.step(
                 scene.gravity,
@@ -482,13 +481,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getPose<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     scene_id: jint,
     id: jint,
-    store: JDoubleArray<'local>
+    store: JDoubleArray<'local>,
 ) {
     unsafe {
         let Some(scene) = get_physics_state().scenes.get(&scene_id) else {
@@ -511,7 +510,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setCenterOfMass<
     'local,
 >(
@@ -538,7 +537,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setLocalBounds<
     'local,
 >(
@@ -572,7 +571,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createSubLevel<
     'local,
 >(
@@ -644,7 +643,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeSubLevel<
     'local,
 >(
@@ -685,8 +684,9 @@ pub fn insert_block_octree(
 ) {
     let block_collider_id = state.0;
     let block_collider = if block_collider_id > 0 {
+        let phys_state = unsafe { get_physics_state() };
         Some(
-            unsafe { &get_physics_state() }
+            phys_state
                 .voxel_collider_map
                 .voxel_colliders
                 .get(block_collider_id as usize - 1)
@@ -716,7 +716,7 @@ pub fn insert_block_octree(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addChunk<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -733,9 +733,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 
     let mut blocks = Vec::with_capacity(ints.len());
 
-    for i in 0..ints.len() {
-        let block = ints[i];
-
+    for block in ints {
         // split it in half
         let block_collider_id = (block >> 16) as u16;
         let voxel_state_id = (block & 0xFFFF) as u16;
@@ -756,11 +754,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 
             scene
                 .main_level_chunks
-                .insert(pack_section_pos(x as i32, y as i32, z as i32), chunk);
+                .insert(pack_section_pos(x, y, z), chunk);
 
             let chunk = scene
                 .main_level_chunks
-                .get(&pack_section_pos(x as i32, y as i32, z as i32))
+                .get(&pack_section_pos(x, y, z))
                 .unwrap();
             if global == 0 {
                 // println!("receving non global physics chunk");
@@ -858,7 +856,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeChunk<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -874,9 +872,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
                 panic!("No scene with given ID!");
             };
 
-            scene
-                .main_level_chunks
-                .remove(&pack_section_pos(x as i32, y as i32, z as i32));
+            scene.main_level_chunks.remove(&pack_section_pos(x, y, z));
 
             if global > 0 {
                 let octree_chunk = scene.octree_chunks.get_mut(&pack_section_pos(
@@ -928,7 +924,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_changeBlock<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -947,18 +943,16 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
                 panic!("No scene with given ID!");
             };
 
-            let chunk = scene.main_level_chunks.get_mut(&pack_section_pos(
-                x as i32 >> 4,
-                y as i32 >> 4,
-                z as i32 >> 4,
-            ));
+            let chunk = scene
+                .main_level_chunks
+                .get_mut(&pack_section_pos(x >> 4, y >> 4, z >> 4));
             if let Some(chunk) = chunk {
                 let block_state = (
                     block_collider_id as u32,
                     ALL_VOXEL_PHYSICS_STATES[voxel_state_id as usize],
                 );
 
-                chunk.set_block(x as i32 & 15, y as i32 & 15, z as i32 & 15, block_state);
+                chunk.set_block(x & 15, y & 15, z & 15, block_state);
 
                 let mut any = false;
                 for (_, sable_body) in scene.level_colliders.iter_mut() {
@@ -971,9 +965,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
 
                 if !any {
                     // insert into level octree
-                    let ox = (x as i32) >> OCTREE_CHUNK_SHIFT;
-                    let oy = (y as i32) >> OCTREE_CHUNK_SHIFT;
-                    let oz = (z as i32) >> OCTREE_CHUNK_SHIFT;
+                    let ox = x >> OCTREE_CHUNK_SHIFT;
+                    let oy = y >> OCTREE_CHUNK_SHIFT;
+                    let oz = z >> OCTREE_CHUNK_SHIFT;
 
                     let mut octree_chunk =
                         scene.octree_chunks.get_mut(&pack_section_pos(ox, oy, oz));
@@ -994,17 +988,17 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
                             &mut octree_chunk.octree,
                             &block_state,
                             true,
-                            (x as i32) & (OCTREE_CHUNK_SIZE - 1),
-                            (y as i32) & (OCTREE_CHUNK_SIZE - 1),
-                            (z as i32) & (OCTREE_CHUNK_SIZE - 1),
+                            x & (OCTREE_CHUNK_SIZE - 1),
+                            y & (OCTREE_CHUNK_SIZE - 1),
+                            z & (OCTREE_CHUNK_SIZE - 1),
                         );
                         insert_block_octree(
                             &mut octree_chunk.liquid_octree,
                             &block_state,
                             true,
-                            (x as i32) & (OCTREE_CHUNK_SIZE - 1),
-                            (y as i32) & (OCTREE_CHUNK_SIZE - 1),
-                            (z as i32) & (OCTREE_CHUNK_SIZE - 1),
+                            x & (OCTREE_CHUNK_SIZE - 1),
+                            y & (OCTREE_CHUNK_SIZE - 1),
+                            z & (OCTREE_CHUNK_SIZE - 1),
                         );
                     } else {
                         if state
@@ -1020,18 +1014,18 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
                                 &mut octree_chunk.liquid_octree,
                                 &block_state,
                                 false,
-                                (x as i32) & (OCTREE_CHUNK_SIZE - 1),
-                                (y as i32) & (OCTREE_CHUNK_SIZE - 1),
-                                (z as i32) & (OCTREE_CHUNK_SIZE - 1),
+                                x & (OCTREE_CHUNK_SIZE - 1),
+                                y & (OCTREE_CHUNK_SIZE - 1),
+                                z & (OCTREE_CHUNK_SIZE - 1),
                             );
                         } else {
                             insert_block_octree(
                                 &mut octree_chunk.octree,
                                 &block_state,
                                 false,
-                                (x as i32) & (OCTREE_CHUNK_SIZE - 1),
-                                (y as i32) & (OCTREE_CHUNK_SIZE - 1),
-                                (z as i32) & (OCTREE_CHUNK_SIZE - 1),
+                                x & (OCTREE_CHUNK_SIZE - 1),
+                                y & (OCTREE_CHUNK_SIZE - 1),
+                                z & (OCTREE_CHUNK_SIZE - 1),
                             );
                         }
                     }
@@ -1041,7 +1035,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setMassProperties<
     'local,
 >(
@@ -1084,7 +1078,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 /// Teleports the object to the given position.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_teleportObject<
     'local,
 >(
@@ -1103,14 +1097,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tel
     let scene = get_scene_mut_ref(scene_id);
     let rb = &mut scene.rigid_body_set[scene.rigid_bodies[&(id as LevelColliderID)]];
 
-    let mut pose = rb.position().clone();
+    let mut pose = *rb.position();
     pose.translation = Vector::new(x as Real, y as Real, z as Real);
     pose.rotation = Quat::from_xyzw(i as Real, j as Real, k as Real, r as Real);
     rb.set_position(pose, true);
 }
 
 /// Wakes up an object.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wakeUpObject<
     'local,
 >(
@@ -1124,7 +1118,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     rb.wake_up(true);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addLinearAngularVelocities<
     'local,
 >(
@@ -1163,7 +1157,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 ///
 /// A collision is formatted as follows:
 /// [body_a, body_b, force_amount, local_normal_a, local_normal_b, local_point_a, local_point_b]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_clearCollisions<
     'local,
 >(
@@ -1214,11 +1208,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cle
 
     scene.reported_collisions.clear();
 
-    return double_array;
+    double_array
 }
 
 /// Applies a force to a body
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_applyForce<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -1242,7 +1236,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
         };
 
         let body = scene.rigid_bodies.get(&(id as LevelColliderID)).unwrap();
-        let rb = &mut scene.rigid_body_set[body.clone()];
+        let rb = &mut scene.rigid_body_set[*body];
 
         if wake_up == 0 && rb.is_sleeping() {
             return;
@@ -1263,7 +1257,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
 }
 
 /// Applies a force and torque
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_applyForceAndTorque<
     'local,
 >(
@@ -1289,7 +1283,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
         };
 
         let body = scene.rigid_bodies.get(&(id as LevelColliderID)).unwrap();
-        let rb = &mut scene.rigid_body_set[body.clone()];
+        let rb = &mut scene.rigid_body_set[*body];
 
         if wake_up == 0 && rb.is_sleeping() {
             return;
@@ -1308,7 +1302,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
 }
 
 /// Gets the linear velocity of a body
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getLinearVelocity<
     'local,
 >(
@@ -1316,7 +1310,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     _class: JClass<'local>,
     scene_id: jint,
     id: jint,
-    store: JDoubleArray<'local>
+    store: JDoubleArray<'local>,
 ) {
     unsafe {
         let Some(state) = &mut PHYSICS_STATE else {
@@ -1328,21 +1322,21 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         };
 
         let body = scene.rigid_bodies.get(&(id as LevelColliderID)).unwrap();
-        let rb = &scene.rigid_body_set[body.clone()];
+        let rb = &scene.rigid_body_set[*body];
 
         let vel = rb.linvel();
 
         _env.set_double_array_region(
             &store,
             0,
-            &vec![vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
+            &[vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
         )
         .unwrap();
     }
 }
 
 /// Gets the angular velocity of a body
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getAngularVelocity<
     'local,
 >(
@@ -1350,7 +1344,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     _class: JClass<'local>,
     scene_id: jint,
     id: jint,
-    store: JDoubleArray<'local>
+    store: JDoubleArray<'local>,
 ) {
     unsafe {
         let Some(state) = &mut PHYSICS_STATE else {
@@ -1362,14 +1356,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         };
 
         let body = scene.rigid_bodies.get(&(id as LevelColliderID)).unwrap();
-        let rb = &scene.rigid_body_set[body.clone()];
+        let rb = &scene.rigid_body_set[*body];
 
         let vel = rb.angvel();
 
         _env.set_double_array_region(
             &store,
             0,
-            &vec![vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
+            &[vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
         )
         .unwrap();
     }

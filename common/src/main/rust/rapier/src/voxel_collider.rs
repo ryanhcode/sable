@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray, JObject};
 use jni::sys::{jboolean, jdouble, jint};
-use jni::JNIEnv;
-use marten::level::{SableMethodID, VoxelColliderData};
 use marten::Real;
+use marten::level::{SableMethodID, VoxelColliderData};
 use rapier3d::na::Vector3;
 
 use crate::get_physics_state_mut;
@@ -37,11 +37,11 @@ impl VoxelColliderMap {
             }
         }
 
-        return collider.as_ref();
+        collider.as_ref()
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_newVoxelCollider<
     'local,
 >(
@@ -94,10 +94,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
             dynamic: dynamic > 0,
         }));
 
-    return next_index as jint;
+    next_index as jint
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addVoxelColliderBox<
     'local,
 >(
@@ -124,7 +124,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_clearVoxelColliderBoxes<
     'local,
 >(
