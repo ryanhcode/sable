@@ -10,11 +10,13 @@ import java.util.Set;
 
 /**
  * A configuration for a generic constraint, with per-axis hard locks and re-anchorable local frames.
- * @param pos1 the position in world space assumed to be inside the plot of the first sub-level (ex. a block position).
- * @param pos2 the position in world space assumed to be inside the plot of the second sub-level (ex. a block position).
+ *
+ * @param pos1         the position in world space assumed to be inside the plot of the first sub-level (ex. a block position).
+ * @param pos2         the position in world space assumed to be inside the plot of the second sub-level (ex. a block position).
  * @param orientation1 the local orientation of the joint frame on the first sub-level.
  * @param orientation2 the local orientation of the joint frame on the second sub-level.
- * @param lockedAxes the set of axes hard-locked by the solver; empty matches a free constraint.
+ * @param lockedAxes   the set of axes hard-locked by the solver; empty matches a free constraint.
+ * @since 1.1.0
  */
 public record GenericConstraintConfiguration(
         Vector3dc pos1,

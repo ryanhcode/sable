@@ -7,10 +7,12 @@ import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
 import dev.ryanhcode.sable.physics.impl.rapier.constraint.RapierConstraintHandle;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.server.level.ServerLevel;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaterniondc;
 import org.joml.Vector3dc;
 
+@ApiStatus.Internal
 public class RapierGenericConstraintHandle extends RapierConstraintHandle implements GenericConstraintHandle {
 
     private static final int FRAME_SIDE_FIRST = 0;

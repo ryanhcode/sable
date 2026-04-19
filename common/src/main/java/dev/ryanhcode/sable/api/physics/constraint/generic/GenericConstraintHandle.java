@@ -5,7 +5,9 @@ import org.joml.Quaterniondc;
 import org.joml.Vector3dc;
 
 /**
- * A generic constraint between two bodies
+ * A generic constraint between two bodies.
+ *
+ * @since 1.1.0
  */
 public interface GenericConstraintHandle extends PhysicsConstraintHandle {
 
@@ -24,5 +26,4 @@ public interface GenericConstraintHandle extends PhysicsConstraintHandle {
      * @param localRotation the local frame orientation
      */
     void setFrame2(Vector3dc localPosition, Quaterniondc localRotation);
-
 }
