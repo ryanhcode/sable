@@ -1,11 +1,11 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use marten::octree::SubLevelOctree;
+use criterion::{Criterion, criterion_group, criterion_main};
 use marten::Real;
+use marten::octree::SubLevelOctree;
 use rapier3d::math::Pose3;
 use rapier3d::na::Vector3;
 use rapier3d::prelude::ColliderHandle;
-use sable_rapier::algo::{find_collision_pairs, DEFAULT_COLLISION_PARALLEL_CUTOFF};
 use sable_rapier::ActiveLevelColliderInfo;
+use sable_rapier::algo::{DEFAULT_COLLISION_PARALLEL_CUTOFF, find_collision_pairs};
 use std::hint::black_box;
 
 fn setup_dummy_sable_handle_a() -> ActiveLevelColliderInfo {

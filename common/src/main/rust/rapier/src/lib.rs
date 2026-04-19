@@ -273,12 +273,12 @@ pub static mut PHYSICS_STATE: Option<PhysicsState> = None;
 
 #[inline(always)]
 pub unsafe fn get_physics_state_mut() -> &'static mut PhysicsState {
-    PHYSICS_STATE.as_mut().expect("No physics state!")
+    unsafe { PHYSICS_STATE.as_mut().expect("No physics state!") }
 }
 
 #[inline(always)]
 pub unsafe fn get_physics_state() -> &'static PhysicsState {
-    PHYSICS_STATE.as_ref().expect("No physics state!")
+    unsafe { PHYSICS_STATE.as_ref().expect("No physics state!") }
 }
 
 #[inline(always)]
