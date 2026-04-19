@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jboolean, jdouble, jint, jlong, jsize};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::{GenericJointBuilder, JointAxis, RigidBodyBuilder, SpringCoefficients};
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
@@ -105,7 +105,7 @@ impl RopeMap {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createRope<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -250,7 +250,7 @@ fn create_rope_body(scene_id: i32, coordinate: Vector, point_radius: Real) -> Ri
 }
 
 /// Removes a rope
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_queryRope<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -284,7 +284,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_que
 }
 
 /// Removes a rope
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRope<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -307,7 +307,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
 }
 
 /// Sets the joint
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeFirstSegmentLength<
     'local,
 >(
@@ -336,7 +336,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     );
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRopePointAtStart<
     'local,
 >(
@@ -381,7 +381,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRopePointAtStart<
     'local,
 >(
@@ -432,7 +432,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wakeUpRope<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -453,7 +453,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
 }
 
 /// Sets the attachment at a given end
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeAttachment<
     'local,
 >(

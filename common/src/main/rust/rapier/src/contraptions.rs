@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray, JIntArray};
 use jni::sys::{jdouble, jint};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::RigidBodyBuilder;
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
@@ -15,7 +15,7 @@ use rapier3d::prelude::{RigidBodyHandle, RigidBodyVelocity};
 use crate::collider::LevelCollider;
 use crate::groups::LEVEL_GROUP;
 use crate::scene::LevelColliderID;
-use crate::{get_scene_mut_ref, ActiveLevelColliderInfo};
+use crate::{ActiveLevelColliderInfo, get_scene_mut_ref};
 
 macro_rules! extract_jdouble_array {
     ($env:expr, $jarr:expr, $len:expr) => {{
@@ -44,7 +44,7 @@ fn get_kinematic_collider_info<'a>(
         .expect("No kinematic contraption with given ID!")
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createKinematicContraption<
     'local,
 >(
@@ -105,7 +105,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 }
 
 /// Set the transform (position/orientation) of a kinematic sub-level's center of mass relative to its parent
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setKinematicContraptionTransform<
     'local,
 >(
@@ -183,7 +183,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 /// Add a chunk to a kinematic sub-level (4096 blocks, each as packed int)
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addKinematicContraptionChunkSection<
     'local,
 >(
@@ -218,7 +218,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 }
 
 /// Remove a kinematic sub-level from a scene
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeKinematicContraption<
     'local,
 >(

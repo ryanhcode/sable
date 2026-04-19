@@ -1,20 +1,23 @@
 [package]
 name = "sable_rapier"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-jni = "0.21.1"
+marten.workspace = true
+
+fern.workspace = true
+jni.workspace = true
+colored.workspace = true
+log.workspace = true
+humantime.workspace = true
+
 rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = [
     "simd-nightly",
     "parallel",
 ] }
 #rapier3d = { version = "0.26.1", features = [ "simd-stable" ] }
-log = "0.4.22"
-fern = { version = "0.6.2", features = ["colored"] }
-humantime = "2.1.0"
-colored = "2.1.0"
-marten = { path = "../marten" }
+
 rayon = "1.10.0"
 dashmap = "7.0.0-rc2"
 

@@ -43,12 +43,12 @@ fn collect_jni_exports(dir: &Path, exports: &mut Vec<String>) {
             };
             for line in contents.lines() {
                 let trimmed = line.trim();
-                if let Some(rest) = trimmed.strip_prefix("pub extern \"system\" fn ") {
-                    if let Some(name) = rest.split(['<', '(']).next() {
-                        let name = name.trim();
-                        if name.starts_with("Java_") {
-                            exports.push(name.to_string());
-                        }
+                if let Some(rest) = trimmed.strip_prefix("pub extern \"system\" fn ")
+                    && let Some(name) = rest.split(['<', '(']).next()
+                {
+                    let name = name.trim();
+                    if name.starts_with("Java_") {
+                        exports.push(name.to_string());
                     }
                 }
             }

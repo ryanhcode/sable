@@ -1,9 +1,9 @@
 use crate::config::{JOINT_SPRING_DAMPING_RATIO, JOINT_SPRING_FREQUENCY};
 use crate::scene::LevelColliderID;
 use crate::{get_scene_mut_ref, get_scene_ref};
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jboolean, jdouble, jint, jlong};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::{
     GenericJointBuilder, JointAxesMask, JointAxis, RevoluteJointBuilder, SpringCoefficients,
@@ -109,7 +109,7 @@ const AXES: [JointAxis; 6] = [
     JointAxis::AngZ,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintMotor<
     'local,
 >(
@@ -146,7 +146,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isConstraintValid<
     'local,
 >(
@@ -163,7 +163,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isC
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getConstraintImpulses<
     'local,
 >(
@@ -171,7 +171,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     _class: JClass<'local>,
     scene_id: jint,
     joint_id: jlong,
-    store: JDoubleArray<'local>
+    store: JDoubleArray<'local>,
 ) {
     let scene = get_scene_ref(scene_id);
     let joint = scene.joint_set.joints.get(&joint_id).unwrap();
@@ -190,7 +190,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     env.set_double_array_region(&store, 0, &arr).unwrap();
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintContactsEnabled<
     'local,
 >(
@@ -209,7 +209,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 // removes a constraint
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeConstraint<
     'local,
 >(
@@ -224,7 +224,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRotaryConstraint<
     'local,
 >(
@@ -307,7 +307,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFixedConstraint<
     'local,
 >(
@@ -393,7 +393,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFreeConstraint<
     'local,
 >(
