@@ -34,10 +34,10 @@ macro_rules! extract_jint_array {
 }
 
 // Helper for getting a mutable kinematic sub-level collider info
-fn get_kinematic_collider_info<'a>(
-    scene: &'a mut crate::scene::PhysicsScene,
+fn get_kinematic_collider_info(
+    scene: &mut crate::scene::PhysicsScene,
     id: jint,
-) -> &'a mut ActiveLevelColliderInfo {
+) -> &mut ActiveLevelColliderInfo {
     scene
         .level_colliders
         .get_mut(&(id as LevelColliderID))
@@ -65,11 +65,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
         Some(new_body)
     } else {
         Some(
-            scene
+            *scene
                 .rigid_bodies
                 .get(&(mount_id as LevelColliderID))
-                .unwrap()
-                .clone(),
+                .unwrap(),
         )
     };
 
@@ -91,13 +90,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 
     let collider_handle = scene.collider_set.insert_with_parent(
         collider,
-        mount_rigid_body.clone(),
+        mount_rigid_body,
         &mut scene.rigid_body_set,
     );
 
     let mut info = ActiveLevelColliderInfo::new(collider_handle, scene_id);
     if should_be_static {
-        info.static_mount = Some(mount_rigid_body.clone());
+        info.static_mount = Some(mount_rigid_body);
     }
 
     info.chunk_map = Some(HashMap::new()); // Use a dedicated chunk map as it doesn't have a plot java-side
@@ -134,7 +133,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 
     let scene = get_scene_mut_ref(scene_id);
     let info = get_kinematic_collider_info(scene, id);
-    let collider_handle = info.collider.clone();
+    let collider_handle = info.collider;
 
     let scene = get_scene_mut_ref(scene_id);
     let collider = scene.collider_set.get_mut(collider_handle);
@@ -143,9 +142,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         return;
     }
 
-    let mut isometry = Pose3::default();
-    isometry.rotation = quat;
-    isometry.translation = Vector::new(translation.x, translation.y, translation.z);
+    let isometry = Pose3 {
+        rotation: quat,
+        translation: Vector::new(translation.x, translation.y, translation.z),
+    };
 
     // if (info.static_mount.is_some()) {
     //     let body = scene.rigid_body_set.get_mut(info.static_mount.unwrap()).unwrap();
@@ -163,9 +163,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     // }
 
     info.center_of_mass = Some(Vector3::new(
-        center_of_mass_arr[0] as f64,
-        center_of_mass_arr[1] as f64,
-        center_of_mass_arr[2] as f64,
+        center_of_mass_arr[0],
+        center_of_mass_arr[1],
+        center_of_mass_arr[2],
     ));
 
     info.fake_velocities = Some(RigidBodyVelocity::new(
@@ -198,8 +198,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 ) {
     let ints = extract_jint_array!(env, data, 4096);
     let mut blocks = Vec::with_capacity(ints.len());
-    for i in 0..ints.len() {
-        let block = ints[i];
+    for block in ints {
         let block_collider_id = (block >> 16) as u16;
         let voxel_state_id = (block & 0xFFFF) as u16;
         blocks.push((

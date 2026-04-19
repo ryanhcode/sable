@@ -37,7 +37,7 @@ impl VoxelColliderMap {
             }
         }
 
-        return collider.as_ref();
+        collider.as_ref()
     }
 }
 
@@ -94,7 +94,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
             dynamic: dynamic > 0,
         }));
 
-    return next_index as jint;
+    next_index as jint
 }
 
 #[unsafe(no_mangle)]

@@ -1,4 +1,4 @@
-/// Flat octree for integer data
+//! Flat octree for integer data
 
 /// The max size we allow an octree buffer to occupy
 const MAX_SIZE: i32 = i32::MAX - 8 * 2;
@@ -31,10 +31,8 @@ pub struct SubLevelOctree {
 
     /// The head of a singly linked list of free space in the buffer.
     free_space_index_head: i32,
-
     // last_access_positions: Vec<(i32, i32, i32)>,
     // last_access_indices: Vec<i32>
-
 }
 
 impl SubLevelOctree {
@@ -232,13 +230,10 @@ impl SubLevelOctree {
 
             shift -= 1;
         }
-
-        if node < 0 {
-            return self.node_to_block_id(node);
-        } else if node == 0 {
-            return -2;
-        } else {
-            return -1;
+        match node {
+            ..0 => self.node_to_block_id(node),
+            0 => -2,
+            _ => -1,
         }
     }
 
@@ -269,4 +264,3 @@ impl SubLevelOctree {
         -node - 1
     }
 }
-

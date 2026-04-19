@@ -291,11 +291,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(axis_x_a as f64, axis_y_a as f64, axis_z_a as f64),
-            normal_b: Vector3::new(axis_x_b as f64, axis_y_b as f64, axis_z_b as f64),
+            normal_a: Vector3::new(axis_x_a, axis_y_a, axis_z_a),
+            normal_b: Vector3::new(axis_x_b, axis_y_b, axis_z_b),
 
             handle,
 
@@ -377,8 +377,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
             normal_a: Vector3::new(0.0, 0.0, 0.0),
             normal_b: Vector3::new(0.0, 0.0, 0.0),
@@ -460,8 +460,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
             normal_a: Vector3::new(0.0, 0.0, 0.0),
             normal_b: Vector3::new(0.0, 0.0, 0.0),
