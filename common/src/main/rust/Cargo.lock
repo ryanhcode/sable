@@ -635,6 +635,7 @@ version = "0.1.0"
 dependencies = [
  "colored 2.2.0",
  "fern",
+ "glamx",
  "humantime",
  "jni",
  "log",

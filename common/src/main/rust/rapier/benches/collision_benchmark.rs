@@ -1,8 +1,8 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use marten::Real;
 use marten::octree::SubLevelOctree;
+use rapier3d::glamx::{DVec3, IVec3};
 use rapier3d::math::Pose3;
-use rapier3d::na::Vector3;
 use rapier3d::prelude::ColliderHandle;
 use sable_rapier::ActiveLevelColliderInfo;
 use sable_rapier::algo::{DEFAULT_COLLISION_PARALLEL_CUTOFF, find_collision_pairs};
@@ -15,9 +15,9 @@ fn setup_dummy_sable_handle_a() -> ActiveLevelColliderInfo {
     ActiveLevelColliderInfo {
         static_mount: None,
         collider: ColliderHandle::default(),
-        local_bounds_min: Some(Vector3::<i32>::new(0, 0, 0)),
-        local_bounds_max: Some(Vector3::<i32>::new(128, 128, 128)),
-        center_of_mass: Some(Vector3::<f64>::new(62.5, 62.5, 62.5)),
+        local_bounds_min: Some(IVec3::ZERO),
+        local_bounds_max: Some(IVec3::splat(128)),
+        center_of_mass: Some(DVec3::splat(62.5)),
         octree: Some(octree),
         chunk_map: None,
         scene_id: 0,
@@ -32,9 +32,9 @@ fn setup_dummy_sable_handle_b() -> ActiveLevelColliderInfo {
     ActiveLevelColliderInfo {
         static_mount: None,
         collider: ColliderHandle::default(),
-        local_bounds_min: Some(Vector3::<i32>::new(128, 0, 0)),
-        local_bounds_max: Some(Vector3::<i32>::new(256, 128, 128)),
-        center_of_mass: Some(Vector3::<f64>::new(128.0 + 64.5, 64.5, 64.5)),
+        local_bounds_min: Some(IVec3::new(128, 0, 0)),
+        local_bounds_max: Some(IVec3::new(256, 128, 128)),
+        center_of_mass: Some(DVec3::new(128.0 + 64.5, 64.5, 64.5)),
         octree: Some(octree),
         chunk_map: None,
         scene_id: 0,
@@ -51,7 +51,7 @@ fn setup_sphere(octree: &mut SubLevelOctree) {
                 let dy = y as f64 - 64.5;
                 let dz = z as f64 - 64.5;
                 if dx * dx + dy * dy + dz * dz <= 63.5 * 63.5 {
-                    octree.insert(x, y, z, 1);
+                    octree.insert(IVec3::new(x, y, z), 1);
                 }
             }
         }
