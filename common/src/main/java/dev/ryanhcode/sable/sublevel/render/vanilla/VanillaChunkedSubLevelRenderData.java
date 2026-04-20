@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
-import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixin.sublevel_render.RenderSectionAccessor;
 import dev.ryanhcode.sable.mixinterface.sublevel_render.vanilla.RenderSectionExtension;
@@ -204,29 +203,12 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
         }
 
         final ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
-        final Vector3d cameraPos = JOMLConversion.atCenterOf(camera.getBlockPosition()).sub(8, 8, 8);
-        this.subLevel.logicalPose().transformPositionInverse(cameraPos);
-
         for (final SectionRenderDispatcher.RenderSection renderSection : this.dirtyRenderSections) {
             ((RenderSectionExtension) renderSection).sable$setListening(false);
 
-            boolean buildSync = false;
-            if (chunkUpdates == PrioritizeChunkUpdates.NEARBY) {
-                final BlockPos origin = renderSection.getOrigin();
-                buildSync = cameraPos.distanceSquared(origin.getX(), origin.getY(), origin.getZ()) < 768.0 || renderSection.isDirtyFromPlayer();
-            } else if (chunkUpdates == PrioritizeChunkUpdates.PLAYER_AFFECTED) {
-                buildSync = renderSection.isDirtyFromPlayer();
-            }
-
-            if (buildSync) {
-                profiler.push("sublevel_build_near_sync");
-                this.sectionRenderDispatcher.rebuildSectionSync(renderSection, renderRegionCache);
-                profiler.pop();
-            } else {
-                profiler.push("sublevel_schedule_async_compile");
-                renderSection.rebuildSectionAsync(this.sectionRenderDispatcher, renderRegionCache);
-                profiler.pop();
-            }
+            profiler.push("sublevel_schedule_async_compile");
+            renderSection.rebuildSectionAsync(this.sectionRenderDispatcher, renderRegionCache);
+            profiler.pop();
 
             renderSection.setNotDirty();
             ((RenderSectionExtension) renderSection).sable$setListening(true);
