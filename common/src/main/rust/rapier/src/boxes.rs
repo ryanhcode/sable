@@ -4,11 +4,10 @@ use jni::sys::{jdouble, jint};
 use marten::Real;
 use rapier3d::dynamics::RigidBodyBuilder;
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
-use rapier3d::glamx::Quat;
-use rapier3d::math::Vector;
+use rapier3d::math::Pose3;
 
-use crate::get_scene_mut;
 use crate::scene::LevelColliderID;
+use crate::{PoseExt, get_scene_mut};
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createBox<'local>(
@@ -25,22 +24,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     let mut pose_arr: [jdouble; 7] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     env.get_double_array_region(pose, 0, &mut pose_arr).unwrap();
 
-    let quat = Quat::from_xyzw(
-        pose_arr[3] as Real,
-        pose_arr[4] as Real,
-        pose_arr[5] as Real,
-        pose_arr[6] as Real,
-    );
-
-    let mut rigid_body = RigidBodyBuilder::dynamic()
+    let rigid_body = RigidBodyBuilder::dynamic()
         .ccd_enabled(true)
-        .translation(Vector::new(
-            pose_arr[0] as Real,
-            pose_arr[1] as Real,
-            pose_arr[2] as Real,
-        ))
+        .pose(Pose3::from_jdouble_array(pose_arr))
         .build();
-    rigid_body.set_rotation(quat, false);
 
     let scene = get_scene_mut(scene_id);
 

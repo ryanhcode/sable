@@ -1,5 +1,7 @@
 //! Flat octree for integer data
 
+use glamx::IVec3;
+
 /// The max size we allow an octree buffer to occupy
 const MAX_SIZE: i32 = i32::MAX - 8 * 2;
 
@@ -55,7 +57,7 @@ impl SubLevelOctree {
 
     /// @return a unique 0-7 index from a given x, y, z position in 0-1 ranges
     #[inline(always)]
-    fn get_octant_index(x: i32, y: i32, z: i32) -> i32 {
+    fn get_octant_index(IVec3 { x, y, z }: IVec3) -> i32 {
         (x & 1) | ((y & 1) << 1) | ((z & 1) << 2)
     }
 
@@ -146,15 +148,13 @@ impl SubLevelOctree {
     ///
     /// # Arguments
     ///
-    /// * `x` - the x position
-    /// * `y` - the y position
-    /// * `z` - the z position
+    /// * `pos` - the position
     /// * `block` - the block ID
     ///
     /// # Returns
     ///
     /// * `bool` - if the insert modified the tree
-    pub fn insert(&mut self, x: i32, y: i32, z: i32, block: i32) -> bool {
+    pub fn insert(&mut self, pos: IVec3, block: i32) -> bool {
         let mut shift = self.log_size - 1;
         let mut index = 0;
         let mut node = self.buffer[index as usize];
@@ -167,7 +167,7 @@ impl SubLevelOctree {
                 return false; // already equivalent
             }
 
-            let octant_index = Self::get_octant_index(x >> shift, y >> shift, z >> shift);
+            let octant_index = Self::get_octant_index(pos >> shift);
 
             if node > 0 {
                 branches_visited[branch_index as usize] = index;
@@ -197,18 +197,17 @@ impl SubLevelOctree {
     ///
     /// # Arguments
     ///
-    /// * `x` - the x position
-    /// * `y` - the y position
-    /// * `z` - the z position
+    /// * `pos` - the position
     /// * `log_size_of_target` - the log size of the target
     ///
     /// # Returns
     ///
     /// * `i32` - the block ID at the position, or -2 if the position is empty
-    pub fn query(&self, x: i32, y: i32, z: i32, log_size_of_target: i32) -> i32 {
+    pub fn query(&self, pos: IVec3, log_size_of_target: i32) -> i32 {
         let size = 1 << self.log_size;
+
         // check if out of bounds
-        if x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size {
+        if pos.cmplt(IVec3::ZERO).any() || pos.cmpge(IVec3::splat(size)).any() {
             return -2;
         }
 
@@ -223,7 +222,7 @@ impl SubLevelOctree {
                 return -2;
             }
 
-            let octant_index = Self::get_octant_index(x >> shift, y >> shift, z >> shift);
+            let octant_index = Self::get_octant_index(pos >> shift);
 
             index = node + octant_index;
             node = *unsafe { self.buffer.get_unchecked(index as usize) };

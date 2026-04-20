@@ -6,8 +6,8 @@ use jni::sys::{jboolean, jdouble, jint, jlong, jsize};
 use marten::Real;
 use rapier3d::dynamics::{GenericJointBuilder, JointAxis, RigidBodyBuilder, SpringCoefficients};
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
-use rapier3d::math::Vector;
-use rapier3d::na::Vector3;
+use rapier3d::glamx::DVec3;
+use rapier3d::math::Vec3;
 use rapier3d::prelude::{
     ImpulseJointHandle, ImpulseJointSet, JointAxesMask, RigidBodyHandle, RopeJointBuilder,
 };
@@ -23,7 +23,7 @@ const MIN_BOUND_DAMPING: Real = 10.0;
 struct RopeAttachment {
     joint: ImpulseJointHandle,
     sub_level_id: Option<LevelColliderID>,
-    location: Vector3<f64>,
+    location: DVec3,
 }
 
 struct RopeStrand {
@@ -55,16 +55,14 @@ pub fn tick(scene_id: jint) {
                         let rb_b = &scene.level_colliders[&id_b];
                         rb_b.center_of_mass.unwrap()
                     } else {
-                        Vector3::new(0.0, 0.0, 0.0)
+                        DVec3::new(0.0, 0.0, 0.0)
                     };
 
                 let impulse_joint = scene
                     .impulse_joint_set
                     .get_mut(attachment.joint, false)
                     .unwrap();
-                impulse_joint
-                    .data
-                    .set_local_anchor1(Vector::from(local_anchor.map(|x| x as Real)));
+                impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
             }
         }
 
@@ -78,18 +76,14 @@ pub fn tick(scene_id: jint) {
                         let rb_b = &scene.level_colliders[&id_b];
                         rb_b.center_of_mass.unwrap()
                     } else {
-                        Vector3::new(0.0, 0.0, 0.0)
+                        DVec3::new(0.0, 0.0, 0.0)
                     };
 
                 let impulse_joint = scene
                     .impulse_joint_set
                     .get_mut(attachment.joint, false)
                     .unwrap();
-                impulse_joint.data.set_local_anchor1(Vector::new(
-                    local_anchor.x as Real,
-                    local_anchor.y as Real,
-                    local_anchor.z as Real,
-                ));
+                impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
             }
         }
     }
@@ -113,7 +107,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 
     let mut vec = Vec::with_capacity(num_points as usize);
     for i in 0..(num_points as usize) {
-        let coordinate = Vector::new(
+        let coordinate = Vec3::new(
             coordinates[i * 3] as Real,
             coordinates[i * 3 + 1] as Real,
             coordinates[i * 3 + 2] as Real,
@@ -167,8 +161,8 @@ fn add_rope_joint(
     length: Real,
 ) -> (ImpulseJointHandle, ImpulseJointHandle) {
     let mut joint = RopeJointBuilder::new(length)
-        .local_anchor1(Vector::ZERO)
-        .local_anchor2(Vector::ZERO)
+        .local_anchor1(Vec3::ZERO)
+        .local_anchor2(Vec3::ZERO)
         .softness(SpringCoefficients::new(
             JOINT_SPRING_FREQUENCY,
             JOINT_SPRING_DAMPING_RATIO,
@@ -203,7 +197,7 @@ fn add_rope_joint(
     (handle, damp_handle)
 }
 
-fn create_rope_body(scene_id: i32, coordinate: Vector, point_radius: Real) -> RigidBodyHandle {
+fn create_rope_body(scene_id: i32, coordinate: Vec3, point_radius: Real) -> RigidBodyHandle {
     let scene = get_scene_mut_ref(scene_id);
     let mut rigid_body = RigidBodyBuilder::dynamic()
         .translation(coordinate)
@@ -383,11 +377,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     old_joint.set_limits(JointAxis::LinX, [0.0, 1.0]);
     old_joint.set_motor_position(JointAxis::LinX, 1.0, MIN_BOUND_STIFFNESS, MIN_BOUND_DAMPING);
 
-    let handle = create_rope_body(
-        scene_id,
-        Vector::new(x as Real, y as Real, z as Real),
-        point_radius,
-    );
+    let handle = create_rope_body(scene_id, DVec3::new(x, y, z).as_vec3(), point_radius);
     strand.joints.insert(
         0,
         add_rope_joint(
@@ -458,8 +448,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     };
 
     let joint = RopeJointBuilder::new(0.0)
-        .local_anchor1(Vector::ZERO)
-        .local_anchor2(Vector::ZERO)
+        .local_anchor1(Vec3::ZERO)
+        .local_anchor2(Vec3::ZERO)
         .softness(SpringCoefficients::new(
             JOINT_SPRING_FREQUENCY,
             JOINT_SPRING_DAMPING_RATIO,
@@ -491,7 +481,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
             Some(sub_level_id as LevelColliderID)
         },
         joint,
-        location: Vector3::new(x, y, z),
+        location: DVec3::new(x, y, z),
     };
 
     if end > 0 {

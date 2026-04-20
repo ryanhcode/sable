@@ -2,9 +2,10 @@ use std::cmp::min;
 
 use marten::Real;
 use marten::level::OCTREE_CHUNK_SHIFT;
-use rapier3d::glamx::Pose3;
-use rapier3d::math::Vector;
-use rapier3d::na::{SimdComplexField, Vector3};
+use rapier3d::glamx::{DVec3, IVec3};
+use rapier3d::math::{Pose3, Vec3};
+
+use rapier3d::na::SimdComplexField;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelRefIterator, ParallelExtend};
 
@@ -21,11 +22,12 @@ pub fn find_collision_pairs(
     prediction: Real,
     cutoff: usize,
     liquid: bool,
-) -> Vec<(Vector3<i32>, Vector3<i32>)> {
+) -> Vec<(IVec3, IVec3)> {
+    #[derive(Default)]
     struct StackObject {
         index: u32,
         depth: u32,
-        min: Vector3<i32>,
+        min: IVec3,
     }
 
     let Some(octree) = &sable_body.octree else {
@@ -36,63 +38,44 @@ pub fn find_collision_pairs(
 
     let center_of_mass = sable_body.center_of_mass.unwrap();
 
-    let offset = Vector3::new(
-        local_bounds_min.x as f64 - center_of_mass.x,
-        local_bounds_min.y as f64 - center_of_mass.y,
-        local_bounds_min.z as f64 - center_of_mass.z,
-    );
-    let offset = Vector3::new(offset.x as Real, offset.y as Real, offset.z as Real);
+    let offset = local_bounds_min.as_dvec3() - center_of_mass;
 
-    let offset = isometry.rotation.mul_vec3(offset.into());
+    let offset = isometry.rotation.mul_vec3(offset.as_vec3());
     let translation = isometry.translation + offset;
 
     // start with the root node
     let mut current_level = Vec::with_capacity(128);
 
-    let com_offset: Vector3<f64> = if let Some(other_handle) = other_sable_body {
-        let com = other_handle.center_of_mass.unwrap();
-        Vector3::new(com.x, com.y, com.z)
-    } else {
-        Vector3::new(0.0, 0.0, 0.0)
-    };
+    let com_offset: DVec3 = other_sable_body
+        .map(|body| body.center_of_mass.unwrap())
+        .unwrap_or(DVec3::ZERO);
 
-    current_level.push(StackObject {
-        index: 0,
-        depth: 0,
-        min: Vector3::new(0, 0, 0),
-    });
+    current_level.push(StackObject::default());
 
     let mut pairs = Vec::with_capacity(16);
     // process nodes level by level to maintain some structure while parallelizing
     while !current_level.is_empty() {
-        type LevelData = (
-            Option<Vec<StackObject>>,
-            Option<Vec<(Vector3<i32>, Vector3<i32>)>>,
-        );
+        type LevelData = (Option<Vec<StackObject>>, Option<Vec<(IVec3, IVec3)>>);
         let mut next_level_data = Vec::<LevelData>::with_capacity(8);
 
         let do_level_parallel = current_level.len() >= cutoff;
 
         let process_stack_object = |entry: &StackObject| -> LevelData {
             let node = *unsafe { octree.buffer.get_unchecked(entry.index as usize) };
-            let node_size = 1 << (octree.log_size as u32 - entry.depth);
+            let node_size: i32 = 1 << (octree.log_size as u32 - entry.depth);
 
             // Calculate the center and radius for this node
-            let node_center = Vector3::new(
-                entry.min.x as Real + node_size as Real / 2.0,
-                entry.min.y as Real + node_size as Real / 2.0,
-                entry.min.z as Real + node_size as Real / 2.0,
-            );
-            let node_center = Vector::new(node_center.x, node_center.y, node_center.z);
+            let node_center = entry.min.as_vec3() + (node_size as f32 / 2.0);
+
             let transformed_center = isometry.rotation.mul_vec3(node_center) + translation;
-            let radius = node_size as Real / 2.0 * 1.7321 + prediction;
+            let radius = (node_size as Real / 2.0 * 1.7321) + prediction;
 
             let scene = get_scene_mut(sable_body.scene_id);
 
             let (has_any_intersections, blocks_opt) = get_overlapping_nodes(
                 other_sable_body,
                 com_offset,
-                transformed_center.into(),
+                transformed_center,
                 radius,
                 scene,
                 node >= 0,
@@ -121,7 +104,7 @@ pub fn find_collision_pairs(
                         index: (node + i) as u32,
                         depth: entry.depth + 1,
                         min: entry.min
-                            + Vector3::new(
+                            + IVec3::new(
                                 (i & 1) * node_size / 2,
                                 ((i >> 1) & 1) * node_size / 2,
                                 ((i >> 2) & 1) * node_size / 2,
@@ -156,13 +139,13 @@ pub fn find_collision_pairs(
 
 fn get_overlapping_nodes(
     other_handle: Option<&ActiveLevelColliderInfo>,
-    com_offset: Vector3<f64>,
-    pos: Vector3<Real>,
+    com_offset: DVec3,
+    pos: Vec3,
     dist: Real,
     scene: &PhysicsScene,
     cancel_early: bool,
     liquid: bool,
-) -> (bool, Option<Vec<Vector3<i32>>>) {
+) -> (bool, Option<Vec<IVec3>>) {
     // biggest power of two that doesn't go over radius
     let log2 = ((dist * 2.0).simd_ln() / 2.0f32.simd_ln()).floor() as i32;
 
@@ -174,33 +157,15 @@ fn get_overlapping_nodes(
     } else {
         min(log2, OCTREE_CHUNK_SHIFT)
     };
+    let min_block_pos = ((pos - dist).as_dvec3() + com_offset).floor().as_ivec3();
 
-    let min_block_pos = Vector3::new(
-        ((pos.x - dist) as f64 + com_offset.x).floor() as i32,
-        ((pos.y - dist) as f64 + com_offset.y).floor() as i32,
-        ((pos.z - dist) as f64 + com_offset.z).floor() as i32,
-    );
-    let max_block_pos = Vector3::new(
-        ((pos.x + dist) as f64 + com_offset.x).floor() as i32,
-        ((pos.y + dist) as f64 + com_offset.y).floor() as i32,
-        ((pos.z + dist) as f64 + com_offset.z).floor() as i32,
-    );
+    let max_block_pos = ((pos + dist).as_dvec3() + com_offset).floor().as_ivec3();
 
     if let Some(other_handle) = other_handle {
         let other_min = other_handle.local_bounds_min.unwrap();
 
-        let min_pos = Vector3::new(
-            (min_block_pos.x - other_min.x) >> log2,
-            (min_block_pos.y - other_min.y) >> log2,
-            (min_block_pos.z - other_min.z) >> log2,
-        )
-        .map(|x| x.max(0));
-
-        let max_pos = Vector3::new(
-            (max_block_pos.x - other_min.x) >> log2,
-            (max_block_pos.y - other_min.y) >> log2,
-            (max_block_pos.z - other_min.z) >> log2,
-        );
+        let min_pos = ((min_block_pos - other_min) >> log2).max(IVec3::ZERO);
+        let max_pos = (max_block_pos - other_min) >> log2;
 
         let Some(oct) = &other_handle.octree else {
             panic!("No octree!")
@@ -214,15 +179,12 @@ fn get_overlapping_nodes(
         for x in min_pos.x..=max_pos.x {
             for y in min_pos.y..=max_pos.y {
                 for z in min_pos.z..=max_pos.z {
-                    if oct.query(x << log2, y << log2, z << log2, log2) > -2 {
+                    let lp = IVec3::new(x, y, z) << log2;
+                    if oct.query(lp, log2) > -2 {
                         if cancel_early {
                             return (true, None);
                         } else {
-                            blocks.as_mut().unwrap().push(Vector3::new(
-                                (x << log2) + other_min.x,
-                                (y << log2) + other_min.y,
-                                (z << log2) + other_min.z,
-                            ));
+                            blocks.as_mut().unwrap().push(lp + other_min);
                         }
                     }
                 }
@@ -237,60 +199,38 @@ fn get_overlapping_nodes(
     }
 
     // find all the octrees
-    let min_octree_pos = Vector3::new(
-        min_block_pos.x >> OCTREE_CHUNK_SHIFT,
-        min_block_pos.y >> OCTREE_CHUNK_SHIFT,
-        min_block_pos.z >> OCTREE_CHUNK_SHIFT,
-    );
-    let max_octree_pos = Vector3::new(
-        max_block_pos.x >> OCTREE_CHUNK_SHIFT,
-        max_block_pos.y >> OCTREE_CHUNK_SHIFT,
-        max_block_pos.z >> OCTREE_CHUNK_SHIFT,
-    );
+    let [min_octree_pos, max_octree_pos] =
+        [min_block_pos, max_block_pos].map(|v| v >> OCTREE_CHUNK_SHIFT);
 
-    let mut blocks = if cancel_early {
-        None
-    } else {
-        Some(Vec::with_capacity(8))
-    };
+    let mut blocks = cancel_early.then(|| Vec::with_capacity(8));
+
     for ox in min_octree_pos.x..=max_octree_pos.x {
         for oy in min_octree_pos.y..=max_octree_pos.y {
             for oz in min_octree_pos.z..=max_octree_pos.z {
-                let chunk = scene.octree_chunks.get(&pack_section_pos(ox, oy, oz));
+                let opos = IVec3::new(ox, oy, oz);
+                let chunk = scene.octree_chunks.get(&pack_section_pos(opos));
                 let Some(chunk) = chunk else {
                     continue;
                 };
+                let min = min_block_pos >> log2;
+                let max = max_block_pos >> log2;
 
-                let min_x = min_block_pos.x >> log2;
-                let min_y = min_block_pos.y >> log2;
-                let min_z = min_block_pos.z >> log2;
-                let max_x = max_block_pos.x >> log2;
-                let max_y = max_block_pos.y >> log2;
-                let max_z = max_block_pos.z >> log2;
                 let chunk_octree = if liquid {
                     &chunk.liquid_octree
                 } else {
                     &chunk.octree
                 };
-
-                for x in min_x..=max_x {
-                    for y in min_y..=max_y {
-                        for z in min_z..=max_z {
-                            if chunk_octree.query(
-                                (x << log2) - (ox << OCTREE_CHUNK_SHIFT),
-                                (y << log2) - (oy << OCTREE_CHUNK_SHIFT),
-                                (z << log2) - (oz << OCTREE_CHUNK_SHIFT),
-                                log2,
-                            ) > -2
-                            {
+                let olp = opos << OCTREE_CHUNK_SHIFT;
+                for x in min.x..=max.x {
+                    for y in min.y..=max.y {
+                        for z in min.z..=max.z {
+                            let lp = IVec3::new(x, y, z) << log2;
+                            let query = lp - olp;
+                            if chunk_octree.query(query, log2) > -2 {
                                 if cancel_early {
                                     return (true, None);
                                 } else {
-                                    blocks.as_mut().unwrap().push(Vector3::new(
-                                        x << log2,
-                                        y << log2,
-                                        z << log2,
-                                    ));
+                                    blocks.as_mut().unwrap().push(lp);
                                 }
                             }
                         }
