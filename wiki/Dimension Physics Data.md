@@ -8,9 +8,9 @@ Sable allows datapacks to specify custom physics parameters for dimensions. Thes
 
 **`base_gravity`** (optional, default `[0.0, -11.0, 0.0]`): Gravitational acceleration as a 3D vector in m/sec². The default pulls straight down at 11 m/s².
 
-**`base_pressure`** (optional, default `1.0`): A pressure multiplier applied everywhere in the dimension. Set to `0.0` for a vacuum. If `pressure_function` is also defined, the two combine.
+**`base_pressure`** (optional, default `1.0`): The pressure multiplier applied everywhere in the dimension. Set to `0` for a vacuum. If `pressure_function` is also defined, the two combine.
 
-**`pressure_function`** (optional): A list of bezier control points describing for controlling air pressure with altitude. Each point has `altitude` (y-level), `value` (pressure at that altitude), and `slope` (rate of change). Omit this field for uniform pressure at `base_pressure`.
+**`pressure_function`** (optional): A list of bezier control points for controlling air pressure with altitude. Each point has `altitude` (y-level), `value` (pressure at that altitude), and `slope` (rate of change). Omit this field for uniform pressure at `base_pressure`.
 
 **`universal_drag`** (optional, default `0.09`): A flat drag coefficient applied to all motion in the dimension.
 
