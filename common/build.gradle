@@ -174,7 +174,10 @@ tasks.register('packRustNatives', Tar) {
             try (var x = new XZOutputStream(f, new LZMA2Options(LZMA2Options.PRESET_MAX))) {
                 x.write(bytes);
             }
-        };
+        }
+        supportedTargets.forEach { t ->
+            delete(file("${nativesDir}/${nativesNameForTarget(t)}"))
+        }
     }
 }
 
@@ -200,11 +203,6 @@ configurations {
         canBeResolved = false
         canBeConsumed = true
     }
-}
-jar {
-    exclude "**/*.so"
-    exclude "**/*.dylib"
-    exclude "**/*.dll"
 }
 
 artifacts {
