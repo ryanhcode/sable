@@ -1,0 +1,147 @@
+{
+  "menu.savingSubLevels": "Сохранение подуровней",
+
+  "commands.sable.helper.missing_sub_level_container": "Не удалось найти контейнер подуровней для этого мира!",
+  "commands.sable.helper.missing_physics_system": "Не удалось найти физическую систему подуровней для этого мира!",
+
+  "commands.sable.sub_level": "подуровень",
+  "commands.sable.sub_levels": "подуровней: %s",
+
+  "commands.sable.physics.global": "глобальные",
+  "commands.sable.physics.local": "локальные",
+
+  "commands.sable.spawn.success": "Заспавнен %s",
+  "commands.sable.spawn.clone.success": "Подуровень клонирован",
+
+  "commands.sable.physics.impulse.angular.success": "Применен угловой импульс %s к %s из %s",
+  "commands.sable.physics.impulse.linear.success": "Применен линейный импульс %s к %s из %s",
+  "commands.sable.physics.rotation.add.success": "Добавлено вращение %s к %s из %s",
+  "commands.sable.physics.rotation.set.success": "Вращение %s установлено на %s",
+  "commands.sable.physics.translation.add.success": "Добавлено смещение %s к %s из %s",
+  "commands.sable.physics.translation.set.success": "Смещение %s установлено на %s",
+
+  "commands.sable.joint.missing_sublevel_target": "Не удалось найти целевой подуровень для соединения (joint)",
+  "commands.sable.joint.success": "Соединение успешно создано",
+
+  "commands.sable.sub_level.set_name.success_singular": "Имя подуровня изменено на %s",
+  "commands.sable.sub_level.set_name.success_multiple": "Имена %s подуровней изменены на %s",
+
+  "commands.sable.sub_level.get_name.success": "Имя подуровня: %s",
+  "commands.sable.sub_level.get_name.failure_unnamed": "У подуровня нет имени",
+
+  "commands.sable.sub_level.clear_name.success_singular": "Имя подуровня очищено",
+  "commands.sable.sub_level.clear_name.success_multiple": "Очищены имена %s подуровней",
+
+  "commands.sable.sub_level.teleport_with_orientation.success": "%s телепортирован на %.2f, %.2f, %.2f с поворотом %.2f, %.2f",
+  "commands.sable.sub_level.teleport.success": "%s телепортирован на %.2f, %.2f, %.2f",
+  "commands.sable.sub_level.remove.success": "Удален %s",
+  "commands.sable.sub_level.assemble.no_blocks": "Не удалось собрать подуровень: нет подходящих блоков",
+  "commands.sable.sub_level.assemble.connected.too_many_blocks": "Не удалось собрать подуровень: слишком много блоков (максимум %s)",
+  "commands.sable.sub_level.shatter.no_blocks": "Не удалось разбить на подуровни: нет подходящих блоков",
+  "commands.sable.sub_level.shatter.connected.too_many_blocks": "Не удалось разбить на подуровни: слишком много блоков (максимум %s)",
+  "commands.sable.sub_level.shatter.region.success": "Регион из %s блоков разбит на новые подуровни",
+  "commands.sable.sub_level.shatter.connected.success": "%s соединенных блоков разбито на новые подуровни",
+  "commands.sable.sub_level.shatter.range.success": "Диапазон из %s блоков разбит на новые подуровни",
+  "commands.sable.sub_level.shatter.radius.success": "Радиус из %s блоков разбит на новые подуровни",
+  "commands.sable.sub_level.shatter.sub_level.success": "%s разбит на %s новых подуровней",
+  "commands.sable.sub_level.shatter.sub_level.only_single_block": "Невозможно разбить подуровень, состоящий из одного блока",
+  "commands.sable.sub_level.assemble.region.success": "Регион из %s блоков собран в новый подуровень",
+  "commands.sable.sub_level.assemble.connected.success": "%s соединенных блоков собрано в новый подуровень",
+  "commands.sable.sub_level.assemble.radius.success": "Радиус из %s блоков собран в новый подуровень",
+  "commands.sable.sub_level.assemble.range.success": "Диапазон из %s блоков собран в новый подуровень",
+
+  "commands.sable.physics.paused.success": "Статус паузы физики установлен на: %s",
+  "commands.sable.physics.paused_toggled.success": "Пауза физики переключена на: %s",
+
+  "commands.sable.place_schematic.failure": "Схема не найдена!",
+  "commands.sable.place_schematic.success": "Схема размещена!",
+
+  "commands.sable.fail.not_inside_sub_level": "Позиция находится за пределами участка подуровня",
+  "commands.sable.fail.no_sub_levels": "Подуровни не найдены",
+  "commands.sable.fail.unmodified": "Ни один подуровень не был изменен",
+  "commands.sable.fail.no_axis_for_rotation": "Отсутствует ось для вращения",
+
+  "commands.sable.info.count": "Найдено подуровней: %s:",
+  "commands.sable.info.name": "%s:",
+  "commands.sable.info.name.tooltip": "Указатель сериализации: %s",
+  "commands.sable.info.position": "    Позиция: %.2f %.2f %.2f",
+  "commands.sable.info.orientation": "    Ориентация: %.2f %.2f %.2f %.2f",
+  "commands.sable.info.linear_velocity": "    Линейная скорость: %.2f %.2f %.2f",
+  "commands.sable.info.angular_velocity": "    Угловая скорость: %.2f %.2f %.2f",
+  "commands.sable.info.mass": "    Масса: %.2f",
+
+  "commands.data.sub_level.get": "%s на подуровне %s с фактором масштаба %s равняется %s",
+  "commands.data.sub_level.modified": "Вспомогательные данные подуровня %s изменены",
+  "commands.data.sub_level.query": "Подуровень %s имеет следующие вспомогательные данные: %s",
+
+  "argument.sable.body.selector.all": "Все подуровни",
+  "argument.sable.body.selector.nearest": "Ближайший подуровень",
+  "argument.sable.body.selector.random": "Случайный подуровень",
+  "argument.sable.body.selector.viewed": "Осматриваемый подуровень",
+  "argument.sable.body.selector.latest": "Последний подуровень",
+  "argument.sable.body.selector.tracking": "Отслеживаемый подуровень",
+  "argument.sable.body.selector.inside": "Внутренний подуровень",
+  "argument.sable.body.static_world": "Статичный мир",
+
+  "argument.sable.sub_level.modifier.distance": "Расстояние до подуровня",
+  "argument.sable.sub_level.modifier.x": "Позиция по X",
+  "argument.sable.sub_level.modifier.y": "Позиция по Y",
+  "argument.sable.sub_level.modifier.z": "Позиция по Z",
+  "argument.sable.sub_level.modifier.dx": "Подуровни между X и X + dX",
+  "argument.sable.sub_level.modifier.dy": "Подуровни между Y и Y + dY",
+  "argument.sable.sub_level.modifier.dz": "Подуровни между Z и Z + dZ",
+  "argument.sable.sub_level.modifier.vx": "Скорость по X",
+  "argument.sable.sub_level.modifier.vy": "Скорость по Y",
+  "argument.sable.sub_level.modifier.vz": "Скорость по Z",
+  "argument.sable.sub_level.modifier.speed": "Скорость подуровня",
+  "argument.sable.sub_level.modifier.mass": "Масса подуровня",
+  "argument.sable.sub_level.modifier.volume": "Объем ограничительной рамки (хитбокса) подуровня",
+  "argument.sable.sub_level.modifier.width": "Размер хитбокса подуровня по оси X",
+  "argument.sable.sub_level.modifier.height": "Размер хитбокса подуровня по оси Y",
+  "argument.sable.sub_level.modifier.length": "Размер хитбокса подуровня по оси Z",
+  "argument.sable.sub_level.modifier.limit": "Максимальное количество возвращаемых подуровней",
+  "argument.sable.sub_level.modifier.name": "Имя подуровня",
+  "argument.sable.sub_level.modifier.sort": "Сортировать подуровни по расстоянию",
+  "argument.sable.unexpected_end_of_input": "Неожиданный конец ввода",
+  "argument.sable.single_sub_level_required": "Допускается только один подуровень, но данный селектор допускает несколько",
+  "argument.sable.sub_level.invalid": "Недопустимый селектор подуровня",
+  "argument.sable.sub_level.expected_end_of_modifier": "Ожидался конец модификатора",
+  "argument.sable.sub_level.expected_positive_integer": "Ожидалось положительное целое число",
+  "argument.sable.sub_level.expected_positive_decimal": "Ожидалось положительное десятичное число",
+  "argument.sable.sub_level.expected_positive_range": "Ожидался положительный диапазон",
+  "argument.sable.sub_level.expected_sorting": "Ожидался тип сортировки: nearest (ближайший) или furthest (самый дальний)",
+
+  "inspector.sable.sub_level_container.title": "Контейнер подуровня",
+
+  "attribute.name.player.sub_level_punch_strength": "Сила толчка",
+  "attribute.name.player.sub_level_punch_cooldown": "Перезарядка толчка",
+
+  "options.sable_menu": "Настройки подуровней...  ",
+  "options.physics_steps": "Шаги физики",
+  "options.physics_steps_template": "%s шагов / сек",
+  "options.physics_steps.tooltip": "Сколько раз физическая симуляция обновляется каждую секунду. Высокие значения значительно повысят нагрузку на систему, но обеспечат более высокую точность.",
+
+  "sub_level.toast.checkLog": "Подробности смотрите в журнале",
+  "sub_level.toast.loadFailure": "Не удалось загрузить подуровень в %s",
+  "sub_level.toast.saveFailure": "Не удалось сохранить подуровень в %s",
+  "sub_level.toast.physicsFailure": "Сбой физики для подуровня в %s",
+  "sub_level.toast.attemptingRecovery": "Попытка восстановления...",
+
+  "camera_type.sub_level_view": "Камера механизма",
+  "camera_type.sub_level_view_unlocked": "Свободная камера механизма",
+
+  "force_group.sable.gravity": "Гравитация",
+  "force_group.sable.drag": "Сопротивление воздуха",
+  "force_group.sable.levitation": "Левитация",
+  "force_group.sable.balloon_lift": "Подъемная сила шара",
+  "force_group.sable.propulsion": "Движущая тяга",
+  "force_group.sable.lift": "Аэродинамическая подъемная сила",
+  "force_group.sable.magnetic_force": "Магнитная сила",
+
+  "schematic.sable.mirror_not_supported": "Невозможно отзеркалить схему, содержащую подуровни!",
+
+  "death.attack.fall.from_sublevel": "%1$s разбился(ась), упав с %2$s",
+
+  "sable.create.mechanical_arm.points_removed_sublevel_and_range": "%1$s выбр. точек взаимодействия удалено из-за ограничений дальности или отсутствия якоря.",
+  "sable.create.remove.points_removed_sublevel" : "%1$s выбр. точек взаимодействия удалено из-за отсутствия якоря."
+}
