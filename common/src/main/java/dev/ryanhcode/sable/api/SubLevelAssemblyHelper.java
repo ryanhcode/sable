@@ -20,23 +20,24 @@ import dev.ryanhcode.sable.sublevel.tracking_points.TrackingPoint;
 import dev.ryanhcode.sable.util.BoundedBitVolume3i;
 import dev.ryanhcode.sable.util.LevelAccelerator;
 import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BellBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
@@ -65,7 +66,7 @@ public class SubLevelAssemblyHelper {
      * @param blocks all blocks that will be assembled into the sub-level
      * @param bounds the bounds in which {@link TrackingPoint tracking points} and retained entities will be moved
      */
-    public static ServerSubLevel assembleBlocks(final ServerLevel level, final BlockPos anchor, final Iterable<BlockPos> blocks, final BoundingBox3ic bounds) {
+    public static ServerSubLevel assembleBlocks(final ServerLevel level, final BlockPos anchor, Iterable<BlockPos> blocks, final BoundingBox3ic bounds) {
         final ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
         assert container != null;
 
@@ -77,6 +78,37 @@ public class SubLevelAssemblyHelper {
             final Pose3d containingPose = containingSubLevel.logicalPose();
             containingPose.transformPosition(pose.position());
             pose.orientation().set(containingPose.orientation());
+        }
+
+        // Get Create's brittle and wrench_pickup tags if they exist.
+        final TagKey< Block > createBrittleTag = (ResourceLocation.isValidNamespace( "create" )
+                ? TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "brittle")) : null);
+        final TagKey< Block > createWrenchPickupTag = (ResourceLocation.isValidNamespace( "create" )
+                ? TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "wrench_pickup")) : null);
+
+        if (createBrittleTag != null && createWrenchPickupTag != null) {
+            final LevelAccelerator accelerator = new LevelAccelerator(level);
+            final ObjectArrayList< BlockPos > newBlocks = new ObjectArrayList<>();
+            final ObjectArrayList< BlockPos > brittleBlocks = new ObjectArrayList<>();
+
+            // Check if blocks have Create's brittle tag or the wrench_pickup tag for redstone blocks.
+            for (final BlockPos pos : blocks) {
+                final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(pos.getX()),
+                        SectionPos.blockToSectionCoord(pos.getZ()));
+
+                final BlockState posState = chunk.getBlockState(pos);
+                final Block block = posState.getBlock();
+
+                // A bit of a dirty way of checking for affected blocks.
+                if (posState.is(createBrittleTag) || posState.is(createWrenchPickupTag)
+                        || block instanceof DiodeBlock || block instanceof TorchBlock || block instanceof SignBlock) { brittleBlocks.add(pos); continue; }
+                newBlocks.add(pos);
+            }
+
+            // Add all brittle blocks in the front of the blocks list so they are processed first.
+            newBlocks.addAll(0, brittleBlocks);
+
+            blocks = newBlocks;
         }
 
         final ServerSubLevel subLevel = (ServerSubLevel) container.allocateNewSubLevel(pose);
