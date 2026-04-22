@@ -143,6 +143,16 @@
 
   "death.attack.fall.from_sublevel": "%1$s fell from %2$s",
 
+  "item.sable.assembler": "Assembler",
+  "item.sable.area_assembler": "Area Assembler",
+  "item.sable.single_block_area_assembler": "Single Block Area Assembler",
+  "item.sable.remover": "Remover",
+
+  "message.sable.sublevel_assembled": "Assembled block at %s into a sublevel!",
+  "message.sable.sublevel_area_assembled": "Assembled area from %s to %s into a sublevel!",
+  "message.sable.single_block_sublevel_area_assembled": "Assembled area from at %s to %s into %s single-block sublevels!",
+  "message.sable.sublevel_removed": "Removed sublevel %s.",
+
   "sable.create.mechanical_arm.points_removed_sublevel_and_range": "%1$s selected interaction point(s) removed due to range limitations or not being anchored.",
   "sable.create.remove.points_removed_sublevel" : "%1$s selected interaction point(s) removed due to not being anchored"
 }
