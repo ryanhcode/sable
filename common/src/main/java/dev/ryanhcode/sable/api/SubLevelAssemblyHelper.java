@@ -298,8 +298,8 @@ public class SubLevelAssemblyHelper {
         final LevelAccelerator resultingAccelerator = new LevelAccelerator(resultingLevel);
 
         // Get Create's brittle and wrench_pickup tags.
-        final TagKey< Block > createBrittleTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "brittle"));
-        final TagKey< Block > createWrenchPickupTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "wrench_pickup"));
+        final TagKey<Block> createBrittleTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "brittle"));
+        final TagKey<Block> createWrenchPickupTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "wrench_pickup"));
 
         final ObjectArrayList<BlockPos> newBlocks = new ObjectArrayList<>();
         final ObjectArrayList<BlockPos> brittleBlocks = new ObjectArrayList<>();
