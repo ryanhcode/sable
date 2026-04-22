@@ -37,7 +37,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('common/src/main/rust/**/Cargo.lock') }}
 
       - name: Run Gradle Task
-        run: ./gradlew common:buildImage common:buildRustNatives
+        run: ./gradlew common:buildImages common:buildRustNatives
 
       - name: Take ownership of the workspace
         run: sudo chown -R $USER:$USER .
