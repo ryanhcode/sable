@@ -24,8 +24,8 @@ public abstract class ArgumentTypeInfosMixin {
 
     @Inject(method = "bootstrap", at = @At("TAIL"))
     private static void sable$bootstrap(final Registry<ArgumentTypeInfo<?, ?>> registry, final CallbackInfoReturnable<ArgumentTypeInfo<?, ?>> cir) {
-        register(registry, "sub_level", SubLevelArgumentType.class, new SubLevelArgumentType.Info());
-        register(registry,"vec3_absolute", Vec3ArgumentAbsolute.class, SingletonArgumentInfo.contextFree(Vec3ArgumentAbsolute::vec3));
+        register(registry, "sable:sub_level", SubLevelArgumentType.class, new SubLevelArgumentType.Info());
+        register(registry, "sable:vec3_absolute", Vec3ArgumentAbsolute.class, SingletonArgumentInfo.contextFree(Vec3ArgumentAbsolute::vec3));
     }
 
 }
