@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use jni::JNIEnv;
-use jni::objects::{JClass, JDoubleArray};
-use jni::sys::{jboolean, jdouble, jint, jlong, jsize};
+use jni::sys::{jboolean, jdouble, jint, jlong};
 use marten::Real;
 use rapier3d::dynamics::{GenericJointBuilder, JointAxis, RigidBodyBuilder, SpringCoefficients};
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
@@ -95,20 +93,13 @@ pub fn tick(scene_id: jint) {
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createRope<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn create_rope(
     scene_id: jint,
     point_radius: jdouble,
     first_joint_length: jdouble,
-    points: JDoubleArray<'local>,
+    coordinates: Vec<jdouble>,
     num_points: jint,
 ) -> jlong {
-    let mut coordinates = vec![0.0; (num_points * 3) as usize];
-    env.get_double_array_region(points, 0, &mut coordinates)
-        .unwrap();
-
     let scene = get_scene_mut_ref(scene_id);
 
     let mut vec = Vec::with_capacity(num_points as usize);
@@ -231,43 +222,23 @@ fn create_rope_body(scene_id: i32, coordinate: Vector, point_radius: Real) -> Ri
     handle
 }
 
-/// Removes a rope
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_queryRope<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jlong,
-) -> JDoubleArray<'local> {
+pub fn query_rope(scene_id: jint, id: jlong) -> Vec<jdouble> {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.get(&(id as usize)).unwrap();
 
-    let flattened: Vec<jdouble> = strand
+    strand
         .points
         .iter()
         .flat_map(|x| {
             let pos = scene.rigid_body_set.get(*x).unwrap().position().translation;
             vec![pos.x as f64, pos.y as f64, pos.z as f64]
         })
-        .collect();
-
-    let double_array = env
-        .new_double_array((strand.points.len() * 3) as jsize)
-        .unwrap();
-    env.set_double_array_region(&double_array, 0, &flattened)
-        .unwrap();
-    double_array
+        .collect()
 }
 
 /// Removes a rope
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRope<'local>(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jlong,
-) {
+pub fn remove_rope(scene_id: jint, id: jlong) {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.remove(&(id as usize)).unwrap();
@@ -284,16 +255,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
 }
 
 /// Sets the joint
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeFirstSegmentLength<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jlong,
-    length: jdouble,
-) {
+pub fn set_rope_first_segment_length(scene_id: jint, id: jlong, length: jdouble) {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.get_mut(&(id as usize)).unwrap();
@@ -313,15 +275,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     );
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRopePointAtStart<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jlong,
-) {
+pub fn remove_rope_point_at_start(scene_id: jint, id: jlong) {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.get_mut(&(id as usize)).unwrap();
@@ -357,18 +311,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRopePointAtStart<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jlong,
-    x: jdouble,
-    y: jdouble,
-    z: jdouble,
-) {
+pub fn add_rope_point_at_start(scene_id: jint, id: jlong, x: jdouble, y: jdouble, z: jdouble) {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.get_mut(&(id as usize)).unwrap();
@@ -407,13 +350,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wakeUpRope<'local>(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    rope_id: jlong,
-) {
+pub fn wake_up_rope(scene_id: jint, rope_id: jlong) {
     let scene = get_scene_mut_ref(scene_id);
 
     let strand = scene.rope_map.ropes.get_mut(&(rope_id as usize)).unwrap();
@@ -424,12 +361,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
 }
 
 /// Sets the attachment at a given end
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeAttachment<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn set_rope_attachment(
     scene_id: jint,
     rope_id: jlong,
     sub_level_id: jint,

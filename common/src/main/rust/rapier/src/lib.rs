@@ -1,6 +1,7 @@
 #![allow(static_mut_refs)]
 
 pub mod algo;
+mod api;
 pub mod boxes;
 mod buoyancy;
 mod collider;
@@ -15,9 +16,8 @@ pub mod rope;
 mod scene;
 mod voxel_collider;
 
-use jni::objects::{JClass, JDoubleArray, JIntArray};
 use jni::sys::{jboolean, jdouble, jint};
-use jni::{JNIEnv, JavaVM};
+use jni::JavaVM;
 use rapier3d::glamx::Quat;
 use rapier3d::math::Vector;
 use std::collections::HashMap;
@@ -313,10 +313,8 @@ pub fn get_rigid_body(scene: &PhysicsScene, id: LevelColliderID) -> &RigidBody {
     &scene.rigid_body_set[*handle]
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_initialize<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn initialize(
+    current_step_vm: Option<JavaVM>,
     scene_id: jint,
     x: jdouble,
     y: jdouble,
@@ -403,7 +401,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
                 rope_map: RopeMap::default(),
                 level_colliders: HashMap::<LevelColliderID, ActiveLevelColliderInfo>::new(),
                 rigid_bodies: HashMap::<LevelColliderID, RigidBodyHandle>::new(),
-                current_step_vm: None,
+                current_step_vm,
                 gravity: Vector::new(x as Real, y as Real, z as Real),
                 universal_drag: universal_drag as Real,
                 manifold_info_map: SableManifoldInfoMap::default(),
@@ -411,8 +409,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
 
             scene.collider_set.insert(collider);
             scene.ground_handle = Some(scene.rigid_body_set.insert(ground));
-            scene.current_step_vm =
-                Some(JavaVM::from_raw(env.get_java_vm().unwrap().get_java_vm_pointer()).unwrap());
+
             state.scenes.insert(scene_id, scene);
         }
     }
@@ -434,31 +431,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_dis
 }
 
 /// Computes buoyancy
-/// Extracts a message from a caught panic payload
-fn panic_message(payload: &Box<dyn std::any::Any + Send>) -> String {
-    if let Some(s) = payload.downcast_ref::<&str>() {
-        s.to_string()
-    } else if let Some(s) = payload.downcast_ref::<String>() {
-        s.clone()
-    } else {
-        "unknown panic".to_string()
-    }
-}
-
-/// Catches a panic and throws a JVM RuntimeException with the panic message
-fn throw_on_panic(env: &mut JNIEnv, result: Result<(), Box<dyn std::any::Any + Send>>) {
-    if let Err(payload) = result {
-        let msg = format!("Rapier native panic: {}", panic_message(&payload));
-        let _ = env.throw_new("java/lang/RuntimeException", &msg);
-    }
-}
-
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tick<'local>(
-    mut env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn tick(
     scene_id: jint,
-    _time_step: jdouble,
+    // _time_step: jdouble
 ) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe {
         if let Some(state) = &mut PHYSICS_STATE {
@@ -476,13 +451,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
 }
 
 /// Steps physics
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_step<'local>(
-    mut env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    time_step: jdouble,
-) {
+pub fn step(scene_id: jint, time_step: jdouble) {
     unsafe {
         if let Some(state) = &mut PHYSICS_STATE {
             rope::tick(scene_id);
@@ -517,22 +486,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getPose<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-    store: JDoubleArray<'local>,
-) {
+pub fn get_pose(scene_id: jint, id: jint) -> [jdouble; 7] {
     unsafe {
         let Some(scene) = get_physics_state().scenes.get(&scene_id) else {
             panic!("No scene with given ID!");
         };
 
         let rb: &RigidBody = &scene.rigid_body_set[scene.rigid_bodies[&(id as LevelColliderID)]];
-
-        let arr: [jdouble; 7] = [
+        [
             rb.translation().x as jdouble,
             rb.translation().y as jdouble,
             rb.translation().z as jdouble,
@@ -540,24 +501,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
             rb.rotation().y as jdouble,
             rb.rotation().z as jdouble,
             rb.rotation().w as jdouble,
-        ];
-
-        env.set_double_array_region(&store, 0, &arr).unwrap();
+        ]
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setCenterOfMass<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-    x: jdouble,
-    y: jdouble,
-    z: jdouble,
-) {
+pub fn set_center_of_mass(scene_id: jint, id: jint, x: jdouble, y: jdouble, z: jdouble) {
     unsafe {
         if let Some(state) = &mut PHYSICS_STATE {
             let Some(scene) = state.scenes.get_mut(&scene_id) else {
@@ -573,12 +521,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setLocalBounds<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn set_local_bounds(
     scene_id: jint,
     id: jint,
     min_x: jint,
@@ -607,19 +550,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createSubLevel<
-    'local,
->(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-    pose: JDoubleArray<'local>,
-) {
-    let mut pose_arr: [jdouble; 7] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    env.get_double_array_region(pose, 0, &mut pose_arr).unwrap();
-
+pub fn create_sub_level(scene_id: jint, id: jint, pose_arr: [jdouble; 7]) {
     let quat = Quat::from_xyzw(
         pose_arr[3] as Real,
         pose_arr[4] as Real,
@@ -680,15 +611,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeSubLevel<
-    'local,
->(
-    mut _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-) {
+pub fn remove_sub_level(scene_id: jint, id: jint) {
     unsafe {
         if let Some(state) = &mut PHYSICS_STATE {
             let Some(scene) = state.scenes.get_mut(&scene_id) else {
@@ -753,21 +676,15 @@ pub fn insert_block_octree(
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addChunk<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_chunk(
     scene_id: jint,
     x: jint,
     y: jint,
     z: jint,
-    data: JIntArray<'local>,
+    ints: &[jint; 4096],
     global: jboolean,
     object_id: jint,
 ) {
-    let mut ints: [jint; 4096] = [0; 4096];
-    env.get_int_array_region(data, 0, &mut ints).unwrap();
-
     let mut blocks = Vec::with_capacity(ints.len());
 
     for block in ints {
@@ -893,16 +810,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeChunk<'local>(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    x: jint,
-    y: jint,
-    z: jint,
-    global: jboolean,
-) {
+pub fn remove_chunk(scene_id: jint, x: jint, y: jint, z: jint, global: jboolean) {
     unsafe {
         if let Some(state) = &mut PHYSICS_STATE {
             let Some(scene) = state.scenes.get_mut(&scene_id) else {
@@ -961,16 +869,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_changeBlock<'local>(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    x: jint,
-    y: jint,
-    z: jint,
-    block: jint,
-) {
+pub fn change_block(scene_id: jint, x: jint, y: jint, z: jint, block: jint) {
     let block_collider_id = (block >> 16) as u16;
     let voxel_state_id = (block & 0xFFFF) as u16;
 
@@ -1072,26 +971,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setMassProperties<
-    'local,
->(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn set_mass_properties(
     scene_id: jint,
     id: jint,
     mass: jdouble,
-    center_of_mass: JDoubleArray<'local>,
-    inertia: JDoubleArray<'local>,
+    _com: [jdouble; 3],
+    inertia_arr: [jdouble; 9],
 ) {
-    let mut com: [jdouble; 3] = [0.0, 0.0, 0.0];
-    env.get_double_array_region(center_of_mass, 0, &mut com)
-        .unwrap();
-
-    let mut inertia_arr: [jdouble; 9] = [0.0; 9];
-    env.get_double_array_region(inertia, 0, &mut inertia_arr)
-        .unwrap();
-
     let inertia_tensor = Matrix3::new(
         inertia_arr[0] as Real,
         inertia_arr[1] as Real,
@@ -1115,12 +1001,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 /// Teleports the object to the given position.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_teleportObject<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn teleport_object(
     scene_id: jint,
     id: jint,
     x: jdouble,
@@ -1141,26 +1022,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tel
 }
 
 /// Wakes up an object.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wakeUpObject<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-) {
+pub fn wake_up_object(scene_id: jint, id: jint) {
     let scene = get_scene_mut_ref(scene_id);
     let rb = &mut scene.rigid_body_set[scene.rigid_bodies[&(id as LevelColliderID)]];
     rb.wake_up(true);
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addLinearAngularVelocities<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_linear_velocities(
     scene_id: jint,
     id: jint,
     linear_x: jdouble,
@@ -1194,14 +1062,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 ///
 /// A collision is formatted as follows:
 /// [body_a, body_b, force_amount, local_normal_a, local_normal_b, local_point_a, local_point_b]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_clearCollisions<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-) -> JDoubleArray<'local> {
+pub fn clear_collisions(scene_id: jint) -> Vec<jdouble> {
     let scene = get_scene_mut_ref(scene_id);
 
     let max_collisions = 100;
@@ -1238,21 +1099,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cle
         arr.push(collision.local_point_b.y as jdouble);
         arr.push(collision.local_point_b.z as jdouble);
     }
-
-    let double_array = _env.new_double_array(arr.len() as jint).unwrap();
-    _env.set_double_array_region(&double_array, 0, &arr)
-        .unwrap();
-
     scene.reported_collisions.clear();
-
-    double_array
+    arr
 }
 
 /// Applies a force to a body
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_applyForce<'local>(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn apply_force(
     scene_id: jint,
     id: jint,
     x: jdouble,
@@ -1294,12 +1146,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
 }
 
 /// Applies a force and torque
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_applyForceAndTorque<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn apply_force_and_torque(
     scene_id: jint,
     id: jint,
     fx: jdouble,
@@ -1339,16 +1186,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
 }
 
 /// Gets the linear velocity of a body
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getLinearVelocity<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-    store: JDoubleArray<'local>,
-) {
+pub fn get_linear_velocity(scene_id: jint, id: jint) -> [jdouble; 3] {
     unsafe {
         let Some(state) = &mut PHYSICS_STATE else {
             panic!("No physics state!");
@@ -1362,27 +1200,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         let rb = &scene.rigid_body_set[*body];
 
         let vel = rb.linvel();
-
-        _env.set_double_array_region(
-            &store,
-            0,
-            &[vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
-        )
-        .unwrap();
+        vel.as_dvec3().to_array()
     }
 }
 
 /// Gets the angular velocity of a body
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getAngularVelocity<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    id: jint,
-    store: JDoubleArray<'local>,
-) {
+pub fn get_angular_velocity(scene_id: jint, id: jint) -> [jdouble; 3] {
     unsafe {
         let Some(state) = &mut PHYSICS_STATE else {
             panic!("No physics state!");
@@ -1396,12 +1219,6 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         let rb = &scene.rigid_body_set[*body];
 
         let vel = rb.angvel();
-
-        _env.set_double_array_region(
-            &store,
-            0,
-            &[vel.x as jdouble, vel.y as jdouble, vel.z as jdouble],
-        )
-        .unwrap();
+        vel.as_dvec3().to_array()
     }
 }
