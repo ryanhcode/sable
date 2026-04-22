@@ -1,6 +1,12 @@
- - Fix items being blurry and red on some Intel systems
- - Ship natives so Intel Macs can load Sable Rapier
- - Fix compatibility issues with Lithium causing crashes on sub-level loading
- - Fix block entities not rendering on sub-levels with Sodium Extras installed
- - Fix a duplication bug with assembling un-generated loot chests
- - Allow paddling on sub-levels in Creative mode
+ - Fix texture binding issues causing visual artifacts on some Intel GPUs
+ - Fix lectern Linked Controller dupe
+ - Fix Sculk events working with sub-levels
+ - Fix a crash with Create Chain Conveyors
+ - Fix vines growing outside of sub-level bounds
+ - Add small `/sable storage` commands for finding and listing positions of unloaded ships
+ - Improve issue handling for Sable's UDP pipeline
+ - Improve the compatibility of Sable's mixins for Create's Mechanical Harvester
+ - Update Sable Companion to support more API methods
+ - Add API handles for generic physics constraints
+ - Add stack-trace for easier debugging of entity large-AABB aborting issues
+ - Optimize some mixins used for sub-levels

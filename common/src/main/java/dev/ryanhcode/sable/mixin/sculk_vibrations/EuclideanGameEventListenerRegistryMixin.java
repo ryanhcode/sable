@@ -1,4 +1,4 @@
-package dev.ryanhcode.sable.mixin.sculk;
+package dev.ryanhcode.sable.mixin.sculk_vibrations;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -19,4 +19,5 @@ public class EuclideanGameEventListenerRegistryMixin {
     private static double replaceDistance(final BlockPos from, final Vec3i to, final Operation<Double> original, @Local(argsOnly = true) final ServerLevel level) {
         return Sable.HELPER.distanceSquaredWithSubLevels(level, JOMLConversion.atLowerCornerOf(from), JOMLConversion.atLowerCornerOf(to));
     }
+
 }

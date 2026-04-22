@@ -49,11 +49,16 @@ public abstract class AbstractSableMixinPlugin implements IMixinConfigPlugin {
             return this.sodiumPresent ? mixinClassName.startsWith("dev.ryanhcode.sable.mixin.sublevel_render.impl.sodium") : mixinClassName.startsWith("dev.ryanhcode.sable.mixin.sublevel_render.impl.vanilla");
         }
 
-        if (isCompatibilityMixin(mixinClassName)) {
-            final String modId = extractModId(mixinClassName);
-            if (modId == null) {
+        if (mixinClassName.startsWith("dev.ryanhcode.sable.mixin.compatibility.") ||
+                mixinClassName.startsWith("dev.ryanhcode.sable.neoforge.mixin.compatibility.") ||
+                mixinClassName.startsWith("dev.ryanhcode.sable.fabric.mixin.compatibility.")
+        ) {
+            final String[] parts = mixinClassName.split("\\.");
+            if (parts.length < 5) {
                 return true;
             }
+
+            final String modId = parts[3].equals("mixin") ? parts[5] : parts[6];
             
             final boolean isModLoaded = this.modLoadedCache.computeIfAbsent(modId, x -> Veil.platform().isModLoaded(modId));
             return isModLoaded && MixinConstraints.handleClassAnnotation(mixinClassName, modId);
@@ -73,42 +78,10 @@ public abstract class AbstractSableMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void preApply(final String targetClassName, final ClassNode targetClass, final String mixinClassName, final IMixinInfo mixinInfo) {
-        if (isCompatibilityMixin(mixinClassName)) {
-            final String modId = extractModId(mixinClassName);
-            if (modId == null) {
-                return;
-            }
-
-            // Handle removing methods if there are constraints on them
-            targetClass.methods.removeIf(method -> {
-                final List<AnnotationNode> nodes = method.visibleAnnotations;
-
-                try {
-                    return nodes != null && MixinConstraints.shouldApply(nodes, modId);
-                } catch (final Throwable e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
     }
 
     @Override
     public void postApply(final String targetClassName, final ClassNode targetClass, final String mixinClassName, final IMixinInfo mixinInfo) {
-    }
-    
-    static boolean isCompatibilityMixin(final String mixinClassName) {
-        return mixinClassName.startsWith("dev.ryanhcode.sable.mixin.compatibility.") ||
-                mixinClassName.startsWith("dev.ryanhcode.sable.neoforge.mixin.compatibility.") ||
-                mixinClassName.startsWith("dev.ryanhcode.sable.fabric.mixin.compatibility.");
-    }
-    
-    static String extractModId(final String mixinClassName) {
-        final String[] parts = mixinClassName.split("\\.");
-        if (parts.length < 5) {
-            return null;
-        }
-
-        return parts[3].equals("mixin") ? parts[5] : parts[6];
     }
     
     // Constraint handling
@@ -119,8 +92,10 @@ public abstract class AbstractSableMixinPlugin implements IMixinConfigPlugin {
         static boolean handleClassAnnotation(final String mixinClassName, final String modId) {
             try {
                 final List<AnnotationNode> nodes = MixinService.getService().getBytecodeProvider().getClassNode(mixinClassName).visibleAnnotations;
-
-                return nodes != null && shouldApply(nodes, modId);
+                if (nodes == null)
+                    return true;
+                
+                return shouldApply(nodes, modId);
             } catch (final Throwable e) {
                 throw new RuntimeException(e);
             }

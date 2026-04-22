@@ -1,4 +1,4 @@
-package dev.ryanhcode.sable.mixin.sculk;
+package dev.ryanhcode.sable.mixin.sculk_vibrations;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -17,12 +17,12 @@ import org.spongepowered.asm.mixin.Mixin;
 public class VibrationSystemListenerMixin {
 
     @WrapMethod(method = "scheduleVibration")
-    private void useGlobalPos(final ServerLevel level, final VibrationSystem.Data data, final Holder<GameEvent> gameEvent, final GameEvent.Context context, final Vec3 pos, final Vec3 sensorPos, final Operation<Void> original) {
+    private void sable$useGlobalPos(final ServerLevel level, final VibrationSystem.Data data, final Holder<GameEvent> gameEvent, final GameEvent.Context context, final Vec3 pos, final Vec3 sensorPos, final Operation<Void> original) {
         original.call(level, data, gameEvent, context, Sable.HELPER.projectOutOfSubLevel(level, pos), Sable.HELPER.projectOutOfSubLevel(level, sensorPos));
     }
 
     @WrapMethod(method = "isOccluded")
-    private static boolean occlusionChecks(final Level level, final Vec3 pos1, final Vec3 pos2, final Operation<Boolean> original) {
+    private static boolean sable$occlusionChecks(final Level level, final Vec3 pos1, final Vec3 pos2, final Operation<Boolean> original) {
         final ActiveSableCompanion helper = Sable.HELPER;
 
         // Check occlusion in global space
