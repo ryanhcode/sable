@@ -6,6 +6,7 @@ import com.simibubi.create.content.contraptions.actors.harvester.HarvesterMoveme
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.behavior_compatibility.harvester_block_entity.DummyMovementContext;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -15,14 +16,15 @@ public class HarvesterMovementBehaviourMixin {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @WrapMethod(method = "visitNewPosition")
     public void sable$checkAllPositions(final MovementContext context, final BlockPos pos, final Operation<Void> original) {
-        if (context != null) {
-            final ActiveSableCompanion helper = Sable.HELPER;
-            helper.runIncludingSubLevels(context.world, pos.getCenter(), true, helper.getContaining(context.contraption.entity), (sublevel, blockPos) -> {
-                original.call(context, blockPos);
-                return null;
-            });
-        } else {
-            original.call(null, pos);
+        if (context instanceof DummyMovementContext) {
+            original.call(context, pos);
+            return;
         }
+
+        final ActiveSableCompanion helper = Sable.HELPER;
+        helper.runIncludingSubLevels(context.world, pos.getCenter(), true, helper.getContaining(context.contraption.entity), (sublevel, blockPos) -> {
+            original.call(context, blockPos);
+            return null;
+        });
     }
 }
