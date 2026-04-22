@@ -5,11 +5,11 @@ import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.SableClient;
 import dev.ryanhcode.sable.mixinterface.udp.ConnectionExtension;
 import dev.ryanhcode.sable.network.udp.SableUDPPacket;
+import dev.ryanhcode.sable.network.udp.SableUDPServer;
 import dev.ryanhcode.sable.network.udp.handler.SableUDPChannelHandlerClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -84,8 +84,7 @@ public abstract class ConnectionMixin implements ConnectionExtension {
                     }
                 })
                 .channel(channelClass)
-                .option(EpollChannelOption.SO_REUSEPORT, true)
-                .connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort());
+                .connect(inetSocketAddress.getAddress(), SableUDPServer.getUDPPort(inetSocketAddress.getPort()));
 
         channelFuture.syncUninterruptibly();
     }

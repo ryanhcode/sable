@@ -17,6 +17,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,6 +51,20 @@ public class SableUDPServer {
     @Nullable
     public static SableUDPServer getServer(final MinecraftServer server) {
         return (((ServerConnectionListenerExtension) server.getConnection())).sable$getServer();
+    }
+
+    /**
+     * Returns the port that will be used by the UDP server
+     *
+     * @param _default the socket that will be used in the case where the port in config is set to -1
+     * @return the port that will be used by the UDP server
+     */
+    public static Integer getUDPPort(final int _default) {
+        final int fromConfig = SableConfig.UDP_LISTEN_PORT.getAsInt();
+
+        if(fromConfig == -1) return _default;
+
+        return fromConfig;
     }
 
     /*@Override
