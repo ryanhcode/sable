@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixin.sublevel_render.RenderSectionAccessor;
+import dev.ryanhcode.sable.mixinterface.compatibility.iris.ExtendedShaderExtension;
 import dev.ryanhcode.sable.mixinterface.sublevel_render.vanilla.RenderSectionExtension;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.render.SubLevelRenderData;
@@ -319,6 +320,10 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
         if (shader.MODEL_VIEW_MATRIX != null) {
             shader.MODEL_VIEW_MATRIX.set(modelView.mul(transform, MODEL_MATRIX));
             shader.MODEL_VIEW_MATRIX.upload();
+
+            if (shader instanceof final ExtendedShaderExtension ext) {
+                ext.sable$refreshModelViewDerivedMatrices();
+            }
         }
 
         // TODO: sorting

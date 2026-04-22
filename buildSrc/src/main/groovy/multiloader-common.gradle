@@ -93,6 +93,7 @@ repositories {
 dependencies {
     compileOnly "maven.modrinth:lithium:mc1.21.1-0.15.3-neoforge"
     compileOnly "maven.modrinth:sodium:$sodium_version"
+    compileOnly "maven.modrinth:iris:$iris_version"
     compileOnly "maven.modrinth:distanthorizons:$distant_horizons_version"
     compileOnly("cc.tweaked:cc-tweaked-$minecraft_version-forge:$cc_tweaked_version")
     compileOnly("io.github.mortuusars.exposure:exposure-${minecraft_version}-neoforge:${exposure_version}") { transitive = false }

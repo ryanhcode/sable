@@ -16,6 +16,7 @@
     "camera.new_camera_types.MinecraftMixin",
     "clip_overwrite.ClientLevelMixin",
     "clip_overwrite.GameRendererMixin",
+    "compatibility.iris.ExtendedShaderMixin",
     "config.GameRendererAccessor",
     "debug_render.DebugRendererMixin",
     "debug_render.DebugScreenOverlayMixin",
