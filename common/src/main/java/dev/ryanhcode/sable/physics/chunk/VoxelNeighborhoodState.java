@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.physics.chunk;
 
 import dev.ryanhcode.sable.api.block.BlockWithSubLevelCollisionCallback;
+import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.util.LevelAccelerator;
 import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -69,31 +70,11 @@ public enum VoxelNeighborhoodState {
         return IS_FULL_BLOCK.apply(blockGetter, state);
     }
 
-    public static int getLiquidType(final BlockState state) {
-        if (state.is(Blocks.WATER) || state.getBlock() instanceof KelpPlantBlock || state.getBlock() instanceof KelpBlock) {
-            return 1;
-        }
-
-        if (state.getBlock() instanceof BubbleColumnBlock) {
-            if (state.getValue(BubbleColumnBlock.DRAG_DOWN)) {
-                return 3;
-            } else {
-                return 2;
-            }
-        }
-
-        if (state.is(Blocks.LAVA)) {
-            return 4;
-        }
-        
-        return 0;
-    }
-
     public static VoxelNeighborhoodState getState(final LevelAccelerator level, final BlockPos pos, @Nullable final LevelChunk chunk) {
         final ChunkPos initialPos = new ChunkPos(pos);
         final BlockState state = chunk != null ? level.getBlockState(chunk, pos) : level.getBlockState(pos);
 
-        if (getLiquidType(state) > 0 || BlockWithSubLevelCollisionCallback.hasCallback(state))
+        if (PhysicsBlockPropertyHelper.getFluidViscosity(state) > 0 || BlockWithSubLevelCollisionCallback.hasCallback(state))
             return CORNER;
 
         if (!isSolid(level, pos, state)) {

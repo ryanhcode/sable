@@ -50,7 +50,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
     friction: jdouble,
     volume: jdouble,
     restitution: jdouble,
-    fluid_type: jint,
+    buoyancy: jdouble,
+    viscosity: jdouble,
     contact_events: JObject,
     dynamic: jboolean,
 ) -> jint {
@@ -85,7 +86,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
         .voxel_colliders
         .push(Some(VoxelColliderData {
             collision_boxes: Vec::new(),
-            fluid_type: fluid_type as i32,
+            buoyancy: buoyancy as Real,
+            viscosity: viscosity as Real,
             friction: friction as Real,
             volume: volume as Real,
             restitution: restitution as Real,

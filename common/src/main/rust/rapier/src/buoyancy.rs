@@ -94,12 +94,13 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                         local_pos.y + y as Real * 0.25,
                         local_pos.z + z as Real * 0.25,
                     );
-                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0, fluid_data.fluid_type);
+                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0, fluid_data.viscosity);
                 }
             } else {
-                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0, fluid_data.fluid_type);
+                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0, fluid_data.viscosity);
             }
         }
+
         for (static_pos, dynamic_pos) in pairs.iter() {
             let chunk = scene.get_chunk(dynamic_pos.x >> 4, dynamic_pos.y >> 4, dynamic_pos.z >> 4);
 
@@ -152,7 +153,6 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                 continue;
             };
 
-
             let local_pos = Vector3::<f64>::new(
                 dynamic_pos.x as f64 + 0.5,
                 dynamic_pos.y as f64 + 0.5,
@@ -180,7 +180,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                         &local_pos,
                         0.25,
                         voxel_collider_data.volume,
-                        fluid_data.fluid_type
+                        fluid_data.buoyancy
                     );
                 }
             } else {
@@ -190,7 +190,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                     &local_pos,
                     0.5,
                     voxel_collider_data.volume,
-                    fluid_data.fluid_type
+                    fluid_data.buoyancy
                 );
             }
         }
@@ -204,7 +204,7 @@ fn do_drag(
     point: &Vector,
     size: Real,
     strength: Real,
-    fluid_type: i32
+    viscosity: Real
 ) {
     let point = body.position().transform_point(*point);
 
@@ -230,8 +230,6 @@ fn do_drag(
     let volume = overlap.unwrap().volume();
     let velo = vels.velocity_at_point(point, body.mass_properties().world_com);
 
-    let viscosity = if fluid_type == 4 { 3.0 } else { 1.0 } as Real;
-
     body.add_force_at_point(-velo * 1.7 * volume * strength * viscosity, point, false);
 }
 
@@ -241,7 +239,7 @@ fn do_float(
     point: &Vector,
     size: Real,
     strength: Real,
-    fluid_type: i32
+    buoyancy: Real
 ) {
     let point = body.position().transform_point(*point);
 
@@ -265,15 +263,6 @@ fn do_float(
     }
 
     let volume = overlap.unwrap().volume();
-
-    let buoyancy = match fluid_type {
-        0 => 0.0,  // Solid (Shouldn't even be called)
-        1 => 1.0,  // Water
-        2 => 3.0,  // Bubble Column (Up)
-        3 => -1.0, // Bubble Column (Down)
-        4 => 0.1,  // Lava
-        _ => 1.0
-    } as Real;
 
     body.add_force_at_point(
         Vector::new(0.0, 10.5 * volume * strength * buoyancy, 0.0),
