@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.api.sublevel;
 
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.network.client.ClientSableInterpolationState;
+import dev.ryanhcode.sable.render.light_bridge.VirtualLightManager;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -53,6 +54,7 @@ public class ClientSubLevelContainer extends SubLevelContainer {
     public void tick() {
         this.interpolation.tick();
         super.tick();
+        VirtualLightManager.get().tick(this.getLevel());
     }
 
     @ApiStatus.Internal

@@ -41,6 +41,10 @@ public abstract class AbstractSableMixinPlugin implements IMixinConfigPlugin {
             return this.sodiumPresent ? mixinClassName.startsWith("dev.ryanhcode.sable.mixin.sublevel_render.impl.sodium") : mixinClassName.startsWith("dev.ryanhcode.sable.mixin.sublevel_render.impl.vanilla");
         }
 
+        if (mixinClassName.startsWith("dev.ryanhcode.sable.mixin.plot.lighting.sodium")) {
+            return this.sodiumPresent;
+        }
+
         if (mixinClassName.startsWith("dev.ryanhcode.sable.mixin.compatibility.lithium")) {
             return this.lithiumPresent;
         }
