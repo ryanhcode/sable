@@ -187,6 +187,7 @@
     "plot.ServerLevelMixin",
     "plot.lighting.BlockAndTintGetterMixin",
     "plot.lighting.LevelChunkMixin",
+    "plot.lighting.server.ServerChunkCacheLightMixin",
     "plot.serialization.ChunkMapMixin",
     "plot.serialization.LevelChunkTicksMixin",
     "portal.EntityMixin",

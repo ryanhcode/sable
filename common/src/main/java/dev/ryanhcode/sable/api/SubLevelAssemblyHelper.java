@@ -113,6 +113,9 @@ public class SubLevelAssemblyHelper {
         pipeline.teleport(subLevel, subLevel.logicalPose().position(), subLevel.logicalPose().orientation());
         subLevel.updateLastPose();
 
+        // Trigger light rescan for the new sub-level so it picks up world light sources
+        dev.ryanhcode.sable.render.light_bridge.ServerSubLevelLightInjector.markNeedsFullRescan(subLevel.getUniqueId());
+
         SubLevelAssemblyHelper.moveTrackingPoints(level, bounds, subLevel, transform);
 
         return subLevel;
@@ -136,6 +139,9 @@ public class SubLevelAssemblyHelper {
         containingPose.transformPosition(subLevel.logicalPose().position());
 
         subLevel.setSplitFrom((ServerSubLevel) containingSubLevel, originalPose);
+
+        // Trigger light rescan for the new split sub-level so it picks up world light sources
+        dev.ryanhcode.sable.render.light_bridge.ServerSubLevelLightInjector.markNeedsFullRescan(subLevel.getUniqueId());
     }
 
     /**

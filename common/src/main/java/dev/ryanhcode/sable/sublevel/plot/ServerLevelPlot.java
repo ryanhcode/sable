@@ -127,11 +127,19 @@ public class ServerLevelPlot extends LevelPlot {
      */
     @Override
     public void tick() {
+        // Inject external light sources before running light updates
+        dev.ryanhcode.sable.render.light_bridge.ServerSubLevelLightInjector.tickPlot(
+                this.getSubLevel().getLevel(), this.getSubLevel(), this);
+
         do {
             this.lightEngine.runLightUpdates();
         } while (this.lightEngine.hasLightWork());
 
         this.contraptions.removeIf(contraption -> !contraption.sable$isValid());
+
+        // Send updated light data to clients after propagation
+        dev.ryanhcode.sable.render.light_bridge.ServerSubLevelLightInjector.afterPlotTick(
+                this.getSubLevel().getLevel(), this.getSubLevel(), this);
     }
 
     /**
