@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.network.udp.handler.SableUDPChannelHandlerServer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalServerChannel;
@@ -67,6 +68,7 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
             this.channels.add(new Bootstrap()
                     .channel(channelClass)
                     .option(ChannelOption.SO_BROADCAST, true)
+                    .option(EpollChannelOption.SO_REUSEPORT, true)
                     .handler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(final Channel channel) {
@@ -93,6 +95,7 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
             this.channels.add(new Bootstrap()
                     .channel(LocalServerChannel.class)
                     .option(ChannelOption.SO_BROADCAST, true)
+                    .option(EpollChannelOption.SO_REUSEPORT, true)
                     .handler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(final Channel channel) {
