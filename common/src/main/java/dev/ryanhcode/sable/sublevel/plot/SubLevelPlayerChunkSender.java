@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.sublevel.plot;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -26,6 +27,13 @@ public class SubLevelPlayerChunkSender {
     public static void sendChunkPoiData(final ServerLevel level, final LevelChunk chunk) {
         final ChunkPos chunkPos = chunk.getPos();
         DebugPackets.sendPoiPacketsForChunk(level, chunkPos);
+    }
+
+    /**
+     * Sends only light data for a chunk, without resending block data.
+     */
+    public static void sendLightUpdate(final Consumer<Packet<? super ClientGamePacketListener>> listener, final LevelLightEngine lightEngine, final ChunkPos pos) {
+        listener.accept(new ClientboundLightUpdatePacket(pos, lightEngine, null, null));
     }
 
 }
