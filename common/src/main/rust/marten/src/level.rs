@@ -84,7 +84,12 @@ pub struct VoxelColliderData {
     pub collision_boxes: Vec<(f32, f32, f32, f32, f32, f32)>,
 
     /// If this should be treated as a fluid for buoyancy
-    pub is_fluid: bool,
+    /// 0: No
+    /// 1: Water
+    /// 2: Bubble Column (Up)
+    /// 3: Bubble Column (Down)
+    /// 4: Lava
+    pub fluid_type: i32,
 
     /// The friction multiplier
     pub friction: f32,

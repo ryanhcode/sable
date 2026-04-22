@@ -7,8 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.KelpBlock;
-import net.minecraft.world.level.block.KelpPlantBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -70,15 +69,31 @@ public enum VoxelNeighborhoodState {
         return IS_FULL_BLOCK.apply(blockGetter, state);
     }
 
-    public static boolean isLiquid(final BlockState state) {
-        return state.liquid() || state.getBlock() instanceof KelpPlantBlock || state.getBlock() instanceof KelpBlock;
+    public static int getLiquidType(final BlockState state) {
+        if (state.is(Blocks.WATER) || state.getBlock() instanceof KelpPlantBlock || state.getBlock() instanceof KelpBlock) {
+            return 1;
+        }
+
+        if (state.getBlock() instanceof BubbleColumnBlock) {
+            if (state.getValue(BubbleColumnBlock.DRAG_DOWN)) {
+                return 3;
+            } else {
+                return 2;
+            }
+        }
+
+        if (state.is(Blocks.LAVA)) {
+            return 4;
+        }
+        
+        return 0;
     }
 
     public static VoxelNeighborhoodState getState(final LevelAccelerator level, final BlockPos pos, @Nullable final LevelChunk chunk) {
         final ChunkPos initialPos = new ChunkPos(pos);
         final BlockState state = chunk != null ? level.getBlockState(chunk, pos) : level.getBlockState(pos);
 
-        if (isLiquid(state) || BlockWithSubLevelCollisionCallback.hasCallback(state))
+        if (getLiquidType(state) > 0 || BlockWithSubLevelCollisionCallback.hasCallback(state))
             return CORNER;
 
         if (!isSolid(level, pos, state)) {

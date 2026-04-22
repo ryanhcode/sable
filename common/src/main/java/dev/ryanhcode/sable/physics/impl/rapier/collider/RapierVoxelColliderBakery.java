@@ -51,15 +51,16 @@ public class RapierVoxelColliderBakery {
      * @return the physics data ID for the block at the given position, or null for empty
      */
     private @NotNull RapierVoxelColliderData buildPhysicsDataForBlock(final BlockState childState) {
-        final boolean liquid = VoxelNeighborhoodState.isLiquid(childState);
+        final int liquid = VoxelNeighborhoodState.getLiquidType(childState);
 
         final double friction = PhysicsBlockPropertyHelper.getFriction(childState);
         final double volume = PhysicsBlockPropertyHelper.getVolume(childState);
         final double restitution = PhysicsBlockPropertyHelper.getRestitution(childState);
         final BlockSubLevelCollisionCallback callback = BlockWithSubLevelCollisionCallback.sable$getCallback(childState);
         final RapierVoxelColliderData entry = Rapier3D.createVoxelColliderEntry(friction, volume, restitution, liquid, callback);
+        
 
-        if (liquid) {
+        if (liquid > 0) {
             entry.addBox(JOMLConversion.ZERO, new Vector3d(1.0, 1.0, 1.0));
             return entry;
         }

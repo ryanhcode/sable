@@ -218,17 +218,17 @@ public class Rapier3D {
      * Adds a new voxel collider data entry.
      *
      * @param frictionMultiplier the friction multiplier
-     * @param isFluid            if the block should be treated as a fluid
+     * @param isFluid            if the block should be treated as a fluid, and if so its type
      * @param contactEvents      if the block has special contact event behavior
      * @return the ID of the new block collider data entry
      */
     @ApiStatus.Internal
-    protected static native int newVoxelCollider(double frictionMultiplier, double volume, double restitution, boolean isFluid, BlockSubLevelCollisionCallback contactEvents);
+    protected static native int newVoxelCollider(double frictionMultiplier, double volume, double restitution, int isFluid, BlockSubLevelCollisionCallback contactEvents);
 
     /**
      * Adds a new box to a voxel collider data entry.
      *
-     * @param index  the ID of the block physics data entry from {@link Rapier3D#newVoxelCollider(double, double, double, boolean, BlockSubLevelCollisionCallback)}}
+     * @param index  the ID of the block physics data entry from {@link Rapier3D#newVoxelCollider(double, double, double, int, BlockSubLevelCollisionCallback)}}
      * @param bounds a 6-long double array, formatted [minX, minY, minZ, maxX, maxY, maxZ]
      */
     @ApiStatus.Internal
@@ -237,7 +237,7 @@ public class Rapier3D {
     /**
      * Clears all boxes from a voxel collider data entry.
      *
-     * @param index the ID of the block physics data entry from {@link Rapier3D#newVoxelCollider(double, double, double, boolean, BlockSubLevelCollisionCallback)}}
+     * @param index the ID of the block physics data entry from {@link Rapier3D#newVoxelCollider(double, double, double, int, BlockSubLevelCollisionCallback)}}
      */
     @ApiStatus.Internal
     public static native void clearVoxelColliderBoxes(int index);
@@ -254,12 +254,12 @@ public class Rapier3D {
      * Allocates a new block physics data entry
      *
      * @param frictionMultiplier the friction multiplier
-     * @param isFluid            if the block should be treated as a fluid
+     * @param isFluid            if the block should be treated as a fluid, and if so its type
      * @param contactEvents      if the block has special contact event behavior
      * @return the handle of the new block physics data entry
      */
     @ApiStatus.Internal
-    public static RapierVoxelColliderData createVoxelColliderEntry(final double frictionMultiplier, final double volume, final double restitution, final boolean isFluid, final BlockSubLevelCollisionCallback contactEvents) {
+    public static RapierVoxelColliderData createVoxelColliderEntry(final double frictionMultiplier, final double volume, final double restitution, final int isFluid, final BlockSubLevelCollisionCallback contactEvents) {
         return new RapierVoxelColliderData(Rapier3D.newVoxelCollider(frictionMultiplier, volume, restitution, isFluid, contactEvents));
     }
 

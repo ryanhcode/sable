@@ -827,7 +827,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                                 if state.voxel_collider_map.voxel_colliders[(block.0 - 1) as usize]
                                     .as_ref()
                                     .unwrap()
-                                    .is_fluid
+                                    .fluid_type > 0
                                 {
                                     insert_block_octree(
                                         &mut octree_chunk.liquid_octree,
@@ -1008,7 +1008,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
                             .unwrap()
                             .as_ref()
                             .unwrap()
-                            .is_fluid
+                            .fluid_type > 0
                         {
                             insert_block_octree(
                                 &mut octree_chunk.liquid_octree,
