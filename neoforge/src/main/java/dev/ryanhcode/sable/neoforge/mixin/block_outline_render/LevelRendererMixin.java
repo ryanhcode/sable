@@ -62,7 +62,8 @@ public abstract class LevelRendererMixin {
 
         final Pose3dc pose = subLevel.renderPose();
 
-        this.sable$sublevelCamera.transform(camera, pose);
+        this.sable$sublevelCamera.setCamera(camera);
+        this.sable$sublevelCamera.setPose(pose);
         final Vec3 cameraPosition = this.sable$sublevelCamera.getPosition();
         final Vec3 realCameraPosition = camera.getPosition();
 

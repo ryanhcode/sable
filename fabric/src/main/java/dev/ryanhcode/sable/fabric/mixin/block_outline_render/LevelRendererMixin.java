@@ -1,22 +1,27 @@
 package dev.ryanhcode.sable.fabric.mixin.block_outline_render;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
+import dev.ryanhcode.sable.mixinhelpers.block_outline_render.SubLevelCamera;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaterniondc;
 import org.joml.Quaternionf;
-import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,46 +32,71 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Transforms block hover outlines for sublevels.
  */
-@Mixin(LevelRenderer.class)
+@Debug(export = true)
+@Mixin(value = LevelRenderer.class, priority = 400)
+// Make sure this applies first so the camera can be modified
 public abstract class LevelRendererMixin {
+
     // Storage vectors to avoid repeated allocation
-    private final @Unique Vector3d sable$localTranslationStorage = new Vector3d();
-    private final @Unique Vector3d sable$globalTranslationStorage = new Vector3d();
     private final @Unique Quaternionf sable$orientationStorage = new Quaternionf();
+    private final @Unique SubLevelCamera sable$sublevelCamera = new SubLevelCamera();
 
     @Shadow
     @Nullable
     private ClientLevel level;
 
-    @Shadow
-    protected static void renderShape(final PoseStack arg, final VertexConsumer arg2, final VoxelShape arg3, final double d, final double e, final double f, final float g, final float h, final float i, final float j) {
+    @Inject(method = "renderLevel", at = @At("HEAD"))
+    public void modifyCamera(final CallbackInfo ci, @Local(argsOnly = true) final LocalRef<Camera> cameraRef) {
+        this.sable$sublevelCamera.setCamera(cameraRef.get());
+        this.sable$sublevelCamera.setPose(null);
+        cameraRef.set(this.sable$sublevelCamera);
     }
 
-    @Inject(method = "renderHitOutline", at = @At("HEAD"), cancellable = true)
-    private void sable$preRenderHitOutline(final PoseStack ps, final VertexConsumer pConsumer, final Entity pEntity, final double pCamX, final double pCamY, final double pCamZ, final BlockPos blockPos, final BlockState blockState, final CallbackInfo ci) {
-        final ClientSubLevel subLevel = (ClientSubLevel) Sable.HELPER.getContaining(this.level, blockPos);
+    @Inject(method = "renderLevel", at = @At("TAIL"))
+    public void clearCamera(final CallbackInfo ci, @Local(argsOnly = true) final LocalRef<Camera> cameraRef) {
+        // This is important to make sure events fired after this mixin still have access to the camera
+        cameraRef.set(this.sable$sublevelCamera.getRenderCamera());
+        this.sable$sublevelCamera.clear();
+    }
+
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
+    private void sable$preRenderHitOutline(final LevelRenderer instance, final PoseStack poseStack, final VertexConsumer consumer, final Entity entity, final double camX, final double camY, final double camZ, final BlockPos pos, final BlockState state, final Operation<Void> original, @Local(argsOnly = true) final Camera camera) {
+        final ClientSubLevel subLevel = (ClientSubLevel) Sable.HELPER.getContaining(this.level, pos);
 
         if (subLevel == null) {
+            original.call(instance, poseStack, consumer, entity, camX, camY, camZ, pos, state);
             return;
         }
 
-        ps.pushPose();
+        poseStack.pushPose();
 
         final Pose3dc pose = subLevel.renderPose();
 
-        final Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        this.sable$sublevelCamera.setPose(pose);
+        final Vec3 cameraPosition = this.sable$sublevelCamera.getPosition();
 
-        final Vector3d globalTranslation = pose.position().sub(cameraPos.x, cameraPos.y, cameraPos.z, this.sable$globalTranslationStorage);
-        final Vector3d localTranslation = this.sable$localTranslationStorage.set(blockPos.getX(), blockPos.getY(), blockPos.getZ()).sub(pose.rotationPoint());
+        final Vector3dc position = pose.position();
+        final Vector3dc rotationPoint = pose.rotationPoint();
+        final Quaterniondc orientation = pose.orientation();
+        final Vector3dc scale = pose.scale();
 
-        // apply transforms
-        ps.translate(globalTranslation.x, globalTranslation.y, globalTranslation.z);
-        ps.mulPose(this.sable$orientationStorage.set(pose.orientation()));
-        ps.translate(localTranslation.x, localTranslation.y, localTranslation.z);
+        poseStack.translate(
+                (float) (position.x() - camX),
+                (float) (position.y() - camY),
+                (float) (position.z() - camZ)
+        );
+        poseStack.mulPose(this.sable$orientationStorage.set(orientation));
+        poseStack.translate(
+                (float) -(rotationPoint.x() - cameraPosition.x),
+                (float) -(rotationPoint.y() - cameraPosition.y),
+                (float) -(rotationPoint.z() - cameraPosition.z)
+        );
+        poseStack.scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
-        renderShape(ps, pConsumer, blockState.getShape(this.level, blockPos, CollisionContext.of(pEntity)), 0, 0, 0, 0.0F, 0.0F, 0.0F, 0.4F);
+        original.call(instance, poseStack, consumer, entity, cameraPosition.x, cameraPosition.y, cameraPosition.z, pos, state);
 
-        ps.popPose();
-        ci.cancel();
+        poseStack.popPose();
+
+        this.sable$sublevelCamera.setPose(null);
     }
 }
