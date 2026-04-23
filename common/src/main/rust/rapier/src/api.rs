@@ -1,4 +1,6 @@
-use fisher::{setup_trace, tracked_call};
+use core::slice;
+
+use fisher::tracked_call;
 use jni::{
     JNIEnv, JavaVM,
     objects::{JClass, JDoubleArray, JIntArray, JObject},
@@ -34,14 +36,6 @@ macro_rules! extract_jdouble_array {
     ($env:expr, $jarr:expr, $len:expr) => {{
         let mut arr = [0.0 as jdouble; $len];
         $env.get_double_array_region($jarr, 0, &mut arr).unwrap();
-        arr
-    }};
-}
-
-macro_rules! extract_jint_array {
-    ($env:expr, $jarr:expr, $len:expr) => {{
-        let mut arr = [0 as jint; $len];
-        $env.get_int_array_region($jarr, 0, &mut arr).unwrap();
         arr
     }};
 }
@@ -194,9 +188,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     z: jint,
     data: JIntArray<'local>,
 ) {
-    let ints = extract_jint_array!(env, data, 4096);
+    let mut buf = Box::<[i32; 4096]>::new_uninit();
+    env.get_int_array_region(data, 0, unsafe {
+        slice::from_raw_parts_mut((*buf).as_mut_ptr().cast(), 4096)
+    })
+    .expect("to copy int array");
+    let buf = unsafe { buf.assume_init() };
     tracked_call!(add_kinematic_contraption_chunk_section(
-        scene_id, id, x, y, z, &ints
+        scene_id, id, x, y, z, buf
     ));
 }
 
@@ -450,7 +449,6 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
     z: jdouble,
     universal_drag: jdouble,
 ) {
-    setup_trace();
     let vm = unsafe { JavaVM::from_raw(env.get_java_vm().unwrap().get_java_vm_pointer()).unwrap() };
     tracked_call!(initialize(Some(vm), scene_id, x, y, z, universal_drag));
 }
@@ -560,8 +558,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     global: jboolean,
     object_id: jint,
 ) {
-    let ints = extract_jint_array!(env, data, 4096);
-    tracked_call!(add_chunk(scene_id, x, y, z, &ints, global, object_id));
+    let mut buf = Box::<[i32; 4096]>::new_uninit();
+    env.get_int_array_region(data, 0, unsafe {
+        slice::from_raw_parts_mut((*buf).as_mut_ptr().cast(), 4096)
+    })
+    .expect("to copy int array");
+    let buf = unsafe { buf.assume_init() };
+    tracked_call!(add_chunk(scene_id, x, y, z, buf, global, object_id));
 }
 
 #[unsafe(no_mangle)]
@@ -934,4 +937,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cle
     index: jint,
 ) {
     tracked_call!(clear_voxel_collider_boxes(index));
+}
+#[cfg(feature = "recording")]
+#[ctor::ctor]
+pub fn ctor() {
+    fisher::setup_trace();
+}
+#[cfg(feature = "recording")]
+#[ctor::dtor]
+pub fn dtor() {
+    fisher::finish_trace();
 }

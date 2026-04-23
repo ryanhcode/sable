@@ -1,7 +1,7 @@
 #![allow(static_mut_refs)]
 
 pub mod algo;
-mod api;
+pub mod api;
 pub mod boxes;
 mod buoyancy;
 mod collider;
@@ -16,8 +16,8 @@ pub mod rope;
 mod scene;
 mod voxel_collider;
 
-use jni::sys::{jboolean, jdouble, jint};
 use jni::JavaVM;
+use jni::sys::{jboolean, jdouble, jint};
 use rapier3d::glamx::Quat;
 use rapier3d::math::Vector;
 use std::collections::HashMap;
@@ -664,13 +664,13 @@ pub fn add_chunk(
     x: jint,
     y: jint,
     z: jint,
-    ints: &[jint; 4096],
+    ints: Box<[jint; 4096]>,
     global: jboolean,
     object_id: jint,
 ) {
     let mut blocks = Vec::with_capacity(ints.len());
 
-    for block in ints {
+    for block in ints.into_iter() {
         // split it in half
         let block_collider_id = (block >> 16) as u16;
         let voxel_state_id = (block & 0xFFFF) as u16;
