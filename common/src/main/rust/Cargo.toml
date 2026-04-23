@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["fisher", "marten", "rapier"]
+members = ["fisher", "fisher-playback", "marten", "rapier"]
 
 [workspace.package]
 edition = "2024"
@@ -9,6 +9,7 @@ version = "0.1.0"
 [workspace.dependencies]
 marten = { path = "marten" }
 fisher = { path = "fisher" }
+sable_rapier = { path = "rapier" }
 
 log = "0.4.22"
 jni = "0.21.1"
@@ -22,4 +23,5 @@ lto = "thin"
 codegen-units = 1
 
 [profile.bench]
+inherits = "release"
 debug = true

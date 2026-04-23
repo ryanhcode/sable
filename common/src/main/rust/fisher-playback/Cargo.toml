@@ -1,0 +1,10 @@
+[package]
+name = "fisher-playback"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+sable_rapier = { workspace = true, features = ["recording"] }
+fisher.workspace = true
+clap = { version = "4.6", features = ["derive"] }
+clap_derive = { version = "4.6.1" }

@@ -23,9 +23,14 @@ macro_rules! decl_tracked_api {
             #[repr(u8)]
             #[derive(::std::fmt::Debug, ::std::marker::Copy, ::std::clone::Clone)]
             $v enum CallType {
-                $(
-                    $tok
-                ),+
+                $( $tok, )+
+                __Last,
+            }
+            impl CallType {
+                pub fn new(id: u8) -> Self {
+                    ::std::assert!(id < Self::__Last as u8);
+                    unsafe { core::mem::transmute::<u8, Self>(id) }
+                }
             }
             impl CallType {
                 pub fn as_trackable(self) -> &'static dyn $crate::imp::Trackable {
@@ -33,6 +38,7 @@ macro_rules! decl_tracked_api {
                         $(
                             Self::$tok => const { $crate::imp::require_trackable( &$tok ) }
                         ),+
+                        _ => ::std::unreachable!(),
                     }
                 }
             }
@@ -43,7 +49,7 @@ macro_rules! decl_tracked_api {
 pub const fn require_trackable<T: Trackable>(v: &'static T) -> &'static dyn Trackable {
     v
 }
-pub const fn require_argument_encoding<'a, T: ArgumentEncode<'a>>(_: &T) {}
+pub const fn require_argument_encoding<T: ArgumentEncode>(_: &T) {}
 
 #[diagnostic::on_unimplemented(
     message = "token `{Self}` is declared but has no tracked call. Instrument a call of this token with `tracked_call!`",
@@ -138,7 +144,7 @@ pub fn get_writer<'a>() -> MutexGuard<'a, Option<Writer>> {
     label = "this parameter doesn't implement `ArgumentEncode`",
     note = "in order to record and playback tracked calls all of their parameters must implement `ArgumentEncode`. Please add an implementation to `rust/fisher`"
 )]
-pub trait ArgumentEncode<'a>: Sized {
-    fn read(reader: &mut BorrowReader<'a>) -> Self;
+pub trait ArgumentEncode: Sized {
+    fn read(reader: &mut BorrowReader<'_>) -> Self;
     fn write(&self, writer: &mut impl Write) -> io::Result<()>;
 }

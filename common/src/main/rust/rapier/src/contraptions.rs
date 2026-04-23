@@ -159,10 +159,10 @@ pub fn add_kinematic_contraption_chunk_section(
     x: jint,
     y: jint,
     z: jint,
-    ints: &[i32; 4096],
+    ints: Box<[jint; 4096]>,
 ) {
     let mut blocks = Vec::with_capacity(ints.len());
-    for block in ints {
+    for block in ints.into_iter() {
         let block_collider_id = (block >> 16) as u16;
         let voxel_state_id = (block & 0xFFFF) as u16;
         blocks.push((
