@@ -324,6 +324,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
+name = "fisher"
+version = "0.1.0"
+dependencies = [
+ "jni",
+ "marten",
+]
+
+[[package]]
 name = "foldhash"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1012,6 +1020,7 @@ dependencies = [
  "criterion",
  "dashmap",
  "fern",
+ "fisher",
  "humantime",
  "jni",
  "log",
