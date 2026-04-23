@@ -20,27 +20,20 @@ import dev.ryanhcode.sable.sublevel.tracking_points.TrackingPoint;
 import dev.ryanhcode.sable.util.BoundedBitVolume3i;
 import dev.ryanhcode.sable.util.LevelAccelerator;
 import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DiodeBlock;
-import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.BellBlock;
-import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
@@ -291,37 +284,11 @@ public class SubLevelAssemblyHelper {
     /**
      * For what good is the movement of a king if his people do not follow?
      */
-    public static void moveBlocks(final ServerLevel level, final AssemblyTransform transform, Iterable<BlockPos> blocks) {
+    public static void moveBlocks(final ServerLevel level, final AssemblyTransform transform, final Iterable<BlockPos> blocks) {
         final ServerLevel resultingLevel = transform.resultingLevel;
 
         final LevelAccelerator accelerator = new LevelAccelerator(level);
         final LevelAccelerator resultingAccelerator = new LevelAccelerator(resultingLevel);
-
-        // Get Create's brittle and wrench_pickup tags.
-        final TagKey<Block> createBrittleTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "brittle"));
-        final TagKey<Block> createWrenchPickupTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("create", "wrench_pickup"));
-
-        final ObjectArrayList<BlockPos> newBlocks = new ObjectArrayList<>();
-        final ObjectArrayList<BlockPos> brittleBlocks = new ObjectArrayList<>();
-
-        // Check if blocks have Create's brittle tag or the wrench_pickup tag for redstone blocks.
-        for (final BlockPos pos : blocks) {
-            final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(pos.getX()),
-                    SectionPos.blockToSectionCoord(pos.getZ()));
-
-            final BlockState posState = chunk.getBlockState(pos);
-            final Block block = posState.getBlock();
-
-            // A bit of a dirty way of checking for affected blocks.
-            if (posState.is(createBrittleTag) || posState.is(createWrenchPickupTag)
-                    || block instanceof DiodeBlock || block instanceof TorchBlock || block instanceof SignBlock) { brittleBlocks.add(pos); continue; }
-            newBlocks.add(pos);
-        }
-
-        // Add all brittle blocks in the front of the blocks list so they are processed first.
-        newBlocks.addAll(0, brittleBlocks);
-
-        blocks = newBlocks;
 
         final List<BlockState> states = new ArrayList<>();
 
@@ -423,24 +390,36 @@ public class SubLevelAssemblyHelper {
             i++;
         }
 
-        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
-        // destroy all the old blocks
-        for (final BlockPos block : blocks) {
-            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
+        final BlockState subLevelState = Blocks.AIR.defaultBlockState();
 
+        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
+        // Replace all old blocks as barriers temporarily to prevent any brittle blocks from breaking.
+        for (final BlockPos block : blocks) {
+
+            try {
+                final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
+                        SectionPos.blockToSectionCoord(block.getZ()));
+
+                chunk.setBlockState(block, Blocks.BARRIER.defaultBlockState(), true);
+            } catch (final Exception e) {
+                Sable.LOGGER.error("Failed to replace old block into a temporary barrier during assembly {}", block, e);
+            }
+        }
+
+        // Destroy all temporary barriers.
+        for (final BlockPos block : blocks) {
             try {
                 final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
                         SectionPos.blockToSectionCoord(block.getZ()));
 
                 chunk.setBlockState(block, subLevelState, true);
             } catch (final Exception e) {
-                Sable.LOGGER.error("Failed to destroy old block during assembly {}", block, e);
+                Sable.LOGGER.error("Failed to destroy temporary barrier during assembly {}", block, e);
             }
         }
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, false);
 
         for (final BlockPos block : blocks) {
-            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
             resultingLevel.sendBlockUpdated(block, Blocks.STONE.defaultBlockState(), subLevelState, 3);
         }
     }
