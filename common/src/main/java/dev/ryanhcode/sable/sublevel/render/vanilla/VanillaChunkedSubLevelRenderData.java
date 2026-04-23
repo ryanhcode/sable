@@ -324,7 +324,6 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
             if (IrisCompat.isLoaded()) {
                 SableIrisCompat.refreshModelMatrices(shader);
             }
-
         }
 
         // TODO: sorting

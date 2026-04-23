@@ -38,8 +38,8 @@ public class ExtendedShaderMixin implements ExtendedShaderExtension {
     @Final
     private float[] tempFloats2;
 
-    @Override
     @Unique
+    @Override
     public void sable$refreshModelMatrices() {
         final var modelView = ((ShaderInstance) (Object) this).MODEL_VIEW_MATRIX;
 
