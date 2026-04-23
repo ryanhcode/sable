@@ -40,7 +40,7 @@ public class ExtendedShaderMixin implements ExtendedShaderExtension {
 
     @Override
     @Unique
-    public void sable$refreshModelViewDerivedMatrices() {
+    public void sable$refreshModelMatrices() {
         final var modelView = ((ShaderInstance) (Object) this).MODEL_VIEW_MATRIX;
 
         if (modelView != null) {
