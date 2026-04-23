@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 marten.workspace = true
+fisher = { workspace = true }
 
 fern.workspace = true
 jni.workspace = true
@@ -32,3 +33,9 @@ harness = false
 
 [dev-dependencies]
 criterion = "0.8.2"
+
+[features]
+#TODO remove
+default = ["recording"]
+
+recording = ["fisher/enabled"]

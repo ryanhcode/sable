@@ -1,0 +1,12 @@
+[package]
+name = "fisher"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+jni.workspace = true
+marten.workspace = true
+
+[features]
+enabled = []
+default = ["enabled"]

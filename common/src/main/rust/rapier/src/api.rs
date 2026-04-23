@@ -1,3 +1,4 @@
+use fisher::{setup_trace, tracked_call};
 use jni::{
     JNIEnv, JavaVM,
     objects::{JClass, JDoubleArray, JIntArray, JObject},
@@ -14,7 +15,7 @@ use crate::{
         add_kinematic_contraption_chunk_section, create_kinematic_contraption,
         remove_kinematic_contraption, set_kinematic_contraption_transform,
     },
-    create_sub_level, get_angular_velocity, get_pose, initialize,
+    create_sub_level, get_angular_velocity, get_linear_velocity, get_pose, initialize,
     joints::{
         add_fixed_constraint, add_free_constraint, add_generic_constraint, add_rotary_constraint,
         get_constraint_impulses, is_constraint_valid, remove_constraint,
@@ -43,6 +44,25 @@ macro_rules! extract_jint_array {
         $env.get_int_array_region($jarr, 0, &mut arr).unwrap();
         arr
     }};
+}
+
+fisher::decl_tracked_api! {
+    pub mod recording {
+        add_chunk, add_linear_velocities, apply_force, apply_force_and_torque, create_box, remove_box, change_block, clear_collisions,
+        config_frequency_and_damping, config_min_island_size, config_solver_iterations,
+        add_kinematic_contraption_chunk_section, create_kinematic_contraption,
+        remove_kinematic_contraption, set_kinematic_contraption_transform,
+        create_sub_level, get_angular_velocity, get_linear_velocity, get_pose, initialize,
+        add_fixed_constraint, add_free_constraint, add_generic_constraint, add_rotary_constraint,
+        get_constraint_impulses, is_constraint_valid, remove_constraint,
+        set_constraint_contacts_enabled, set_constraint_frame, set_constraint_motor,
+        remove_chunk, remove_sub_level,
+        add_rope_point_at_start, create_rope, query_rope, remove_rope, remove_rope_point_at_start,
+        set_rope_attachment, set_rope_first_segment_length, wake_up_rope,
+        set_center_of_mass, set_local_bounds, set_mass_properties, step, teleport_object, tick,
+        add_voxel_collider_box, clear_voxel_collider_boxes, new_voxel_collider,
+        wake_up_object,
+    }
 }
 
 /// Extracts a message from a caught panic payload
@@ -78,7 +98,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 ) {
     let pose_arr: [jdouble; 7] = extract_jdouble_array!(env, pose, 7);
 
-    create_box(
+    tracked_call!(create_box(
         scene_id,
         id,
         mass,
@@ -86,7 +106,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
         half_extent_y,
         half_extent_z,
         pose_arr,
-    );
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -96,7 +116,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     id: jint,
 ) {
-    remove_box(scene_id, id);
+    tracked_call!(remove_box(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -108,7 +128,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_con
     collision_natural_frequency: jdouble,
     collision_damping_ratio: jdouble,
 ) {
-    config_frequency_and_damping(collision_natural_frequency, collision_damping_ratio);
+    tracked_call!(config_frequency_and_damping(
+        collision_natural_frequency,
+        collision_damping_ratio
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -121,11 +144,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_con
     num_internal_pgs_iterations: jint,
     num_internal_stabilization_iterations: jint,
 ) {
-    config_solver_iterations(
+    tracked_call!(config_solver_iterations(
         num_solver_iterations,
         num_internal_pgs_iterations,
         num_internal_stabilization_iterations,
-    );
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -136,7 +159,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_con
     _class: JClass<'local>,
     island_size: jint,
 ) {
-    config_min_island_size(island_size);
+    tracked_call!(config_min_island_size(island_size));
 }
 
 #[unsafe(no_mangle)]
@@ -150,7 +173,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     id: jint,
     _pose: JDoubleArray<'local>,
 ) {
-    create_kinematic_contraption(scene_id, mount_id, id);
+    tracked_call!(create_kinematic_contraption(scene_id, mount_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -168,7 +191,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     let center_of_mass_arr = extract_jdouble_array!(env, center_of_mass, 3);
     let pose_arr = extract_jdouble_array!(env, pose, 7);
     let velocities_arr = extract_jdouble_array!(env, velocities, 6);
-    set_kinematic_contraption_transform(scene_id, id, center_of_mass_arr, pose_arr, velocities_arr);
+    tracked_call!(set_kinematic_contraption_transform(
+        scene_id,
+        id,
+        center_of_mass_arr,
+        pose_arr,
+        velocities_arr
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -185,7 +214,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     data: JIntArray<'local>,
 ) {
     let ints = extract_jint_array!(env, data, 4096);
-    add_kinematic_contraption_chunk_section(scene_id, id, x, y, z, &ints);
+    tracked_call!(add_kinematic_contraption_chunk_section(
+        scene_id, id, x, y, z, &ints
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -197,7 +228,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     id: jint,
 ) {
-    remove_kinematic_contraption(scene_id, id);
+    tracked_call!(remove_kinematic_contraption(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -215,7 +246,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     has_max_force: jboolean,
     max_force: jdouble,
 ) {
-    set_constraint_motor(
+    tracked_call!(set_constraint_motor(
         scene_id,
         joint_id,
         axis,
@@ -224,7 +255,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         damping,
         has_max_force,
         max_force,
-    );
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -236,7 +267,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isC
     scene_id: jint,
     joint_id: jlong,
 ) -> jboolean {
-    is_constraint_valid(scene_id, joint_id)
+    tracked_call!(is_constraint_valid(scene_id, joint_id))
 }
 
 #[unsafe(no_mangle)]
@@ -249,7 +280,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     joint_id: jlong,
     store: JDoubleArray<'local>,
 ) {
-    let arr = get_constraint_impulses(scene_id, joint_id);
+    let arr = tracked_call!(get_constraint_impulses(scene_id, joint_id));
     env.set_double_array_region(&store, 0, &arr).unwrap();
 }
 
@@ -263,7 +294,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     joint_id: jlong,
     enabled: jboolean,
 ) {
-    set_constraint_contacts_enabled(scene_id, joint_id, enabled);
+    tracked_call!(set_constraint_contacts_enabled(scene_id, joint_id, enabled));
 }
 
 #[unsafe(no_mangle)]
@@ -275,7 +306,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     joint_id: jlong,
 ) {
-    remove_constraint(scene_id, joint_id);
+    tracked_call!(remove_constraint(scene_id, joint_id));
 }
 
 #[unsafe(no_mangle)]
@@ -300,10 +331,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     axis_y_b: jdouble,
     axis_z_b: jdouble,
 ) -> jlong {
-    add_rotary_constraint(
+    tracked_call!(add_rotary_constraint(
         scene_id, id_a, id_b, local_x_a, local_y_a, local_z_a, local_x_b, local_y_b, local_z_b,
         axis_x_a, axis_y_a, axis_z_a, axis_x_b, axis_y_b, axis_z_b,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -326,10 +357,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     local_q_z: jdouble,
     local_q_w: jdouble,
 ) -> jlong {
-    add_fixed_constraint(
+    tracked_call!(add_fixed_constraint(
         scene_id, id_a, id_b, local_x_a, local_y_a, local_z_a, local_x_b, local_y_b, local_z_b,
         local_q_x, local_q_y, local_q_z, local_q_w,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -352,10 +383,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     local_q_z: jdouble,
     local_q_w: jdouble,
 ) -> jlong {
-    add_free_constraint(
+    tracked_call!(add_free_constraint(
         scene_id, id_a, id_b, local_x_a, local_y_a, local_z_a, local_x_b, local_y_b, local_z_b,
         local_q_x, local_q_y, local_q_z, local_q_w,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -383,7 +414,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     local_q_w_b: jdouble,
     locked_axes_mask: jint,
 ) -> jlong {
-    add_generic_constraint(
+    tracked_call!(add_generic_constraint(
         scene_id,
         id_a,
         id_b,
@@ -402,7 +433,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         local_q_z_b,
         local_q_w_b,
         locked_axes_mask,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -422,10 +453,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     local_q_z: jdouble,
     local_q_w: jdouble,
 ) {
-    set_constraint_frame(
+    tracked_call!(set_constraint_frame(
         scene_id, joint_id, side, local_x, local_y, local_z, local_q_x, local_q_y, local_q_z,
         local_q_w,
-    );
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -438,8 +469,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
     z: jdouble,
     universal_drag: jdouble,
 ) {
+    setup_trace();
     let vm = unsafe { JavaVM::from_raw(env.get_java_vm().unwrap().get_java_vm_pointer()).unwrap() };
-    initialize(Some(vm), scene_id, x, y, z, universal_drag);
+    tracked_call!(initialize(Some(vm), scene_id, x, y, z, universal_drag));
 }
 
 #[unsafe(no_mangle)]
@@ -449,8 +481,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
     scene_id: jint,
     _time_step: jdouble,
 ) {
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tick(scene_id)));
-    throw_on_panic(&mut env, result);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracked_call!(tick(scene_id)));
+    throw_on_panic(&mut env, result));
 }
 
 #[unsafe(no_mangle)]
@@ -460,7 +492,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
     scene_id: jint,
     time_step: jdouble,
 ) {
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| step(scene_id, time_step);));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracked_call!(step(scene_id, time_step));));
     throw_on_panic(&mut env, result);
 }
 
@@ -472,7 +504,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     id: jint,
     store: JDoubleArray<'local>,
 ) {
-    let arr: [jdouble; 7] = get_pose(scene_id, id);
+    let arr: [jdouble; 7] = tracked_call!(get_pose(scene_id, id));
     env.set_double_array_region(&store, 0, &arr).unwrap();
 }
 
@@ -488,7 +520,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     y: jdouble,
     z: jdouble,
 ) {
-    set_center_of_mass(scene_id, id, x, y, z);
+    tracked_call!(set_center_of_mass(scene_id, id, x, y, z));
 }
 
 #[unsafe(no_mangle)]
@@ -506,7 +538,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     max_y: jint,
     max_z: jint,
 ) {
-    set_local_bounds(scene_id, id, min_x, min_y, min_z, max_x, max_y, max_z);
+    tracked_call!(set_local_bounds(
+        scene_id, id, min_x, min_y, min_z, max_x, max_y, max_z
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -520,7 +554,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     pose: JDoubleArray<'local>,
 ) {
     let pose_arr = extract_jdouble_array!(env, pose, 7);
-    create_sub_level(scene_id, id, pose_arr);
+    tracked_call!(create_sub_level(scene_id, id, pose_arr));
 }
 
 #[unsafe(no_mangle)]
@@ -532,7 +566,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     id: jint,
 ) {
-    remove_sub_level(scene_id, id);
+    tracked_call!(remove_sub_level(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -548,7 +582,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     object_id: jint,
 ) {
     let ints = extract_jint_array!(env, data, 4096);
-    add_chunk(scene_id, x, y, z, &ints, global, object_id);
+    tracked_call!(add_chunk(scene_id, x, y, z, &ints, global, object_id));
 }
 
 #[unsafe(no_mangle)]
@@ -561,7 +595,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     z: jint,
     global: jboolean,
 ) {
-    remove_chunk(scene_id, x, y, z, global);
+    tracked_call!(remove_chunk(scene_id, x, y, z, global));
 }
 
 #[unsafe(no_mangle)]
@@ -574,7 +608,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
     z: jint,
     block: jint,
 ) {
-    change_block(scene_id, x, y, z, block);
+    tracked_call!(change_block(scene_id, x, y, z, block));
 }
 
 #[unsafe(no_mangle)]
@@ -592,7 +626,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     let com = extract_jdouble_array!(env, center_of_mass, 3);
     let inertia_arr = extract_jdouble_array!(env, inertia, 9);
 
-    set_mass_properties(scene_id, id, mass, com, inertia_arr);
+    tracked_call!(set_mass_properties(scene_id, id, mass, com, inertia_arr));
 }
 
 #[unsafe(no_mangle)]
@@ -611,7 +645,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tel
     k: jdouble,
     r: jdouble,
 ) {
-    teleport_object(scene_id, id, x, y, z, i, j, k, r);
+    tracked_call!(teleport_object(scene_id, id, x, y, z, i, j, k, r));
 }
 
 #[unsafe(no_mangle)]
@@ -623,7 +657,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     scene_id: jint,
     id: jint,
 ) {
-    wake_up_object(scene_id, id);
+    tracked_call!(wake_up_object(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -642,9 +676,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     angular_z: jdouble,
     wake_up: jboolean,
 ) {
-    add_linear_velocities(
+    tracked_call!(add_linear_velocities(
         scene_id, id, linear_x, linear_y, linear_z, angular_x, angular_y, angular_z, wake_up,
-    );
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -655,7 +689,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cle
     _class: JClass<'local>,
     scene_id: jint,
 ) -> JDoubleArray<'local> {
-    let arr = clear_collisions(scene_id);
+    let arr = tracked_call!(clear_collisions(scene_id));
     let double_array = _env.new_double_array(arr.len() as jint).unwrap();
     _env.set_double_array_region(&double_array, 0, &arr)
         .unwrap();
@@ -677,7 +711,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
     fz: jdouble,
     wake_up: jboolean,
 ) {
-    apply_force(scene_id, id, x, y, z, fx, fy, fz, wake_up);
+    tracked_call!(apply_force(scene_id, id, x, y, z, fx, fy, fz, wake_up));
 }
 
 #[unsafe(no_mangle)]
@@ -696,7 +730,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
     tz: jdouble,
     wake_up: jboolean,
 ) {
-    apply_force_and_torque(scene_id, id, fx, fy, fz, tx, ty, tz, wake_up);
+    tracked_call!(apply_force_and_torque(
+        scene_id, id, fx, fy, fz, tx, ty, tz, wake_up
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -709,7 +745,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     id: jint,
     store: JDoubleArray<'local>,
 ) {
-    _env.set_double_array_region(&store, 0, &get_angular_velocity(scene_id, id))
+    _env.set_double_array_region(&store, 0, &tracked_call!(get_linear_velocity(scene_id, id)))
         .unwrap();
 }
 
@@ -723,8 +759,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     id: jint,
     store: JDoubleArray<'local>,
 ) {
-    _env.set_double_array_region(&store, 0, &get_angular_velocity(scene_id, id))
-        .unwrap();
+    _env.set_double_array_region(
+        &store,
+        0,
+        &tracked_call!(get_angular_velocity(scene_id, id)),
+    )
+    .unwrap();
 }
 
 #[unsafe(no_mangle)]
@@ -740,13 +780,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     let mut coordinates = vec![0.0; (num_points * 3) as usize];
     env.get_double_array_region(points, 0, &mut coordinates)
         .unwrap();
-    create_rope(
+    tracked_call!(create_rope(
         scene_id,
         point_radius,
         first_joint_length,
         coordinates,
         num_points,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -756,7 +796,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_que
     scene_id: jint,
     id: jlong,
 ) -> JDoubleArray<'local> {
-    let flattened = query_rope(scene_id, id);
+    let flattened = tracked_call!(query_rope(scene_id, id));
     let double_array = env.new_double_array((flattened.len()) as jsize).unwrap();
     env.set_double_array_region(&double_array, 0, &flattened)
         .unwrap();
@@ -770,7 +810,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     id: jlong,
 ) {
-    remove_rope(scene_id, id);
+    tracked_call!(remove_rope(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -783,7 +823,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     id: jlong,
     length: jdouble,
 ) {
-    set_rope_first_segment_length(scene_id, id, length);
+    tracked_call!(set_rope_first_segment_length(scene_id, id, length));
 }
 
 #[unsafe(no_mangle)]
@@ -795,7 +835,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     scene_id: jint,
     id: jlong,
 ) {
-    remove_rope_point_at_start(scene_id, id);
+    tracked_call!(remove_rope_point_at_start(scene_id, id));
 }
 
 #[unsafe(no_mangle)]
@@ -810,7 +850,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     y: jdouble,
     z: jdouble,
 ) {
-    add_rope_point_at_start(scene_id, id, x, y, z);
+    tracked_call!(add_rope_point_at_start(scene_id, id, x, y, z));
 }
 
 #[unsafe(no_mangle)]
@@ -820,7 +860,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     scene_id: jint,
     rope_id: jlong,
 ) {
-    wake_up_rope(scene_id, rope_id);
+    tracked_call!(wake_up_rope(scene_id, rope_id));
 }
 
 #[unsafe(no_mangle)]
@@ -837,7 +877,15 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     z: jdouble,
     end: jboolean,
 ) {
-    set_rope_attachment(scene_id, rope_id, sub_level_id, x, y, z, end);
+    tracked_call!(set_rope_attachment(
+        scene_id,
+        rope_id,
+        sub_level_id,
+        x,
+        y,
+        z,
+        end
+    ));
 }
 
 #[unsafe(no_mangle)]
@@ -874,7 +922,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
     } else {
         None
     };
-    new_voxel_collider(
+    tracked_call!(new_voxel_collider(
         friction,
         volume,
         restitution,
@@ -882,7 +930,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
         dynamic,
         global_ref,
         global_method,
-    )
+    ))
 }
 
 #[unsafe(no_mangle)]
@@ -895,7 +943,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     box_bounds: JDoubleArray<'local>,
 ) {
     let bounds = extract_jdouble_array!(env, box_bounds, 6);
-    add_voxel_collider_box(index, bounds);
+    tracked_call!(add_voxel_collider_box(index, bounds));
 }
 
 #[unsafe(no_mangle)]
@@ -906,5 +954,5 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cle
     _class: JClass<'local>,
     index: jint,
 ) {
-    clear_voxel_collider_boxes(index);
+    tracked_call!(clear_voxel_collider_boxes(index));
 }
