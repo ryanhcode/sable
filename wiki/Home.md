@@ -64,6 +64,15 @@ repositories {
             includeGroup("dev.ryanhcode.sable-companion")
         }
     }
+
+    maven { //Veil
+        url "https://maven.blamejared.com"
+    }
+
+    maven { //Forge Config API Port
+        name = "Fuzs Mod Resources"
+        url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
+    }
 }
 
 dependencies {
@@ -91,6 +100,20 @@ repositories {
             includeGroup("dev.ryanhcode.sable")
             includeGroup("dev.ryanhcode.sable-companion")
         }
+    }
+
+    maven { //Registrate
+        name = "ithundxr's mavenSnapshots"
+        url = uri("https://maven.ithundxr.dev/snapshots")
+    }
+
+    maven { //Veil
+        url "https://maven.blamejared.com"
+    }
+
+    maven { //Forge Config API Port
+        name = "Fuzs Mod Resources"
+        url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
     }
 }
 
