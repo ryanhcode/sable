@@ -428,18 +428,20 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
     scene_id: jint,
     _time_step: jdouble,
 ) {
-    unsafe {
-        if let Some(state) = &mut PHYSICS_STATE {
-            rope::tick(scene_id);
-            joints::tick(scene_id);
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        unsafe {
+            if let Some(state) = &mut PHYSICS_STATE {
+                rope::tick(scene_id);
+                joints::tick(scene_id);
 
-            let Some(scene) = state.scenes.get_mut(&scene_id) else {
-                panic!("No scene with given ID!");
-            };
+                let Some(scene) = state.scenes.get_mut(&scene_id) else {
+                    return;
+                };
 
-            compute_buoyancy(scene);
+                compute_buoyancy(scene);
+            }
         }
-    }
+    }));
 }
 
 /// Steps physics
@@ -463,20 +465,26 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
 
             scene.manifold_info_map = SableManifoldInfoMap::default();
 
-            scene.pipeline.step(
-                scene.gravity,
-                &state.integration_parameters,
-                &mut scene.island_manager,
-                &mut scene.broad_phase,
-                &mut scene.narrow_phase,
-                &mut scene.rigid_body_set,
-                &mut scene.collider_set,
-                &mut scene.impulse_joint_set,
-                &mut scene.multibody_joint_set,
-                &mut scene.ccd_solver,
-                &scene.physics_hooks,
-                &scene.event_handler,
-            );
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                scene.pipeline.step(
+                    scene.gravity,
+                    &state.integration_parameters,
+                    &mut scene.island_manager,
+                    &mut scene.broad_phase,
+                    &mut scene.narrow_phase,
+                    &mut scene.rigid_body_set,
+                    &mut scene.collider_set,
+                    &mut scene.impulse_joint_set,
+                    &mut scene.multibody_joint_set,
+                    &mut scene.ccd_solver,
+                    &scene.physics_hooks,
+                    &scene.event_handler,
+                );
+            }));
+
+            if result.is_err() {
+                log::error!("Rapier physics step panicked, skipping this tick");
+            }
         }
     }
 }
