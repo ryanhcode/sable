@@ -3,7 +3,6 @@
   "values": [
     "minecraft:soul_sand",
     "minecraft:soul_soil",
-    "minecraft:soul_soil",
     "minecraft:honey_block",
     "minecraft:cactus",
     { "id": "create:belt", "required": false }]
