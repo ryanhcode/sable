@@ -61,7 +61,3 @@ reason = "Sable is out of date"
 [[dependencies.sable]]
 modId = "scalablelux"
 type = "incompatible"
-
-[[dependencies.sable]]
-modId = "littletiles"
-type = "incompatible"
