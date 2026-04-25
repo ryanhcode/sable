@@ -94,10 +94,10 @@ dependencies {
     compileOnly("maven.modrinth:iris:$iris_version") { transitive = false }
     compileOnly("maven.modrinth:sodium-extras:neoforge-${minecraft_version}-$sodiumextras_version") { transitive = false }
 
-    compileOnly "rearth.oritech:oritech-neoforge-${minecraft_version}:${oritech_version}"
-    compileOnly "software.bernie.geckolib:geckolib-neoforge-$minecraft_version:$geckolib_version"
-    compileOnly "earth.terrarium.athena:athena-neoforge-1.21:4.0.0"
-    compileOnly "dev.architectury:architectury-neoforge:$architectury_api_version"
+    implementation "rearth.oritech:oritech-neoforge-${minecraft_version}:${oritech_version}"
+    implementation "software.bernie.geckolib:geckolib-neoforge-$minecraft_version:$geckolib_version"
+    implementation "earth.terrarium.athena:athena-neoforge-1.21:4.0.0"
+    implementation "dev.architectury:architectury-neoforge:$architectury_api_version"
 
     jarJar(api("foundry.veil:veil-neoforge-${project.minecraft_version}:${project.veil_version}") {
         exclude group: "maven.modrinth"
