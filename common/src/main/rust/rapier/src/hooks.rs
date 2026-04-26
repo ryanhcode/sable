@@ -4,8 +4,8 @@ use jni::sys::{jdouble, jint, jvalue};
 use marten::Real;
 use marten::level::VoxelColliderData;
 use rapier3d::geometry::{Collider, SolverContact};
-use rapier3d::math::{Pose, Vec3, Vector};
-use rapier3d::na::Vector3;
+use rapier3d::glamx::DVec3;
+use rapier3d::math::{Pose, Vec3};
 use rapier3d::pipeline::{ContactModificationContext, PhysicsHooks};
 
 use crate::collider::LevelCollider;
@@ -37,7 +37,7 @@ impl PhysicsHooks for SablePhysicsHooks {
                 continue;
             }
 
-            let mut tangent_velo: Vector = Vector::ZERO;
+            let mut tangent_velo: Vec3 = Vec3::ZERO;
 
             let mut velocity = 0.0;
             let mut friction_multiplier = 1.0;
@@ -117,7 +117,7 @@ impl SablePhysicsHooks {
         contact: &SolverContact,
         collider_a: &Collider,
         level_collider_a: Option<&LevelCollider>,
-    ) -> Vector {
+    ) -> Vec3 {
         if let Some(level_collider_a) = level_collider_a
             && level_collider_a.id.is_some()
         {
@@ -131,11 +131,11 @@ impl SablePhysicsHooks {
                 let transform = collider_a.position();
                 return transform.transform_vector(fake_velo.velocity_at_point(
                     transform.inverse_transform_point(contact.point),
-                    Vector::ZERO,
+                    Vec3::ZERO,
                 ));
             };
         }
-        Vector::new(0.0, 0.0, 0.0)
+        Vec3::ZERO
     }
 }
 
@@ -143,25 +143,25 @@ fn handle_block_params(
     isometry: &Pose,
     _collider: &Collider,
     level_collider: Option<&LevelCollider>,
-    global_point: &Vector,
+    global_point: &Vec3,
     velocity: Real,
     manifold_index: usize,
     body_a: bool,
-) -> (Vector, bool, Real, Real) {
+) -> (Vec3, bool, Real, Real) {
     let state = unsafe { get_physics_state() };
     let scene = get_scene_mut(level_collider.unwrap().scene_id);
 
     let collider_info = level_collider.and_then(|lc| lc.id.map(|id| &scene.level_colliders[&(id)]));
 
-    let mut tangent_velo: Vector = Vector::ZERO;
+    let mut tangent_velo = Vec3::ZERO;
 
     if collider_info.is_some()
         && let Some(fake_velo) = collider_info.unwrap().fake_velocities
     {
-        tangent_velo += isometry.transform_vector(fake_velo.velocity_at_point(
-            isometry.inverse_transform_point(*global_point),
-            Vector::ZERO,
-        ));
+        tangent_velo += isometry.transform_vector(
+            fake_velo
+                .velocity_at_point(isometry.inverse_transform_point(*global_point), Vec3::ZERO),
+        );
     };
 
     // Get manifold info from the map
@@ -181,10 +181,9 @@ fn handle_block_params(
         manifold_info.col_b as u32
     };
 
-    let center_of_mass = collider_info.map_or(Vector3::zeros(), |b| b.center_of_mass.unwrap());
+    let center_of_mass = collider_info.map_or(DVec3::ZERO, |b| b.center_of_mass.unwrap());
     let local = isometry.inverse_transform_point(*global_point);
-    let block_coord_d: Vector3<f64> =
-        Vector3::new(local.x as f64, local.y as f64, local.z as f64) + center_of_mass;
+    let block_coord_d = local.as_dvec3() + center_of_mass;
 
     if block_id == 0 {
         return (tangent_velo, false, 1.0, 0.0);
@@ -245,11 +244,7 @@ fn handle_block_params(
         .get_double_array_region(arr, 0, &mut velo_arr)
         .unwrap();
 
-    let velo = Vec3::new(
-        velo_arr[0] as Real,
-        velo_arr[1] as Real,
-        velo_arr[2] as Real,
-    );
+    let velo = DVec3::from_array(*velo_arr.first_chunk().expect("const inbounds")).as_vec3();
 
     (
         tangent_velo + isometry.transform_vector(velo),

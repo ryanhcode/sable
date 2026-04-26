@@ -1,9 +1,11 @@
 //! A sparse voxel world.
 
 use crate::octree::SubLevelOctree;
+use glamx::{IVec3, Vec3};
 use jni::JNIEnv;
 use jni::descriptors::Desc;
 use jni::objects::{GlobalRef, JMethodID};
+use jni::sys::jdouble;
 
 /// log_2 of the size of a chunk
 pub const CHUNK_SHIFT: u8 = 4;
@@ -40,7 +42,7 @@ impl ChunkSection {
     /// # Safety
     /// This method assumes that the coordinate is > than 0 and < than `CHUNK_SIZE` on all axes.
     #[inline(always)]
-    fn get_index(&self, x: i32, y: i32, z: i32) -> usize {
+    fn get_index(&self, IVec3 { x, y, z }: IVec3) -> usize {
         (x + (z << 4) + (y << 8)) as usize
     }
 
@@ -49,8 +51,8 @@ impl ChunkSection {
     /// # Safety
     /// This method assumes that the coordinate is > than 0 and < than `CHUNK_SIZE` on all axes.
     /// If the coordinate is out of bounds, behavior is undefined.
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, state: BlockState) {
-        let index = self.get_index(x, y, z);
+    pub fn set_block(&mut self, pos: IVec3, state: BlockState) {
+        let index = self.get_index(pos);
         self.blocks[index] = state;
     }
 
@@ -59,8 +61,8 @@ impl ChunkSection {
     /// # Safety
     /// This method assumes that the coordinate is >= than 0 and < than `CHUNK_SIZE` on all axes.
     /// If the coordinate is out of bounds, behavior is undefined.
-    pub fn get_block(&self, x: i32, y: i32, z: i32) -> BlockState {
-        let index = self.get_index(x, y, z);
+    pub fn get_block(&self, pos: IVec3) -> BlockState {
+        let index = self.get_index(pos);
         unsafe { *self.blocks.get_unchecked(index) }
     }
 }
@@ -76,12 +78,26 @@ unsafe impl<'local> Desc<'local, JMethodID> for &SableMethodID {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct CollisionBox {
+    pub min: Vec3,
+    pub max: Vec3,
+}
+impl From<[jdouble; 6]> for CollisionBox {
+    fn from(value: [jdouble; 6]) -> Self {
+        let [min_x, min_y, min_z, max_x, max_y, max_z] = value.map(|v| v as f32);
+        Self {
+            min: Vec3::new(min_x, min_y, min_z),
+            max: Vec3::new(max_x, max_y, max_z),
+        }
+    }
+}
+
 /// The physics data of a blockstate
 #[derive(Debug)]
 pub struct VoxelColliderData {
     /// Collision boxes within the 0-1 voxel space.
-    /// Formatted [min_x, min_y, min_z, max_x, max_y, max_z]
-    pub collision_boxes: Vec<(f32, f32, f32, f32, f32, f32)>,
+    pub collision_boxes: Vec<CollisionBox>,
 
     /// If this should be treated as a fluid for buoyancy
     pub is_fluid: bool,
@@ -130,6 +146,12 @@ impl OctreeChunkSection {
             octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT),
             liquid_octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT),
         }
+    }
+}
+
+impl Default for OctreeChunkSection {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

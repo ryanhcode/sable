@@ -2,7 +2,7 @@ use crate::PHYSICS_STATE;
 use crate::scene::LevelColliderID;
 use rapier3d::dynamics::MassProperties;
 use rapier3d::geometry::{Shape, ShapeType, TypedShape};
-use rapier3d::math::Vector;
+use rapier3d::math::Vec3;
 use rapier3d::parry::bounding_volume::{Aabb, BoundingSphere};
 use rapier3d::prelude::*;
 use std::f32::consts::PI;
@@ -30,7 +30,7 @@ impl LevelCollider {
         }
     }
 
-    fn scaled(self, _scale: &Vector) -> Self {
+    fn scaled(self, _scale: &Vec3) -> Self {
         Self { ..self }
     }
 }
@@ -49,7 +49,7 @@ impl RayCast for LevelCollider {
 impl PointQuery for LevelCollider {
     fn project_local_point(
         &self,
-        _pt: Vector,
+        _pt: Vec3,
         _solid: bool,
     ) -> rapier3d::parry::query::PointProjection {
         todo!()
@@ -57,7 +57,7 @@ impl PointQuery for LevelCollider {
 
     fn project_local_point_and_get_feature(
         &self,
-        _pt: Vector,
+        _pt: Vec3,
     ) -> (rapier3d::parry::query::PointProjection, FeatureId) {
         todo!()
     }
@@ -67,47 +67,32 @@ impl Shape for LevelCollider {
     fn compute_local_aabb(&self) -> Aabb {
         if self.is_static {
             Aabb::new(
-                Vector::new(-WORLD_SIZE, -WORLD_SIZE, -WORLD_SIZE),
-                Vector::new(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE),
+                Vec3::new(-WORLD_SIZE, -WORLD_SIZE, -WORLD_SIZE),
+                Vec3::new(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE),
             )
         } else {
-            unsafe {
-                let Some(state) = &PHYSICS_STATE else {
-                    panic!("no physics state!")
-                };
+            let state = unsafe { PHYSICS_STATE.as_ref() }.expect("physics state to be present");
+            let scene = state.scenes.get(&self.scene_id).expect("scene");
 
-                let Some(scene) = state.scenes.get(&self.scene_id) else {
-                    panic!("No scene with given ID!");
-                };
+            let sable_body = &scene.level_colliders[&{ self.id.unwrap() }];
 
-                let sable_body = &scene.level_colliders[&{ self.id.unwrap() }];
+            let center_of_mass = sable_body.center_of_mass.unwrap();
+            let local_min = sable_body.local_bounds_min.unwrap();
+            let local_max = sable_body.local_bounds_max.unwrap();
+            //TODO this gets duplicated a lot, there should be a factory function on AABB for it.
+            let min = (local_min.as_dvec3() - center_of_mass).as_vec3();
 
-                let center_of_mass = sable_body.center_of_mass.unwrap();
-                let local_min = sable_body.local_bounds_min.unwrap();
-                let local_max = sable_body.local_bounds_max.unwrap();
+            let max = ((local_max + 1).as_dvec3() - center_of_mass).as_vec3();
 
-                let min = Vector::new(
-                    (local_min.x as f64 - center_of_mass.x) as Real,
-                    (local_min.y as f64 - center_of_mass.y) as Real,
-                    (local_min.z as f64 - center_of_mass.z) as Real,
-                );
-
-                let max = Vector::new(
-                    ((local_max.x + 1) as f64 - center_of_mass.x) as Real,
-                    ((local_max.y + 1) as f64 - center_of_mass.y) as Real,
-                    ((local_max.z + 1) as f64 - center_of_mass.z) as Real,
-                );
-
-                Aabb::new(min, max)
-            }
+            Aabb::new(min, max)
         }
     }
 
     fn compute_local_bounding_sphere(&self) -> BoundingSphere {
         if self.is_static {
-            BoundingSphere::new(Vector::ZERO, WORLD_SIZE)
+            BoundingSphere::new(Vec3::ZERO, WORLD_SIZE)
         } else {
-            BoundingSphere::new(Vector::ZERO, 1.0)
+            BoundingSphere::new(Vec3::ZERO, 1.0)
             // Bounding sphere that covers the entire bounding box
             // unsafe {
             //     let Some(state) = &PHYSICS_STATE else {
@@ -125,15 +110,15 @@ impl Shape for LevelCollider {
         Box::new(*self)
     }
 
-    fn scale_dyn(&self, scale: Vector, _num_subdivisions: u32) -> Option<Box<dyn Shape>> {
+    fn scale_dyn(&self, scale: Vec3, _num_subdivisions: u32) -> Option<Box<dyn Shape>> {
         Some(Box::new(self.scaled(&scale)))
     }
 
     fn mass_properties(&self, _density: Real) -> MassProperties {
         MassProperties {
             inv_mass: 0.0,
-            inv_principal_inertia: AngVector::new(0.0, 0.0, 0.0),
-            local_com: Vector::ZERO,
+            inv_principal_inertia: Vec3::ZERO,
+            local_com: Vec3::ZERO,
             principal_inertia_local_frame: Default::default(),
         }
     }

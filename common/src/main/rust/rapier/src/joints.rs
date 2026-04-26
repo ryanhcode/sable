@@ -8,9 +8,8 @@ use marten::Real;
 use rapier3d::dynamics::{
     GenericJointBuilder, JointAxesMask, JointAxis, RevoluteJointBuilder, SpringCoefficients,
 };
-use rapier3d::glamx::Quat;
-use rapier3d::math::Vector;
-use rapier3d::na::Vector3;
+use rapier3d::glamx::{DQuat, DVec3, Quat};
+use rapier3d::math::Vec3;
 use rapier3d::prelude::{FixedJointBuilder, ImpulseJointHandle};
 use std::collections::HashMap;
 
@@ -21,10 +20,10 @@ struct SubLevelJoint {
     id_a: Option<LevelColliderID>,
     id_b: Option<LevelColliderID>,
 
-    pos_a: Vector3<f64>,
-    pos_b: Vector3<f64>,
-    normal_a: Vector3<f64>,
-    normal_b: Vector3<f64>,
+    pos_a: DVec3,
+    pos_b: DVec3,
+    normal_a: DVec3,
+    normal_b: DVec3,
 
     rotation_a: Option<Quat>,
     rotation_b: Option<Quat>,
@@ -34,18 +33,9 @@ struct SubLevelJoint {
     fixed: bool,
     contacts_enabled: bool,
 }
-
+#[derive(Default)]
 pub struct SableJointSet {
     joints: HashMap<SableJointHandle, SubLevelJoint>,
-}
-
-impl SableJointSet {
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            joints: HashMap::new(),
-        }
-    }
 }
 
 pub fn tick(scene_id: jint) {
@@ -63,43 +53,31 @@ pub fn tick(scene_id: jint) {
             .unwrap();
         impulse_joint.data.contacts_enabled = joint.contacts_enabled;
         if !joint.fixed && joint.rotation_a.is_none() {
-            impulse_joint.data.set_local_axis1(Vector::new(
-                joint.normal_a.x as Real,
-                joint.normal_a.y as Real,
-                joint.normal_a.z as Real,
-            ));
+            impulse_joint.data.set_local_axis1(joint.normal_a.as_vec3());
         }
         let local_anchor_1 = joint.pos_a
-            - if let Some(id_a) = joint.id_a {
-                let rb_a = &scene.level_colliders[&id_a];
-                rb_a.center_of_mass.unwrap()
-            } else {
-                Vector3::new(0.0, 0.0, 0.0)
-            };
-        impulse_joint.data.set_local_anchor1(Vector::new(
-            local_anchor_1.x as Real,
-            local_anchor_1.y as Real,
-            local_anchor_1.z as Real,
-        ));
+            - joint
+                .id_a
+                .map(|v| scene.level_colliders[&v].center_of_mass.unwrap())
+                .unwrap_or_default();
+
+        impulse_joint
+            .data
+            .set_local_anchor1(local_anchor_1.as_vec3());
+
         if !joint.fixed && joint.rotation_b.is_none() {
-            impulse_joint.data.set_local_axis2(Vector::new(
-                joint.normal_b.x as Real,
-                joint.normal_b.y as Real,
-                joint.normal_b.z as Real,
-            ));
+            impulse_joint.data.set_local_axis2(joint.normal_b.as_vec3());
         }
         let local_anchor_2 = joint.pos_b
-            - if let Some(id_b) = joint.id_b {
-                let rb_b = &scene.level_colliders[&id_b];
-                rb_b.center_of_mass.unwrap()
-            } else {
-                Vector3::new(0.0, 0.0, 0.0)
-            };
-        impulse_joint.data.set_local_anchor2(Vector::new(
-            local_anchor_2.x as Real,
-            local_anchor_2.y as Real,
-            local_anchor_2.z as Real,
-        ));
+            - joint
+                .id_b
+                .map(|v| scene.level_colliders[&v].center_of_mass.unwrap())
+                .unwrap_or_default();
+
+        impulse_joint
+            .data
+            .set_local_anchor2(local_anchor_2.as_vec3());
+
         if let Some(rotation_a) = joint.rotation_a {
             impulse_joint.data.local_frame1.rotation = rotation_a;
         }
@@ -270,10 +248,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     };
 
     let revolute = RevoluteJointBuilder::new(
-        Vector::new(axis_x_a as Real, axis_y_a as Real, axis_z_a as Real).normalize(),
+        DVec3::new(axis_x_a, axis_y_a, axis_z_a)
+            .as_vec3()
+            .normalize(),
     )
-    .local_anchor1(Vector::ZERO)
-    .local_anchor2(Vector::ZERO)
+    .local_anchor1(Vec3::ZERO)
+    .local_anchor2(Vec3::ZERO)
     .softness(SpringCoefficients::new(
         JOINT_SPRING_FREQUENCY,
         JOINT_SPRING_DAMPING_RATIO,
@@ -300,11 +280,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
-            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
+            pos_a: DVec3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: DVec3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(axis_x_a, axis_y_a, axis_z_a),
-            normal_b: Vector3::new(axis_x_b, axis_y_b, axis_z_b),
+            normal_a: DVec3::new(axis_x_a, axis_y_a, axis_z_a),
+            normal_b: DVec3::new(axis_x_b, axis_y_b, axis_z_b),
 
             rotation_a: None,
             rotation_b: None,
@@ -353,15 +333,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         scene.rigid_bodies[&(id_b as LevelColliderID)]
     };
 
-    let quat = Quat::from_xyzw(
-        local_q_x as Real,
-        local_q_y as Real,
-        local_q_z as Real,
-        local_q_w as Real,
-    );
+    let quat = DQuat::from_xyzw(local_q_x, local_q_y, local_q_z, local_q_w).as_quat();
     let mut revolute = FixedJointBuilder::new()
-        .local_anchor1(Vector::ZERO)
-        .local_anchor2(Vector::ZERO)
+        .local_anchor1(Vec3::ZERO)
+        .local_anchor2(Vec3::ZERO)
         .softness(SpringCoefficients::new(
             JOINT_SPRING_FREQUENCY,
             JOINT_SPRING_DAMPING_RATIO,
@@ -389,11 +364,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
-            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
+            pos_a: DVec3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: DVec3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(0.0, 0.0, 0.0),
-            normal_b: Vector3::new(0.0, 0.0, 0.0),
+            normal_a: DVec3::ZERO,
+            normal_b: DVec3::ZERO,
 
             rotation_a: None,
             rotation_b: None,
@@ -446,13 +421,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         SpringCoefficients::new(JOINT_SPRING_FREQUENCY, JOINT_SPRING_DAMPING_RATIO),
     );
 
-    let quat = Quat::from_xyzw(
-        local_q_x as Real,
-        local_q_y as Real,
-        local_q_z as Real,
-        local_q_w as Real,
-    );
-    joint.0.local_frame1.rotation = quat;
+    joint.0.local_frame1.rotation =
+        DQuat::from_xyzw(local_q_x, local_q_y, local_q_z, local_q_w).as_quat();
 
     let handle = scene
         .impulse_joint_set
@@ -475,11 +445,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
-            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
+            pos_a: DVec3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: DVec3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(0.0, 0.0, 0.0),
-            normal_b: Vector3::new(0.0, 0.0, 0.0),
+            normal_a: DVec3::ZERO,
+            normal_b: DVec3::ZERO,
 
             rotation_a: None,
             rotation_b: None,
@@ -535,18 +505,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 
     let locked_axes = JointAxesMask::from_bits_truncate(locked_axes_mask as u8);
 
-    let rotation_a = Quat::from_xyzw(
-        local_q_x_a as Real,
-        local_q_y_a as Real,
-        local_q_z_a as Real,
-        local_q_w_a as Real,
-    );
-    let rotation_b = Quat::from_xyzw(
-        local_q_x_b as Real,
-        local_q_y_b as Real,
-        local_q_z_b as Real,
-        local_q_w_b as Real,
-    );
+    let rotation_a = DQuat::from_xyzw(local_q_x_a, local_q_y_a, local_q_z_a, local_q_w_a).as_quat();
+    let rotation_b = DQuat::from_xyzw(local_q_x_b, local_q_y_b, local_q_z_b, local_q_w_b).as_quat();
 
     let mut joint = GenericJointBuilder::new(locked_axes).softness(SpringCoefficients::new(
         JOINT_SPRING_FREQUENCY,
@@ -576,11 +536,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: DVec3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: DVec3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(0.0, 0.0, 0.0),
-            normal_b: Vector3::new(0.0, 0.0, 0.0),
+            normal_a: DVec3::ZERO,
+            normal_b: DVec3::ZERO,
 
             rotation_a: Some(rotation_a),
             rotation_b: Some(rotation_b),
@@ -617,13 +577,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         return;
     };
 
-    let position = Vector3::new(local_x as f64, local_y as f64, local_z as f64);
-    let rotation = Quat::from_xyzw(
-        local_q_x as Real,
-        local_q_y as Real,
-        local_q_z as Real,
-        local_q_w as Real,
-    );
+    let position = DVec3::new(local_x, local_y, local_z);
+    let rotation = DQuat::from_xyzw(local_q_x, local_q_y, local_q_z, local_q_w).as_quat();
 
     match side {
         0 => {

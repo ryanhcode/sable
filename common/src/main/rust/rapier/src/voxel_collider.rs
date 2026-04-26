@@ -4,12 +4,10 @@ use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray, JObject};
 use jni::sys::{jboolean, jdouble, jint};
 use marten::Real;
-use marten::level::{SableMethodID, VoxelColliderData};
-use rapier3d::na::Vector3;
+use marten::level::{CollisionBox, SableMethodID, VoxelColliderData};
+use rapier3d::glamx::IVec3;
 
 use crate::get_physics_state_mut;
-
-type IVec3 = Vector3<i32>;
 
 /// The physics data of a blockstate
 #[derive(Debug)]
@@ -113,14 +111,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         .unwrap();
 
     if let Some(data) = &mut state.voxel_collider_map.voxel_colliders[index as usize] {
-        data.collision_boxes.push((
-            bounds[0] as f32,
-            bounds[1] as f32,
-            bounds[2] as f32,
-            bounds[3] as f32,
-            bounds[4] as f32,
-            bounds[5] as f32,
-        ));
+        data.collision_boxes.push(CollisionBox::from(bounds));
     }
 }
 
