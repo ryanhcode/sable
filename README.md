@@ -46,3 +46,11 @@ View the [Sable Developer Wiki](https://github.com/ryanhcode/sable/wiki) for doc
 
 Unless otherwise stated, all content in this repository is licensed under [Polyform Shield License 1.0.0](LICENSE.md) by
 RyanHCode.
+
+## 💰 Bounty Contribution
+
+- **Task:** Server: Create + Sable
+- **Reward:** $7
+- **Source:** GitHub-Paid
+- **Date:** 2026-04-27
+
