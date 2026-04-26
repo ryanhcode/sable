@@ -87,23 +87,67 @@ macro_rules! tracked_call {
             };
 
             let mut w = $crate::imp::get_writer();
-            if let ::std::option::Option::Some(w) = &mut *w {
-                w.frame(TRACKED_ID).unwrap();
-                // TODO is there a way to drop w before calling f to shorten the critical section here?
-                $f($(
-                    {
-                        let arg = $arg;
-                        $crate::imp::ArgumentEncode::write(&arg, &mut **w).expect("write to succeed");
-                        arg
-                    }
-                ),*
-            )
+            if w.is_some() {
+                w.as_mut().unwrap().frame(TRACKED_ID).unwrap();
+                let mut w_opt = Some(w);
+                $crate::tracked_call! { is_last_arg($f, w_opt): () $( $arg ),* }
             } else {
-                drop(w);
                 $f( $( $arg ),* )
             }
         }
     };
+    // munch non-last arg
+    (
+        is_last_arg($f:ident, $w:ident): (
+            $( ($out:expr, $last:literal) ),*
+        )
+        $arg:expr, $( $args:expr ),+
+    ) => {
+        $crate::tracked_call! {
+            is_last_arg($f, $w): (
+                $( ( $out, $last ), )*
+                ($arg, false)
+            )
+            $( $args ),+
+        }
+    };
+    // munch last arg
+    (
+        is_last_arg($f:ident, $w:ident): (
+            $( ($out:expr, $last:literal) ),*
+        )
+        $arg:expr $(,)?
+    ) => {
+        $crate::tracked_call! {
+            is_last_arg($f, $w): (
+                $( ( $out, $last ), )*
+                ($arg, true)
+            )
+
+        }
+    };
+    // call with some args
+    ( is_last_arg($f:ident, $w:ident): ( $( ($arg:expr, $last:literal) ),+ ) ) => {
+        $f(
+            $(
+                {
+                    let arg = $arg;
+                    $crate::imp::ArgumentEncode::write(&arg, &mut **($w.as_deref_mut().map(Option::as_mut).flatten().expect("lock to be held"))).expect("write to succeed");
+                    if $last {
+                        // release lock on recording
+                        ::std::mem::drop(::std::mem::take(&mut $w));
+                    }
+                    arg
+                }
+            ),+
+        )
+    };
+    // call with no args
+    ( is_last_arg($f:ident, $w:ident): () ) => {
+        ::std::mem::drop($w);
+        $f()
+    };
+
 }
 
 pub struct Writer(BufWriter<File>);

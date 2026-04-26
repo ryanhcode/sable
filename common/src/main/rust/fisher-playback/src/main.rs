@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf, time::Instant};
+use std::{path::PathBuf, time::Instant};
 
 use clap::Parser;
 use fisher::imp::BorrowReader;
