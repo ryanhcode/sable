@@ -108,12 +108,12 @@ def compileRustTaskName = { target ->
 
 def commandLineForTarget(target) {
     if (target.triple.contains('msvc')) {
-        [project.ext.xWinCargo, 'xwin', 'build', '--target', target.triple].flatten()
+        [project.ext.xWinCargo, 'xwin', 'build', '--release', '--target', target.triple].flatten()
         // support meme platforms, this does nothing by default because the target is disabled
     } else if (target.triple == 'aarch64-unknown-freebsd') {
-        [project.ext.zigbuildCargo, 'zigbuild', '-Z', 'build-std', '--target', target.triple].flatten()
+        [project.ext.zigbuildCargo, 'zigbuild', '-Z', 'build-std', '--release', '--target', target.triple].flatten()
     } else {
-        [project.ext.zigbuildCargo, 'zigbuild', '--target', target.triple].flatten()
+        [project.ext.zigbuildCargo, 'zigbuild', '--release', '--target', target.triple].flatten()
     }
 }
 
@@ -170,7 +170,7 @@ tasks.register('copyRustNatives', Copy) {
 tasks.register('copyRustNativesDev', Copy) {
     group = 'rust'
     into nativesDir
-    mustRunAfter(buildRustNatives)
+    mustRunAfter(buildRustNativesDev)
 
     supportedTargets.forEach { target ->
         var library = file("$rustRootDir/target/debug/${if (target.lib) { "lib" } else { "" }}sable_rapier.${target.ext}")
