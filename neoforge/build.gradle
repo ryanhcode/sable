@@ -98,4 +98,5 @@ dependencies {
         exclude group: "maven.modrinth"
         exclude group: "me.fallenbreath"
     })
+    compileOnly("foundry.imguimc:imguimc-neoforge-${project.minecraft_version}:${project.imguimc_version}")
 }
