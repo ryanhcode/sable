@@ -32,7 +32,7 @@ public abstract class EntityMixin  {
             provider = SubLevel::logicalPose;
         }
 
-        final Quaterniond orientation = EntitySubLevelRotationHelper.getEntityOrientation((Entity) (Object) this, provider, 0.0f, EntitySubLevelRotationHelper.Type.CAMERA);
+        final Quaterniond orientation = EntitySubLevelRotationHelper.getEntityOrientation(Entity.class.cast(this), provider, 0.0f, EntitySubLevelRotationHelper.Type.CAMERA);
 
         if (orientation != null) {
             final Vec3 viewVector = cir.getReturnValue();

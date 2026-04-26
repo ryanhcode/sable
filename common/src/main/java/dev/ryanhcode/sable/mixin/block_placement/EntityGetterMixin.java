@@ -1,5 +1,8 @@
 package dev.ryanhcode.sable.mixin.block_placement;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
@@ -15,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.List;
 
@@ -30,41 +34,27 @@ public interface EntityGetterMixin {
     @Shadow
     List<? extends Player> players();
 
-    /**
-     * @author RyanH
-     * @reason Taking sub-levels into account
-     */
-    @Overwrite
-    default boolean isUnobstructed(@Nullable final Entity pEntity, final VoxelShape voxelShape) {
-        if (voxelShape.isEmpty()) {
-            return true;
-        } else {
-            for (final Entity entity : this.getEntities(pEntity, voxelShape.bounds())) {
-                final AABB entityBounds = entity.getBoundingBox();
+    @WrapOperation(method = "isUnobstructed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/shapes/Shapes;joinIsNotEmpty(Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/BooleanOp;)Z"))
+    default boolean joinIsNotEmptyIncludeSubLevel(final VoxelShape voxelShape, final VoxelShape EntityShape,
+                                                  final BooleanOp op, Operation<Boolean> original,
+                                                  @Local(ordinal = 1) final Entity entity) {
+        final AABB entityBounds = entity.getBoundingBox();
+        boolean fine = original.call(voxelShape, EntityShape, op);
 
-                boolean fine = Shapes.joinIsNotEmpty(voxelShape, Shapes.create(entityBounds), BooleanOp.AND);
+        final BoundingBox3d queryBounds = new BoundingBox3d(entityBounds);
+        queryBounds.expand(1.5, queryBounds);
+        final Iterable<SubLevel> intersecting = Sable.HELPER.getAllIntersecting(entity.level(), queryBounds);
 
-                final BoundingBox3d queryBounds = new BoundingBox3d(entityBounds);
-                queryBounds.expand(1.5, queryBounds);
-                final Iterable<SubLevel> intersecting = Sable.HELPER.getAllIntersecting(entity.level(), queryBounds);
+        for (final SubLevel subLevel : intersecting) {
+            if (fine) break;
 
-                for (final SubLevel subLevel : intersecting) {
-                    if (fine) continue;
-
-                    final BoundingBox3d bb = new BoundingBox3d(entityBounds);
-                    bb.transformInverse(subLevel.logicalPose(), bb);
-                    bb.expand(-0.75 / 16.0, bb);
-                    if (Shapes.joinIsNotEmpty(voxelShape, Shapes.create(bb.toMojang()), BooleanOp.AND))
-                        fine = true;
-                }
-
-                if (!entity.isRemoved() && entity.blocksBuilding && (pEntity == null || !entity.isPassengerOfSameVehicle(pEntity)) && fine) {
-                    return false;
-                }
-            }
-
-            return true;
+            final BoundingBox3d bb = new BoundingBox3d(entityBounds);
+            bb.transformInverse(subLevel.logicalPose(), bb);
+            bb.expand(-0.75 / 16.0, bb);
+            if (Shapes.joinIsNotEmpty(voxelShape, Shapes.create(bb.toMojang()), BooleanOp.AND))
+                fine = true;
         }
-    }
 
+        return fine;
+    }
 }

@@ -35,4 +35,12 @@ public abstract class EntityMixin implements EntityExtension {
     public Vec3 sable$vanillaCollide(final Vec3 vec3) {
         return this.collide(vec3);
     }
+
+    @Override
+    public void sable$withPos(final Vec3 pos, final Runnable run) {
+        Vec3 curentPos = position;
+        position = pos;
+        run.run();
+        position = curentPos;
+    }
 }

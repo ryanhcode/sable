@@ -1,5 +1,10 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.particles;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.simibubi.create.foundation.particle.AirParticle;
 import com.simibubi.create.foundation.particle.AirParticleData;
 import dev.ryanhcode.sable.Sable;
@@ -48,6 +53,8 @@ public abstract class AirParticleMixin extends SimpleAnimatedParticle implements
     @Shadow
     private Direction.Axis twirlAxis;
 
+    @Shadow private float originZ;
+
     protected AirParticleMixin(final ClientLevel arg, final double d, final double e, final double f, final SpriteSet arg2, final float g) {
         super(arg, d, e, f, arg2, g);
     }
@@ -62,35 +69,14 @@ public abstract class AirParticleMixin extends SimpleAnimatedParticle implements
         this.sable$targetZ = z + dz;
     }
 
-    /**
-     * @author RyanH
-     * @reason Fix target / origin handling with sub-levels
-     */
-    @Overwrite
-    public void tick() {
-        this.xo = this.x;
-        this.yo = this.y;
-        this.zo = this.z;
-        if (this.age++ >= this.lifetime) {
-            this.remove();
-            return;
-        }
-
-        final float progress = (float) Math.pow(((float) this.age) / this.lifetime, this.drag);
-        final float angle = (progress * 2 * 360 + this.twirlAngleOffset) % 360;
-        final Vec3 twirl = VecHelper.rotate(new Vec3(0, this.twirlRadius, 0), angle, this.twirlAxis);
-
-        final double desiredX = (Mth.lerp(progress, this.sable$originX, this.sable$targetX) + twirl.x);
-        final double desiredY = (Mth.lerp(progress, this.sable$originY, this.sable$targetY) + twirl.y);
-        final double desiredZ = (Mth.lerp(progress, this.sable$originZ, this.sable$targetZ) + twirl.z);
-        final Vector3d desiredVec = Sable.HELPER.projectOutOfSubLevel(this.level, new Vector3d(desiredX, desiredY, desiredZ));
-
-        this.xd = desiredVec.x - this.x;
-        this.yd = desiredVec.y - this.y;
-        this.zd = desiredVec.z - this.z;
-
-        this.setSpriteFromAge(this.sprites);
-        this.move(this.xd, this.yd, this.zd);
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;lerp(FFF)F", ordinal = 2))
+    private float make(float delta, float start, float end, Operation<Float> original,
+                       @Local(name = "x") final LocalFloatRef x, @Local(name = "y") final LocalFloatRef y) {
+        final float z = original.call(delta, start, end);
+        Vector3d desiredVec = Sable.HELPER.projectOutOfSubLevel(this.level, new Vector3d(x.get(), y.get(), z));
+        x.set((float)desiredVec.x);
+        y.set((float)desiredVec.y);
+        return (float) desiredVec.z;
     }
 
     @Override

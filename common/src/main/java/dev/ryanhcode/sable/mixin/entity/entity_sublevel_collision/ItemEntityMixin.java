@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import net.minecraft.world.entity.Entity;
@@ -21,8 +23,8 @@ public abstract class ItemEntityMixin extends Entity {
     /**
      * if we're tracking a sub-level, force us to tick more often
      */
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;horizontalDistanceSqr()D"))
-    private double sable$shouldTickPhysics(final Vec3 instance) {
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;horizontalDistanceSqr()D"))
+    private double sable$shouldTickPhysics(final Vec3 instance, Operation<Double> original) {
         if (Sable.HELPER.getTrackingSubLevel(this) != null)
             return 1.0;
 

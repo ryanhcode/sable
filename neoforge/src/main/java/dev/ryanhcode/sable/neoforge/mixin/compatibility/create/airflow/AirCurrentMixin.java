@@ -43,14 +43,14 @@ public abstract class AirCurrentMixin {
         }
     }
 
-    @Redirect(method = "tickAffectedEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    public AABB sable$reverseProjectEntityBB(final Entity instance) {
+    @WrapOperation(method = "tickAffectedEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
+    public AABB sable$reverseProjectEntityBB(final Entity instance, Operation<AABB> original) {
         final SubLevel subLevel = this.sable$subLevelReference.get();
         if (subLevel != null) {
-            return new BoundingBox3d(instance.getBoundingBox()).transformInverse(subLevel.logicalPose(), new BoundingBox3d()).toMojang();
+            return new BoundingBox3d(original.call(instance)).transformInverse(subLevel.logicalPose(), new BoundingBox3d()).toMojang();
         }
 
-        return instance.getBoundingBox();
+        return original.call(instance);
     }
 
     @WrapOperation(method = "tickAffectedEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
@@ -71,14 +71,14 @@ public abstract class AirCurrentMixin {
         original.call(instance, vec3);
     }
 
-    @Redirect(method = "tickAffectedEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;position()Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 sable$reverseProjectAllPositions(final Entity instance) {
+    @WrapOperation(method = "tickAffectedEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;position()Lnet/minecraft/world/phys/Vec3;"))
+    public Vec3 sable$reverseProjectAllPositions(final Entity instance, Operation<Vec3> original) {
         final SubLevel subLevel = this.sable$subLevelReference.get();
         if (subLevel != null) {
-            return subLevel.logicalPose().transformPositionInverse(instance.position());
+            return subLevel.logicalPose().transformPositionInverse(original.call(instance));
         }
 
-        return instance.position();
+        return original.call(instance);
     }
 
 }

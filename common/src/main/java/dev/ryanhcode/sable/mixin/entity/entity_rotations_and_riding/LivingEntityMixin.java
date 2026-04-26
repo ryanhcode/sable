@@ -71,15 +71,15 @@ public abstract class LivingEntityMixin extends Entity{
         original.call(instance, pos.x, pos.y, pos.z);
     }
 
-    @Redirect(method = "dismountVehicle", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(DD)D"))
-    public double sable$maxAltitude(final double a, final double b, @Local(argsOnly = true) final Entity vehicle) {
+    @WrapOperation(method = "dismountVehicle", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(DD)D"))
+    public double sable$maxAltitude(final double a, final double b, Operation<Double> original, @Local(argsOnly = true) final Entity vehicle) {
         final Vec3 vehiclePos = vehicle.position();
         final SubLevel subLevel = Sable.HELPER.getContaining(vehicle);
 
         if (subLevel != null) {
-            return Math.max(this.getY(), subLevel.logicalPose().transformPosition(vehiclePos).y);
+            return original.call(this.getY(), subLevel.logicalPose().transformPosition(vehiclePos).y);
         } else {
-            return Math.max(a, b);
+            return original.call(a, b);
         }
     }
 

@@ -4,6 +4,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.index.SableTags;
@@ -106,9 +108,10 @@ public abstract class EntityMixin implements EntityMovementExtension {
         }
     }
 
-    @Redirect(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 sable$collideRedirect(final Entity entity, final Vec3 collisionMotion) {
-        final Entity self = (Entity) (Object) this;
+
+    @WrapOperation(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    public Vec3 sable$collideRedirect(final Entity entity, final Vec3 collisionMotion, Operation<Vec3> original) {
+        final Entity self = Entity.class.cast(this);
         final Vec3 motion = collisionMotion;
 
         Vec3 velocity = Vec3.ZERO;
@@ -155,7 +158,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
 //        }
 
         final Vec3 beforeVanillaCollision = this.sable$collisionInfo.motion;
-        final Vec3 afterVanillaCollision = this.collide(beforeVanillaCollision);
+        final Vec3 afterVanillaCollision = original.call(entity, beforeVanillaCollision);
 
         final boolean xCollision = !Mth.equal(beforeVanillaCollision.x, afterVanillaCollision.x);
         final boolean zCollision = !Mth.equal(beforeVanillaCollision.z, afterVanillaCollision.z);
@@ -220,7 +223,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
     public void sable$tickInject(final CallbackInfo ci) {
         final ActiveSableCompanion helper = Sable.HELPER;
         final Entity vehicle = this.getVehicle();
-        final SubLevel containingSubLevel = helper.getContaining((Entity) (Object) this);
+        final SubLevel containingSubLevel = helper.getContaining(Entity.class.cast(this));
 
         // we can't both be tracking a sub-level and be in one
         if (containingSubLevel != null) {
@@ -248,38 +251,22 @@ public abstract class EntityMixin implements EntityMovementExtension {
         }
     }
 
-    /**
-     * @return the position that the state returned by getInBlockState was gotten from
-     */
-    @Override
-    public BlockPos sable$getInBlockStatePos() {
-        return this.sable$inBlockStatePos;
-    }
-
-    /**
-     * @author RyanH
-     * @reason Take into account sub-levels
-     */
-    @Overwrite
-    public BlockState getInBlockState() {
-        final Level level = this.level();
-
-        if (this.inBlockState == null || this.sable$trackingSubLevel != null) {
-            this.inBlockState = level.getBlockState(this.blockPosition);
-            this.sable$inBlockStatePos = this.blockPosition;
-
-            final Iterable<SubLevel> intersecting = Sable.HELPER.getAllIntersecting(this.level, new BoundingBox3d(this.blockPosition));
+    @WrapOperation(method = "getInBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
+    private BlockState getInBlockSTateIncludeSubLevels(Level instance, BlockPos blockPos, Operation<BlockState> original) {
+        BlockState state = original.call(instance, blockPos);
+        this.sable$inBlockStatePos = blockPos;
+        if (this.sable$trackingSubLevel != null) {
+            final Iterable<SubLevel> intersecting = Sable.HELPER.getAllIntersecting(instance, new BoundingBox3d(blockPos));
 
             final Iterator<SubLevel> iter = intersecting.iterator();
-            while (this.inBlockState.isAir() && iter.hasNext()) {
+            while (state.isAir() && iter.hasNext()) {
                 final SubLevel subLevel = iter.next();
                 final BlockPos localBlockPos = BlockPos.containing(subLevel.logicalPose().transformPositionInverse(this.position.add(0.0, 0.001, 0.0)));
-                this.inBlockState = level.getBlockState(localBlockPos);
+                state = original.call(instance, localBlockPos);
                 this.sable$inBlockStatePos = localBlockPos;
             }
         }
-
-        return this.inBlockState;
+        return state;
     }
 
     /**

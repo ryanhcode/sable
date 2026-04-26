@@ -1,7 +1,9 @@
 package dev.ryanhcode.sable.mixin.entity.entities_stick_sublevels;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
@@ -24,7 +26,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
@@ -119,13 +120,10 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntitySt
         return this.sable$getDifference(true).z;
     }
 
-    @Redirect(method = "calculateEntityAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;updateWalkAnimation(F)V"))
-    private void sable$walkAnimation(final LivingEntity instance, final float g, final boolean pIncludeHeight) {
+    @WrapOperation(method = "calculateEntityAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;length(DDD)D"))
+    private double sable$walkAnimation(double xDistance, double yDistance, double zDistance, Operation<Double> original, @Local(argsOnly = true) boolean pIncludeHeight) {
         final Vec3 delta = this.sable$getDifference(false);
-        final float f = (float) Mth.length(delta.x, pIncludeHeight ? delta.y : 0.0D, delta.z);
-
-        this.updateWalkAnimation(f);
-
+        return original.call(delta.x, pIncludeHeight?delta.y : 0.0D, delta.z);
     }
 
     @Unique

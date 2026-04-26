@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.plot;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
@@ -51,9 +53,9 @@ public class ChunkMapMixin {
      * Instead of only letting the server stop when the updating chunk map is empty, we stop when it is empty of **plot chunks**, because plot chunks do not unload through vanilla means.
      * TODO: Remove when plot chunks are unloaded with their plots
      */
-    @Redirect(method = "hasWork", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z", ordinal = 1, remap = false))
-    private boolean sable$hasWork(final Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingChunkMap) {
-        return !updatingChunkMap.values().stream().anyMatch(chunkHolder -> !(chunkHolder instanceof PlotChunkHolder));
+    @WrapOperation(method = "hasWork", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z", ordinal = 1, remap = false))
+    private boolean sable$hasWork(final Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingChunkMap, Operation<Boolean> original) {
+        return original.call(updatingChunkMap) || !updatingChunkMap.values().stream().anyMatch(chunkHolder -> !(chunkHolder instanceof PlotChunkHolder));
     }
 
     @Inject(method = "isChunkTracked", at = @At(value = "HEAD"), cancellable = true)

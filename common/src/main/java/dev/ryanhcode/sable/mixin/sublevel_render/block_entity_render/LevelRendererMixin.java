@@ -63,7 +63,7 @@ public class LevelRendererMixin {
     }
 
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V", ordinal = 1))
-    public <E extends BlockEntity> void sable$renderBlockEntities(final BlockEntityRenderDispatcher instance, final E blockEntity, final float pt, final PoseStack poseStack, final MultiBufferSource multiBufferSource, final Operation<Void> original, @Local final Camera camera) {
+    public <E extends BlockEntity> void sable$renderBlockEntities(final BlockEntityRenderDispatcher instance, final E blockEntity, final float pt, final PoseStack poseStack, final MultiBufferSource multiBufferSource, final Operation<Void> original, @Local(argsOnly = true) final Camera camera) {
         final ClientSubLevel subLevel = Sable.HELPER.getContainingClient(blockEntity);
         if (subLevel == null) {
             original.call(instance, blockEntity, pt, poseStack, multiBufferSource);

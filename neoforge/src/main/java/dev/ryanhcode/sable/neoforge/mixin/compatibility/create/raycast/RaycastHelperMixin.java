@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.raycast;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.foundation.utility.RaycastHelper;
 import dev.ryanhcode.sable.Sable;
@@ -27,8 +29,8 @@ import static dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.rayc
 public class RaycastHelperMixin {
 
 
-    @Redirect(method = "getTraceTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$rotateWithSublevels(final Vec3 instance, final double pX, final double pY, final double pZ, @Local(argsOnly = true) final Player player) {
+    @WrapOperation(method = "getTraceTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$rotateWithSublevels(final Vec3 instance, final double pX, final double pY, final double pZ, Operation<Vec3> original, @Local(argsOnly = true) final Player player) {
         Vec3 resultTarget = new Vec3(pX, pY, pZ);
 
         final Entity vehicle = player.getVehicle();
@@ -44,7 +46,7 @@ public class RaycastHelperMixin {
             }
         }
 
-        return instance.add(resultTarget);
+        return original.call(instance, resultTarget.x, resultTarget.y, resultTarget.z);
     }
 
     @Inject(method = "rayTraceUntil(Lnet/minecraft/world/entity/player/Player;DLjava/util/function/Predicate;)Lcom/simibubi/create/foundation/utility/RaycastHelper$PredicateTraceResult;",

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.trains;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.contraptions.render.ContraptionVisual;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
@@ -27,13 +29,13 @@ public abstract class CarriageContraptionVisualMixin extends ContraptionVisual<C
         super(ctx, entity, partialTick);
     }
 
-    @Redirect(method = "animate", at = @At(value = "INVOKE", target = "Ldev/engine_room/flywheel/lib/transform/PoseTransformStack;translate(Lorg/joml/Vector3fc;)Ldev/engine_room/flywheel/lib/transform/Translate;"))
-    private Translate sable$translate(final PoseTransformStack instance, final Vector3fc vector3fc, @Local final Vector3f visualPosition, @Local(argsOnly = true) final float partialTick) {
+    @WrapOperation(method = "animate", at = @At(value = "INVOKE", target = "Ldev/engine_room/flywheel/lib/transform/PoseTransformStack;translate(Lorg/joml/Vector3fc;)Ldev/engine_room/flywheel/lib/transform/Translate;"))
+    private Translate sable$translate(final PoseTransformStack instance, final Vector3fc vector3fc, Operation<Translate> original, @Local final Vector3f visualPosition, @Local(argsOnly = true) final float partialTick) {
         final Vec3 pos = this.entity.position();
         final SubLevelContainer container = SubLevelContainer.getContainer(this.entity.level());
 
         if (container == null) {
-            instance.translate(vector3fc);
+            original.call(instance, vector3fc);
             return instance;
         }
 
@@ -41,7 +43,7 @@ public abstract class CarriageContraptionVisualMixin extends ContraptionVisual<C
         final boolean inBounds = container.inBounds(chunkPos);
 
         if (!inBounds) {
-            instance.translate(vector3fc);
+            original.call(instance, vector3fc);
             return instance;
         }
 
@@ -51,7 +53,7 @@ public abstract class CarriageContraptionVisualMixin extends ContraptionVisual<C
         final FlywheelCompatNeoForge.SubLevelFlwRenderState state = FlywheelCompatNeoForge.getInfo(ChunkPos.asLong(plotX, plotZ));
 
         if (state == null) {
-            instance.translate(vector3fc);
+            original.call(instance, vector3fc);
             return instance;
         }
 

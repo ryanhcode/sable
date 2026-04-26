@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_rotations_and_riding;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
@@ -50,15 +52,16 @@ public abstract class PlayerMixin extends LivingEntity {
         upDeltaMovement.set(dir.mul(dir.dot(deltaMovement.x, deltaMovement.y, deltaMovement.z)));
     }
 
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(DDD)V"))
+    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(DDD)V"))
     private void sable$modifyTravelSetDeltaMovement(final Player instance,
                                                     final double x,
                                                     final double y,
                                                     final double z,
+                                                    Operation<Void> original,
                                                     @Share("upDir") final LocalRef<Vector3d> upDir,
                                                     @Share("upDeltaMovement") final LocalRef<Vector3d> upDeltaMovement) {
         if (upDeltaMovement.get() == null) {
-            instance.setDeltaMovement(x, y, z);
+            original.call(instance, x, y, z);
             return;
         }
 
@@ -66,20 +69,21 @@ public abstract class PlayerMixin extends LivingEntity {
         final double dot = upDir.get().dot(deltaMovement.x, deltaMovement.y, deltaMovement.z);
 
         final double scalar = 0.6;
-        this.setDeltaMovement(deltaMovement
+        final Vec3 finalDeltaMovement = deltaMovement
                 .subtract(dot * upDir.get().x, dot * upDir.get().y, dot * upDir.get().z)
-                .add(upDeltaMovement.get().x * scalar, upDeltaMovement.get().y * scalar, upDeltaMovement.get().z * scalar));
+                .add(upDeltaMovement.get().x * scalar, upDeltaMovement.get().y * scalar, upDeltaMovement.get().z * scalar);
+        original.call(instance, finalDeltaMovement.x, finalDeltaMovement.y, finalDeltaMovement.z);
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;minmax(Lnet/minecraft/world/phys/AABB;)Lnet/minecraft/world/phys/AABB;"))
-    public AABB sable$fixRidingBoundingBox(final AABB usBoundingBox, AABB vehicleBoundingBox) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;minmax(Lnet/minecraft/world/phys/AABB;)Lnet/minecraft/world/phys/AABB;"))
+    public AABB sable$fixRidingBoundingBox(final AABB usBoundingBox, AABB vehicleBoundingBox, Operation<AABB> original) {
         final Entity vehicle = this.getVehicle();
         final SubLevel vehicleSubLevel = Sable.HELPER.getContaining(vehicle);
-        if (vehicleSubLevel == null) return usBoundingBox.minmax(vehicleBoundingBox);
+        if (vehicleSubLevel == null) return original.call(usBoundingBox, vehicleBoundingBox);
 
         final BoundingBox3d bb = new BoundingBox3d(vehicleBoundingBox);
         vehicleBoundingBox = bb.transform(vehicleSubLevel.logicalPose(), bb).toMojang();
 
-        return usBoundingBox.minmax(vehicleBoundingBox);
+        return original.call(usBoundingBox, vehicleBoundingBox);
     }
 }

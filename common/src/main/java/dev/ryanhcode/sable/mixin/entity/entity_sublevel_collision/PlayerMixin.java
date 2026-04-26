@@ -1,7 +1,8 @@
 package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinhelpers.CanFallAtleastHelper;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -126,12 +127,8 @@ public abstract class PlayerMixin extends LivingEntity {
         return CanFallAtleastHelper.canFallAtleastWithSubLevels(this.level(), boundsToCheck) == null;
     }
 
-    @Redirect(method = "canFallAtLeast", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;noCollision(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Z"))
-    private boolean sable$noCollision(final Level level, final Entity entity, final AABB aabb) {
-        final boolean original = level.noCollision(entity, aabb);
-
-        if (!original) return false;
-
-        return CanFallAtleastHelper.canFallAtleastWithSubLevels(level, aabb) == null;
+    @WrapOperation(method = "canFallAtLeast", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;noCollision(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Z"))
+    private boolean sable$noCollision(final Level level, final Entity entity, final AABB aabb, Operation<Boolean> original) {
+        return original.call(level, entity, aabb) && (CanFallAtleastHelper.canFallAtleastWithSubLevels(level, aabb) == null);
     }
 }

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
@@ -23,14 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(WalkNodeEvaluator.class)
 public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBlockY()I"))
-    private int sable$redirectGetBlockY(final Mob mob) {
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBlockY()I"))
+    private int sable$redirectGetBlockY(final Mob mob, Operation<Integer> original) {
         final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(mob);
 
         if (trackingSubLevel != null) {
             return Mth.floor(trackingSubLevel.logicalPose().transformPositionInverse(mob.position()).y);
         } else {
-            return mob.getBlockY();
+            return original.call(mob);
         }
     }
     @Inject(method = "getStart", at = @At("HEAD"))
@@ -39,29 +41,35 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
         if (trackingSubLevel != null) {
             mobPosition.set(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()));
-        } else {
-            mobPosition.set(this.mob.position());
         }
     }
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getX()D"))
-    private double sable$redirectGetX(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().x;
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getX()D"))
+    private double sable$redirectGetX(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().x;
+        return original.call(mob);
     }
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getZ()D"))
-    private double sable$redirectGetZ(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().z;
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getZ()D"))
+    private double sable$redirectGetZ(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().z;
+        return original.call(mob);
     }
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getY()D"))
-    private double sable$redirectGetY(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().y;
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getY()D"))
+    private double sable$redirectGetY(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().y;
+        return original.call(mob);
     }
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;blockPosition()Lnet/minecraft/core/BlockPos;"))
-    private BlockPos sable$redirectBlockPosition(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return BlockPos.containing(mobPosition.get());
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;blockPosition()Lnet/minecraft/core/BlockPos;"))
+    private BlockPos sable$redirectBlockPosition(final Mob mob, Operation<BlockPos> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return BlockPos.containing(mobPosition.get());
+        return original.call(mob);
     }
 
 
@@ -71,8 +79,6 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
         if (trackingSubLevel != null) {
             mobPosition.set(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()));
-        } else {
-            mobPosition.set(this.mob.position());
         }
     }
 
@@ -82,29 +88,35 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
     }
 
 
-    @Redirect(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getX()D"))
-    private double sable$redirectGetX2(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().x;
+    @WrapOperation(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getX()D"))
+    private double sable$redirectGetX2(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().x;
+        return original.call(mob);
     }
 
-    @Redirect(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getZ()D"))
-    private double sable$redirectGetZ2(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().z;
+    @WrapOperation(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getZ()D"))
+    private double sable$redirectGetZ2(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().z;
+        return original.call(mob);
     }
 
-    @Redirect(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getY()D"))
-    private double sable$redirectGetY2(final Mob mob, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        return mobPosition.get().y;
+    @WrapOperation(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getY()D"))
+    private double sable$redirectGetY2(final Mob mob, Operation<Double> original, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
+        if (mobPosition.get() != null)
+            return mobPosition.get().y;
+        return original.call(mob);
     }
 
-    @Redirect(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    private AABB sable$canReachWithoutCollision(final Mob instance) {
+    @WrapOperation(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
+    private AABB sable$canReachWithoutCollision(final Mob instance, Operation<AABB> original) {
         final SubLevel trackingSubLevel = this.sable$getTrackingSubLevel();
 
         if (trackingSubLevel != null) {
-            return instance.getBoundingBox().move(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()).subtract(this.mob.position()));
+            return original.call(instance).move(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()).subtract(this.mob.position()));
         }
 
-        return instance.getBoundingBox();
+        return original.call(instance);
     }
 }

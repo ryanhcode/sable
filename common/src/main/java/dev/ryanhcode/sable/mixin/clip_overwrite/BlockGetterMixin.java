@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.clip_overwrite;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
@@ -42,15 +44,14 @@ public interface BlockGetterMixin {
 
     /**
      * @author RyanH
-     * @reason Overwrites raycasts to take sublevels into account
+     * @reason Wrap raycasts to take sublevels into account
      */
-    @Overwrite
-    default BlockHitResult clip(ClipContext clipContext) {
-        final BlockGetter self = (BlockGetter) this;
+    @WrapMethod(method = "clip")
+    default BlockHitResult clip(ClipContext clipContext, Operation<BlockHitResult> original) {
 
         if (!(this instanceof final Level level) || (clipContext instanceof final ClipContextExtension extension && extension.sable$doNotProject())) {
             // If the level cannot have sublevels, use the original method
-            return originalClip(self, clipContext);
+            return original.call(clipContext);
         }
 
         final SubLevel ignoredSubLevel = clipContext instanceof final ClipContextExtension extension ?
@@ -93,7 +94,7 @@ public interface BlockGetterMixin {
             final Vec3 diff = clipContext.getFrom().subtract(clipContext.getTo());
             minResult = BlockHitResult.miss(clipContext.getTo(), Direction.getNearest(diff.x, diff.y, diff.z), BlockPos.containing(clipContext.getTo()));
         } else {
-            minResult = originalClip(self, clipContext);
+            minResult = original.call(clipContext);
             minDistance = minResult.getLocation().distanceTo(clipContext.getFrom());
         }
 
@@ -121,7 +122,7 @@ public interface BlockGetterMixin {
 
 
             final ClipContext subClipContext = new ClipContext(JOMLConversion.toMojang(from), JOMLConversion.toMojang(to), clipContext.block, clipContext.fluid, clipContext.collisionContext);
-            final BlockHitResult subResult = originalClip(subLevel.getLevel(), subClipContext);
+            final BlockHitResult subResult = original.call(subClipContext);
             final double distance = subResult.getLocation().distanceTo(subClipContext.getFrom());
 
             if ((distance < minDistance || minResult.getType() == HitResult.Type.MISS) && subResult.getType() != HitResult.Type.MISS) {
@@ -132,26 +133,5 @@ public interface BlockGetterMixin {
 
         return minResult;
     }
-
-    @Unique
-    private static @NotNull BlockHitResult originalClip(final BlockGetter level, final ClipContext clipContext) {
-        return BlockGetter.traverseBlocks(clipContext.getFrom(), clipContext.getTo(), clipContext, (clipContextx, blockPos) -> {
-            final BlockState blockState = level.getBlockState(blockPos);
-            final FluidState fluidState = level.getFluidState(blockPos);
-            final Vec3 vec3 = clipContextx.getFrom();
-            final Vec3 vec32 = clipContextx.getTo();
-            final VoxelShape voxelShape = clipContextx.getBlockShape(blockState, level, blockPos);
-            final BlockHitResult blockHitResult = level.clipWithInteractionOverride(vec3, vec32, blockPos, voxelShape, blockState);
-            final VoxelShape voxelShape2 = clipContextx.getFluidShape(fluidState, level, blockPos);
-            final BlockHitResult blockHitResult2 = voxelShape2.clip(vec3, vec32, blockPos);
-            final double d = blockHitResult == null ? Double.MAX_VALUE : clipContextx.getFrom().distanceToSqr(blockHitResult.getLocation());
-            final double e = blockHitResult2 == null ? Double.MAX_VALUE : clipContextx.getFrom().distanceToSqr(blockHitResult2.getLocation());
-            return d <= e ? blockHitResult : blockHitResult2;
-        }, clipContextx -> {
-            final Vec3 vec3 = clipContextx.getFrom().subtract(clipContextx.getTo());
-            return BlockHitResult.miss(clipContextx.getTo(), Direction.getNearest(vec3.x, vec3.y, vec3.z), BlockPos.containing(clipContextx.getTo()));
-        });
-    }
-
 
 }

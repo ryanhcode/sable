@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_leashing;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
@@ -16,12 +18,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
 
-    @Redirect(method = "renderLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getRopeHoldPosition(F)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 sable$getRopeHoldPosition(final Entity instance, final float f, @Local(argsOnly = true, ordinal = 0) final Entity leashedEntity){
+    @WrapOperation(method = "renderLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getRopeHoldPosition(F)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 sable$getRopeHoldPosition(final Entity instance, final float f, Operation<Vec3> original, @Local(argsOnly = true, ordinal = 0) final Entity leashedEntity){
         final ActiveSableCompanion helper = Sable.HELPER;
         final SubLevel leashedSubLevel = helper.getContaining(leashedEntity);
 
-        final Vector3d ropeHoldPosition = JOMLConversion.toJOML(instance.getRopeHoldPosition(f));
+        final Vector3d ropeHoldPosition = JOMLConversion.toJOML(original.call(instance, f));
         final SubLevel holdingSubLevel = helper.getContaining(leashedEntity.level(), ropeHoldPosition);
 
         if (holdingSubLevel != null) {
@@ -35,12 +37,12 @@ public class EntityRendererMixin {
         return JOMLConversion.toMojang(ropeHoldPosition);
     }
 
-    @Redirect(method = "renderLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 sable$getEyePosition(final Entity instance, final float f, @Local(argsOnly = true, ordinal = 0) final Entity leashedEntity){
+    @WrapOperation(method = "renderLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 sable$getEyePosition(final Entity instance, final float f, Operation<Vec3> original, @Local(argsOnly = true, ordinal = 0) final Entity leashedEntity){
         final ActiveSableCompanion helper = Sable.HELPER;
         final SubLevel leashedSubLevel = helper.getContaining(leashedEntity);
 
-        final Vector3d eyePosition = JOMLConversion.toJOML(instance.getEyePosition(f));
+        final Vector3d eyePosition = JOMLConversion.toJOML(original.call(instance, f));
         final SubLevel holdingSubLevel = helper.getContaining(leashedEntity.level(), eyePosition);
 
         if (holdingSubLevel != null) {

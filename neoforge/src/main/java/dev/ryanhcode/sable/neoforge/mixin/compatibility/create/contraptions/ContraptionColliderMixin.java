@@ -1,5 +1,8 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.contraptions;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -37,7 +40,7 @@ public class ContraptionColliderMixin {
     @Unique
     private static Matrix3d sable$toCreate(final org.joml.Matrix3d jomlMatrix) {
         final Matrix3d createMatrix = new Matrix3d();
-        final Matrix3dAccessor accessor = ((Matrix3dAccessor) createMatrix);
+        final Matrix3dAccessor accessor = Matrix3dAccessor.class.cast(createMatrix);
 
         accessor.setM00(jomlMatrix.m00);
         accessor.setM01(jomlMatrix.m01);
@@ -54,13 +57,13 @@ public class ContraptionColliderMixin {
         return createMatrix;
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    private static AABB sable$contraptionBounds(final AbstractContraptionEntity instance, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
+    private static AABB sable$contraptionBounds(AbstractContraptionEntity instance, Operation<AABB> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = Sable.HELPER.getContaining(instance);
         contraptionSubLevel.set(subLevel);
 
         if (subLevel != null) {
-            final BoundingBox3d globalBB = new BoundingBox3d(instance.getBoundingBox());
+            final BoundingBox3d globalBB = new BoundingBox3d(original.call(instance));
             globalBB.transform(subLevel.logicalPose(), globalBB);
             return globalBB.toMojang();
         }
@@ -68,69 +71,69 @@ public class ContraptionColliderMixin {
         return instance.getBoundingBox();
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private static AABB sable$entityQueryBounds(final AABB instance, final double d, final double e, final double f, @Local(argsOnly = true) final AbstractContraptionEntity contraption, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
+    private static AABB sable$entityQueryBounds(final AABB instance, final double d, final double e, final double f, Operation<AABB> original, @Local(argsOnly = true) final AbstractContraptionEntity contraption, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
 
         if (subLevel != null) {
-            final BoundingBox3d globalBB = new BoundingBox3d(contraption.getBoundingBox().inflate(2.0).expandTowards(d, e, f));
+            final BoundingBox3d globalBB = new BoundingBox3d(original.call(contraption.getBoundingBox(), d, e, f));
             globalBB.transform(subLevel.logicalPose(), globalBB);
             return globalBB.toMojang();
         }
 
-        return instance.expandTowards(d, e, f);
+        return original.call(instance, d, e, f);
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;position()Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$contraptionPosition(final AbstractContraptionEntity instance, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;position()Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$contraptionPosition(AbstractContraptionEntity instance, Operation<Vec3> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
 
         if (subLevel != null) {
-            return subLevel.logicalPose().transformPosition(instance.position());
+            return subLevel.logicalPose().transformPosition(original.call(instance));
         }
 
-        return instance.position();
+        return original.call(instance);
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getPrevPositionVec()Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$getPrevPositionVec(final AbstractContraptionEntity instance, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getPrevPositionVec()Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$getPrevPositionVec(AbstractContraptionEntity instance, Operation<Vec3> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
 
         if (subLevel != null) {
-            return subLevel.logicalPose().transformPosition(instance.getPrevPositionVec());
+            return subLevel.logicalPose().transformPosition(original.call(instance));
         }
 
-        return instance.getPrevPositionVec();
+        return original.call(instance);
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getAnchorVec()Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$getAnchorVec(final AbstractContraptionEntity instance, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getAnchorVec()Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$getAnchorVec(AbstractContraptionEntity instance, Operation<Vec3> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
 
         if (subLevel != null) {
-            return subLevel.logicalPose().transformPosition(instance.getAnchorVec().add(0.5, 0.5, 0.5)).subtract(0.5, 0.5, 0.5);
+            return subLevel.logicalPose().transformPosition(original.call(instance).add(0.5, 0.5, 0.5)).subtract(0.5, 0.5, 0.5);
         }
 
-        return instance.getAnchorVec();
+        return original.call(instance);
     }
 
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity$ContraptionRotationState;asMatrix()Lcom/simibubi/create/foundation/collision/Matrix3d;"))
-    private static Matrix3d sable$rotationMatrix(final AbstractContraptionEntity.ContraptionRotationState rotationState, @Local(argsOnly = true) final AbstractContraptionEntity contraption, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity$ContraptionRotationState;asMatrix()Lcom/simibubi/create/foundation/collision/Matrix3d;"))
+    private static Matrix3d sable$rotationMatrix(final AbstractContraptionEntity.ContraptionRotationState rotationState, Operation<Matrix3d> original, @Local(argsOnly = true) final AbstractContraptionEntity contraption, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
         if (subLevel != null) {
             final Pose3d pose = subLevel.logicalPose();
-            final org.joml.Matrix3d jomlMatrix = sable$toJOML(rotationState.asMatrix());
+            final org.joml.Matrix3d jomlMatrix = sable$toJOML(original.call(rotationState));
 
             jomlMatrix.rotateLocal(pose.orientation());
             return sable$toCreate(jomlMatrix);
         }
 
-        return rotationState.asMatrix();
+        return original.call(rotationState);
     }
 
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toLocalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$toLocalVector(final AbstractContraptionEntity instance, final Vec3 localVec, final float partialTicks, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toLocalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$toLocalVector(AbstractContraptionEntity instance, Vec3 localVec, float partialTicks, Operation<Vec3> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
 
         if (subLevel != null) {
@@ -138,19 +141,19 @@ public class ContraptionColliderMixin {
             return instance.toLocalVector(pose.transformPositionInverse(localVec), partialTicks);
         }
 
-        return instance.toLocalVector(localVec, partialTicks);
+        return original.call(instance, localVec, partialTicks);
     }
-    @Redirect(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getContactPointMotion(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$getContactPointMotion(final AbstractContraptionEntity instance, final Vec3 globalContactPoint, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
+    @WrapOperation(method = "collideEntities", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getContactPointMotion(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$getContactPointMotion(AbstractContraptionEntity instance, Vec3 globalContactPoint, Operation<Vec3> original, @Share("subLevel") final LocalRef<SubLevel> contraptionSubLevel) {
         final SubLevel subLevel = contraptionSubLevel.get();
         if (subLevel != null) {
             final Pose3d pose = subLevel.logicalPose();
             final Vec3 localContactPoint = pose.transformPositionInverse(globalContactPoint);
-            final Vec3 motion = pose.transformNormal(instance.getContactPointMotion(localContactPoint))
+            final Vec3 motion = pose.transformNormal(original.call(instance, localContactPoint))
                     .add(globalContactPoint.subtract(subLevel.lastPose().transformPosition(localContactPoint)));
             return motion;
         }
         
-        return instance.getContactPointMotion(globalContactPoint);
+        return original.call(instance, globalContactPoint);
     }
 }

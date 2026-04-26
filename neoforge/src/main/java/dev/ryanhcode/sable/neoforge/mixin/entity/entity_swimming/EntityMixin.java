@@ -1,5 +1,15 @@
 package dev.ryanhcode.sable.neoforge.mixin.entity.entity_swimming;
 
+import com.llamalad7.mixinextras.expression.Definition;
+import com.llamalad7.mixinextras.expression.Expression;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalDoubleRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
@@ -29,12 +39,15 @@ import net.neoforged.neoforge.common.extensions.IEntityExtension;
 import net.neoforged.neoforge.fluids.FluidType;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(value = Entity.class, priority = 500)
 public abstract class EntityMixin implements IEntityExtension {
@@ -76,171 +89,166 @@ public abstract class EntityMixin implements IEntityExtension {
     @Shadow
     private FluidType forgeFluidTypeOnEyes;
 
-    /**
-     * @author RyanH
-     * @reason Take into account water on sub-levels.
-     */
-    @Overwrite
-    public void updateFluidHeightAndDoFluidPushing() {
-        if (!this.touchingUnloadedChunk()) {
-            final AABB aabb = this.getBoundingBox().deflate(0.001);
-            final int i = Mth.floor(aabb.minX);
-            final int j = Mth.ceil(aabb.maxX);
-            final int k = Mth.floor(aabb.minY);
-            final int l = Mth.ceil(aabb.maxY);
-            final int i1 = Mth.floor(aabb.minZ);
-            final int j1 = Mth.ceil(aabb.maxZ);
-            final BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
 
-            Object2ObjectMap<FluidType, SableInterimCalculation> interimCalcs = null;
+    @Shadow public abstract void updateFluidHeightAndDoFluidPushing();
 
-            for (int l1 = i; l1 < j; l1++) {
-                for (int i2 = k; i2 < l; i2++) {
-                    for (int j2 = i1; j2 < j1; j2++) {
-                        blockpos$mutableblockpos.set(l1, i2, j2);
-                        final FluidState fluidstate = this.level.getFluidState(blockpos$mutableblockpos);
-                        final FluidType fluidType = fluidstate.getFluidType();
-                        if (!fluidType.isAir()) {
-                            final double d1 = (float) i2 + fluidstate.getHeight(this.level, blockpos$mutableblockpos);
-                            if (d1 >= aabb.minY) {
-                                if (interimCalcs == null) {
-                                    interimCalcs = new Object2ObjectArrayMap<>();
-                                }
+    @Unique
+    private SubLevel sable$sl = null;
+    @Unique
+    private Pose3dc sable$lastPose = null;
+    @Unique
+    private Object2ObjectMap interimCalcs = null;
+    @Unique
+    private BoundingBox3d sable$globalBound = new BoundingBox3d();
+    @Unique
+    private LevelReusedVectors sable$jomlSink = null;
 
-                                final SableInterimCalculation interim = interimCalcs.computeIfAbsent(fluidType, t -> new SableInterimCalculation());
-                                interim.fluidHeight = Math.max(d1 - aabb.minY, interim.fluidHeight);
-                                if (this.isPushedByFluid(fluidType)) {
-                                    Vec3 vec31 = fluidstate.getFlow(this.level, blockpos$mutableblockpos);
-                                    if (interim.fluidHeight < 0.4) {
-                                        vec31 = vec31.scale(interim.fluidHeight);
-                                    }
+    // avoid reallocation
+    @Unique
+    private BoundingBox3d sable$localBound = new BoundingBox3d();
+    @Unique
+    private Quaterniond sable$playerOrientation = new Quaterniond();
+    @Unique
+    private BlockPos.MutableBlockPos sable$mutableBlockPos = null;
+    @Unique
+    private Vector3d sable$playerCenter = new Vector3d();
+    @Unique
+    private Vector3d sable$playerSize = new Vector3d();
 
-                                    interim.flowVector = interim.flowVector.add(vec31);
-                                    interim.blockCount++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    @Unique
+    private boolean sable$finishComputing = false; //in case another mod is recursively calling the function, like Valkerien skies for example, don't recompute
 
-            //#region sable stuff
-            final ActiveSableCompanion helper = Sable.HELPER;
-            final BoundingBox3d globalBounds = new BoundingBox3d(aabb);
-            final BoundingBox3d localBounds = new BoundingBox3d();
-            final Iterable<SubLevel> intersecting = helper.getAllIntersecting(this.level, globalBounds);
+    @WrapOperation(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
+    private AABB returnSubLevelBoundingBoxAndInit(Entity instance, Operation<AABB> original,
+                                                  @Share("localPlayerBox") LocalRef<Quaterniond> localPlayerBox,
+                                                  @Share("playerBox") LocalRef<OrientedBoundingBox3d> playerBox,
+                                                  @Share("fluidBox") LocalRef<OrientedBoundingBox3d> fluidBox,
+                                                  @Share("minYVertex") LocalDoubleRef minYVertex,
+                                                  @Share("hasComputedMinYVertex") LocalBooleanRef hasComputedMinYVertex) {
+        if (this.sable$finishComputing || (this.sable$sl == null))
+            return original.call(instance);
+        this.sable$globalBound.transformInverse(this.sable$lastPose, this.sable$localBound);
+        localPlayerBox.set(this.sable$lastPose.orientation().conjugate(this.sable$playerOrientation));
+        localPlayerBox.get().rotateY(SubLevelEntityCollision.getHitBoxYaw(this.sable$lastPose));
+        playerBox.set(new OrientedBoundingBox3d(this.sable$lastPose.transformPositionInverse(this.sable$globalBound.center(this.sable$playerCenter)), this.sable$globalBound.size(this.sable$playerSize), localPlayerBox.get(), this.sable$jomlSink));
+        fluidBox.set(new OrientedBoundingBox3d(new Vector3d(), new Vector3d(1.0), JOMLConversion.QUAT_IDENTITY, this.sable$jomlSink));
+        minYVertex.set(Float.MAX_VALUE);
+        hasComputedMinYVertex.set(false);
+        return this.sable$localBound.toMojang();
+    }
 
-            final BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
+    @WrapOperation(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "NEW", target = "()Lnet/minecraft/core/BlockPos$MutableBlockPos;"))
+    private BlockPos.MutableBlockPos returnPreAllocedMutableBlockPos(Operation<BlockPos.MutableBlockPos> original) {
+        if (this.sable$finishComputing)
+            return original.call();
+        if (this.sable$mutableBlockPos == null )
+            return this.sable$mutableBlockPos = original.call();
+        return this.sable$mutableBlockPos;
+    }
 
-            final Vector3d playerCenter = new Vector3d();
-            final Vector3d playerSize = new Vector3d();
-            final Quaterniond playerOrientation = new Quaterniond();
+    @Inject(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getHeight(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F"))
+    private void calculateMinYVertex(final CallbackInfo ci, @Share("minYVertex") LocalDoubleRef minYVertex,
+                                     @Share("hasComputedMinYVertex") LocalBooleanRef hasComputedMinYVertex,
+                                     @Share("playerBox") LocalRef<OrientedBoundingBox3d> playerBox,
+                                     @Share("fluidBox") LocalRef<OrientedBoundingBox3d> fluidBox) {
+        if (this.sable$finishComputing || hasComputedMinYVertex.get() || this.sable$jomlSink == null)
+            return;
+        final Vector3d[] vertices = playerBox.get().vertices(this.sable$jomlSink.a);
 
-            for (final SubLevel subLevel : intersecting) {
-                final Pose3dc pose = subLevel.lastPose();
-                globalBounds.transformInverse(pose, localBounds);
-
-                final LevelReusedVectors jomlSink = ((LevelExtension) this.level).sable$getJOMLSink();
-                final Quaterniond localPlayerBox = pose.orientation().conjugate(playerOrientation);
-
-                final double yaw = SubLevelEntityCollision.getHitBoxYaw(pose);
-                localPlayerBox.rotateY(yaw);
-
-                final OrientedBoundingBox3d playerBox = new OrientedBoundingBox3d(pose.transformPositionInverse(globalBounds.center(playerCenter)), globalBounds.size(playerSize), localPlayerBox, jomlSink);
-                final OrientedBoundingBox3d fluidBox = new OrientedBoundingBox3d(new Vector3d(), new Vector3d(1.0), JOMLConversion.QUAT_IDENTITY, jomlSink);
-
-                final int minX = Mth.floor(localBounds.minX);
-                final int maxX = Mth.ceil(localBounds.maxX);
-                final int minY = Mth.floor(localBounds.minY);
-                final int maxY = Mth.ceil(localBounds.maxY);
-                final int minZ = Mth.floor(localBounds.minZ);
-                final int maxZ = Mth.ceil(localBounds.maxZ);
-
-                double minYVertex = Float.MAX_VALUE;
-                boolean hasComputedMinYVertex = false;
-
-                for (int x = minX; x < maxX; x++) {
-                    for (int y = minY; y < maxY; y++) {
-                        for (int z = minZ; z < maxZ; z++) {
-                            mutableBlockPos.set(x, y, z);
-                            final FluidState fluidState = this.level.getFluidState(mutableBlockPos);
-                            final FluidType fluidType = fluidState.getFluidType();
-
-                            if (!fluidType.isAir()) {
-                                final double fluidLevelY = (float) y + fluidState.getHeight(this.level, mutableBlockPos);
-
-                                if (!hasComputedMinYVertex) {
-                                    final Vector3d[] vertices = playerBox.vertices(jomlSink.a);
-
-                                    for (final Vector3d vertex : vertices) {
-                                        minYVertex = Math.min(minYVertex, vertex.y);
-                                    }
-
-                                    hasComputedMinYVertex = true;
-                                }
-
-                                if (fluidLevelY >= minYVertex) {
-                                    fluidBox.getPosition().set(x + 0.5, y + 0.5, z + 0.5);
-
-                                    if (!(OrientedBoundingBox3d.sat(playerBox, fluidBox).lengthSquared() > 0.0))
-                                        continue;
-
-                                    if (interimCalcs == null) {
-                                        interimCalcs = new Object2ObjectArrayMap<>();
-                                    }
-
-                                    final SableInterimCalculation interim = interimCalcs.computeIfAbsent(fluidType, t -> new SableInterimCalculation());
-                                    interim.fluidHeight = Math.max(fluidLevelY - minYVertex, interim.fluidHeight);
-
-                                    if (Sable.HELPER.getTrackingSubLevel((Entity) (Object) this) == null && helper.getContaining((Entity) (Object) this) != subLevel) {
-                                        ((EntityMovementExtension) this).sable$setTrackingSubLevel(subLevel);
-                                    }
-
-                                    if (this.isPushedByFluid(fluidType)) {
-                                        Vec3 flowVec = fluidState.getFlow(this.level, mutableBlockPos);
-
-                                        if (interim.fluidHeight < 0.4) {
-                                            flowVec = flowVec.scale(interim.fluidHeight);
-                                        }
-
-                                        flowVec = pose.transformNormal(flowVec);
-
-                                        interim.flowVector = interim.flowVector.add(flowVec);
-                                        interim.blockCount++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //#region sable end
-
-            if (interimCalcs != null) {
-                interimCalcs.forEach((fluidTypex, interimx) -> {
-                    if (interimx.flowVector.length() > 0.0) {
-                        if (interimx.blockCount > 0) {
-                            interimx.flowVector = interimx.flowVector.scale(1.0 / (double) interimx.blockCount);
-                        }
-
-                        if (!((Object) this instanceof Player)) {
-                            interimx.flowVector = interimx.flowVector.normalize();
-                        }
-
-                        final Vec3 vec32 = this.getDeltaMovement();
-                        interimx.flowVector = interimx.flowVector.scale(this.getFluidMotionScale(fluidTypex));
-                        final double d2 = 0.003;
-                        if (Math.abs(vec32.x) < d2 && Math.abs(vec32.z) < d2 && interimx.flowVector.length() < 0.0045000000000000005) {
-                            interimx.flowVector = interimx.flowVector.normalize().scale(0.0045000000000000005);
-                        }
-
-                        this.setDeltaMovement(this.getDeltaMovement().add(interimx.flowVector));
-                    }
-
-                    this.setFluidTypeHeight(fluidTypex, interimx.fluidHeight);
-                });
-            }
+        for (final Vector3d vertex : vertices) {
+            minYVertex.set(Math.min(minYVertex.get(), vertex.y));
         }
+
+        hasComputedMinYVertex.set(true);
+    }
+
+    @WrapOperation(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/phys/AABB;minY:D", opcode = Opcodes.GETFIELD, ordinal = 1))
+    private double returnMinYVertext(AABB instance, Operation<Double> original,
+                                     @Local LocalRef<Object2ObjectMap> localIntrasic,
+                                     @Share("minYVertex") LocalDoubleRef minYVertex,
+                                     @Share("hasComputedMinYVertex") LocalBooleanRef hasComputedMinYVertex) {
+        if (this.sable$finishComputing || !hasComputedMinYVertex.get())
+            return original.call(instance);
+        return minYVertex.get();
+    }
+
+    @Definition(id = "minY", field = "Lnet/minecraft/world/phys/AABB;minY:D")
+    @Definition(id = "aabb", local = @Local(type = AABB.class, ordinal = 0))
+    @Expression("? >= aabb.minY")
+    @ModifyExpressionValue(method = "updateFluidHeightAndDoFluidPushing()V", at = @At("MIXINEXTRAS:EXPRESSION"))
+    private boolean willThisWorks(boolean original, @Share("playerBox") LocalRef<OrientedBoundingBox3d> playerBox, @Share("fluidBox") LocalRef<OrientedBoundingBox3d> fluidBox) {
+        if (this.sable$finishComputing || playerBox.get() == null)
+            return original;
+        if (!original)
+            return false;
+
+        fluidBox.get().getPosition().set(sable$mutableBlockPos.getX() + 0.5, sable$mutableBlockPos.getY() + 0.5, sable$mutableBlockPos.getZ() + 0.5);
+        return (OrientedBoundingBox3d.sat(playerBox.get(), fluidBox.get()).lengthSquared() > 0.0);
+    }
+
+    @WrapOperation(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/phys/AABB;minY:D", opcode = Opcodes.GETFIELD, ordinal = 2))
+    private double returnMinYVertext2(AABB instance, Operation<Double> original,
+                                     @Local LocalRef<Object2ObjectMap> localIntrasic,
+                                     @Share("minYVertex") LocalDoubleRef minYVertex,
+                                     @Share("hasComputedMinYVertex") LocalBooleanRef hasComputedMinYVertex) {
+        if (this.sable$finishComputing || !hasComputedMinYVertex.get())
+            return original.call(instance);
+        final ActiveSableCompanion helper = Sable.HELPER;
+        if (Sable.HELPER.getTrackingSubLevel(Entity.class.cast(this)) == null && helper.getContaining(Entity.class.cast(this)) != this.sable$sl) {
+            ((EntityMovementExtension) this).sable$setTrackingSubLevel(this.sable$sl);
+        }
+        return minYVertex.get();
+    }
+
+    @WrapOperation(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 modifyFlowPos(Vec3 instance, Vec3 vec, Operation<Vec3> original) {
+        if (this.sable$finishComputing || this.sable$lastPose == null)
+            return original.call(instance, vec);
+        return original.call(instance, this.sable$lastPose.transformNormal(vec));
+    }
+
+    /**
+     * inject at {@code if (interimCalcs != null) interimCalcs.foreach(...)}
+     * the {@code if (interimCalcs == null)} check inside the loop is actually a {@code Opcodes.IFNONNULL}
+     **/
+    @Inject(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "JUMP", opcode = Opcodes.IFNULL, shift = At.Shift.BY, by = -1), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+    private void includeSublevel(CallbackInfo ci, AABB aabb, @Local LocalRef<Object2ObjectMap> localIntrasic) {
+        if (this.sable$finishComputing)
+            return;
+
+        if (this.sable$sl != null) {
+            if (localIntrasic.get() != null) {
+                if (this.interimCalcs == null)
+                    this.interimCalcs = new Object2ObjectArrayMap(localIntrasic.get());
+                else
+                    this.interimCalcs.putAll(localIntrasic.get());
+            }
+            ci.cancel();
+            return;
+        }
+
+        this.interimCalcs = localIntrasic.get();
+        this.sable$jomlSink = ((LevelExtension) this.level).sable$getJOMLSink();
+
+        final ActiveSableCompanion helper = Sable.HELPER;
+        this.sable$globalBound.set(aabb);
+        final Iterable<SubLevel> intersecting = helper.getAllIntersecting(this.level, this.sable$globalBound);
+        for (final SubLevel subLevel : intersecting) {
+            this.sable$sl = subLevel;
+            this.sable$lastPose = subLevel.lastPose();
+            this.updateFluidHeightAndDoFluidPushing();
+        }
+        localIntrasic.set(this.interimCalcs);
+        this.sable$finishComputing = true;
+    }
+
+    @Inject(method = "updateFluidHeightAndDoFluidPushing()V", at = @At("TAIL"))
+    private void resetStateMachine(CallbackInfo ci) {
+        this.sable$finishComputing = false;
+        this.sable$sl = null;
+        this.sable$lastPose = null;
+        this.interimCalcs = null;
+        this.sable$jomlSink = null;
     }
 
     @Override

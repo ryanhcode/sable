@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.particles;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.simibubi.create.content.kinetics.fan.AirFlowParticle;
@@ -41,24 +43,24 @@ public abstract class AirFlowParticleMixin extends SimpleAnimatedParticle {
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;contains(DDD)Z", ordinal = 0))
-    public boolean sable$reverseProjectPos(final AABB instance, final double x, final double y, final double z) {
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;contains(DDD)Z", ordinal = 0))
+    public boolean sable$reverseProjectPos(AABB instance, double x, double y, double z, Operation<Boolean> original) {
         final SubLevel subLevel = Sable.HELPER.getContainingClient(this.source.getAirCurrentPos());
         if (subLevel != null) {
             return true;
         }
 
-        return instance.contains(x, y, z);
+        return original.call(instance, x, y, z);
     }
 
-    @Redirect(method = "tick", at = @At(value = "NEW", target = "(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
-    public Vec3 sable$reverseProjectPos2(final double x, final double y, final double z) {
+    @WrapOperation(method = "tick", at = @At(value = "NEW", target = "(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
+    public Vec3 sable$reverseProjectPos2(final double x, final double y, final double z, Operation<Vec3> original) {
         final SubLevel subLevel = Sable.HELPER.getContainingClient(this.source.getAirCurrentPos());
         if (subLevel != null) {
-            return subLevel.logicalPose().transformPositionInverse(new Vec3(x, y, z));
+            return subLevel.logicalPose().transformPositionInverse(original.call(x, y, z));
         }
 
-        return new Vec3(x, y, z);
+        return original.call(x, y, z);
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/fan/IAirCurrentSource;getAirCurrent()Lcom/simibubi/create/content/kinetics/fan/AirCurrent;", ordinal = 1))

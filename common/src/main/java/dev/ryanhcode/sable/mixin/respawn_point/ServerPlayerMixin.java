@@ -1,5 +1,9 @@
 package dev.ryanhcode.sable.mixin.respawn_point;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
@@ -28,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.objectweb.asm.Opcodes;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -70,36 +75,23 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
         return this.sable$respawnPoint;
     }
 
-    @Inject(method = "setRespawnPosition", at = @At("HEAD"), cancellable = true)
-    private void sable$setRespawnPosition(final ResourceKey<Level> resourceKey, @Nullable final BlockPos blockPos, final float f, final boolean bl, final boolean sendMessage, final CallbackInfo ci) {
+    @WrapOperation(method = "setRespawnPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerPlayer;respawnPosition:Lnet/minecraft/core/BlockPos;", opcode = Opcodes.GETFIELD))
+    private BlockPos sable$setRespawnPosition(ServerPlayer instance, Operation<BlockPos> original) {
+        final BlockPos pos = original.call(instance);
         final ServerLevel level = this.serverLevel();
         final SubLevelTrackingPointSavedData data = SubLevelTrackingPointSavedData.getOrLoad(level);
-
-        if (this.sable$respawnPoint != null) {
+        if (this.sable$respawnPoint != null && pos == null) {
             data.removeTrackingPoint(this.sable$respawnPoint);
             this.sable$respawnPoint = null;
+            return null;
         }
-
-        if (blockPos != null) {
-            final SubLevel trackingSubLevel = Sable.HELPER.getContaining(level, blockPos);
-
+        if (pos != null) {
+            final SubLevel trackingSubLevel = Sable.HELPER.getContaining(level, pos);
             if (trackingSubLevel instanceof final ServerSubLevel serverSubLevel) {
-                this.sable$respawnPoint = data.generateTrackingPoint(Vec3.atCenterOf(blockPos), serverSubLevel);
-
-                if (this.sable$respawnPoint != null) {
-                    final boolean theSame = blockPos.equals(this.respawnPosition) && resourceKey.equals(this.respawnDimension);
-                    if (sendMessage && !theSame) {
-                        this.sendSystemMessage(Component.translatable("block.minecraft.set_spawn"));
-                    }
-
-                    this.respawnPosition = blockPos;
-                    this.respawnDimension = resourceKey;
-                    this.respawnAngle = f;
-                    this.respawnForced = bl;
-                    ci.cancel();
-                }
+                this.sable$respawnPoint = data.generateTrackingPoint(Vec3.atCenterOf(pos), serverSubLevel);
             }
         }
+        return pos;
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
@@ -113,27 +105,6 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
     private void sable$readRespawnPoint(final CompoundTag compoundTag, final CallbackInfo ci) {
         if (compoundTag.hasUUID("RespawnPoint")) {
             this.sable$respawnPoint = compoundTag.getUUID("RespawnPoint");
-        }
-    }
-
-    /**
-     * @author RyanH
-     * @reason Respawning on sub-levels
-     */
-    @Overwrite
-    public void copyRespawnPosition(final ServerPlayer serverPlayer) {
-        if (serverPlayer.getRespawnPosition() != null) {
-            this.sable$respawnPoint = ((ServerPlayerRespawnExtension) serverPlayer).sable$getRespawnPoint();
-            this.respawnPosition = serverPlayer.getRespawnPosition();
-            this.respawnDimension = serverPlayer.getRespawnDimension();
-            this.respawnAngle = serverPlayer.getRespawnAngle();
-            this.respawnForced = serverPlayer.isRespawnForced();
-        } else {
-            this.sable$respawnPoint = null;
-            this.respawnPosition = null;
-            this.respawnDimension = Level.OVERWORLD;
-            this.respawnAngle = 0.0F;
-            this.respawnForced = false;
         }
     }
 
@@ -157,8 +128,8 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
      * @author RyanH
      * @reason Respawning on sub-levels
      */
-    @Redirect(method = "findRespawnPositionAndUseSpawnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;findRespawnAndUseSpawnBlock(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;FZZ)Ljava/util/Optional;"))
-    private Optional<ServerPlayer.RespawnPosAngle> sable$findRespawnPosition(final ServerLevel level, final BlockPos blockPos, final float f1, final boolean b1, final boolean b2) {
+    @WrapOperation(method = "findRespawnPositionAndUseSpawnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;findRespawnAndUseSpawnBlock(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;FZZ)Ljava/util/Optional;"))
+    private Optional<ServerPlayer.RespawnPosAngle> sable$findRespawnPosition(final ServerLevel level, final BlockPos blockPos, final float f1, final boolean b1, final boolean b2, Operation<Optional<ServerPlayer.RespawnPosAngle>> original) {
         final SubLevelTrackingPointSavedData data = SubLevelTrackingPointSavedData.getOrLoad(level);
 
         if (this.sable$respawnPoint != null) {
@@ -178,6 +149,6 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
             return Optional.of(new ServerPlayer.RespawnPosAngle(JOMLConversion.toMojang(point.position()), f1));
         }
 
-        return findRespawnAndUseSpawnBlock(level, blockPos, f1, b1, b2);
+        return original.call(level, blockPos, f1, b1, b2);
     }
 }

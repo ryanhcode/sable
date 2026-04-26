@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.super_glue;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.contraptions.glue.SuperGlueEntity;
 import com.simibubi.create.content.contraptions.glue.SuperGlueSelectionHandler;
 import dev.ryanhcode.sable.Sable;
@@ -16,17 +18,17 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SuperGlueSelectionHandler.class)
 public class SuperGlueSelectionHandlerMixin {
 
-    @Redirect(method = "tick",
+    @WrapOperation(method = "tick",
             at = @At(value = "INVOKE",
                     target = "Lcom/simibubi/create/content/contraptions/glue/SuperGlueEntity;getBoundingBox()Lnet/minecraft/world/phys/AABB;", ordinal = 0))
-    private AABB sable$projectBoundingBox(final SuperGlueEntity instance) {
+    private AABB sable$projectBoundingBox(final SuperGlueEntity instance, Operation<AABB> original) {
         final SubLevel subLevel = Sable.HELPER.getContaining(instance);
 
         if (subLevel != null) {
-            final BoundingBox3d bb = new BoundingBox3d(instance.getBoundingBox());
+            final BoundingBox3d bb = new BoundingBox3d(original.call(instance));
             return bb.transform(subLevel.logicalPose(), bb).toMojang();
         }
 
-        return instance.getBoundingBox();
+        return original.call(instance);
     }
 }

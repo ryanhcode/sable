@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_interaction;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
@@ -22,32 +24,32 @@ import java.util.Optional;
 @Mixin(ProjectileUtil.class)
 public class ProjectileUtilMixin {
 
-    @Redirect(method = "getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private static double sable$fixDistance(final Vec3 start, final Vec3 hitPos, @Local(argsOnly = true) final Entity source) {
-        return Sable.HELPER.distanceSquaredWithSubLevels(source.level(), start, hitPos);
+    @WrapOperation(method = "getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+    private static double sable$fixDistance(final Vec3 start, final Vec3 hitPos, Operation<Double> original, @Local(argsOnly = true) final Entity source) {
+        return Sable.HELPER.distanceSquaredWithSubLevels(source.level(), start, hitPos, original);
     }
 
-    @Redirect(method = "getEntityHitResult(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;F)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private static double sable$fixDistance2(final Vec3 start, final Vec3 hitPos, @Local(argsOnly = true) final Level level) {
-        return Sable.HELPER.distanceSquaredWithSubLevels(level, start, hitPos);
+    @WrapOperation(method = "getEntityHitResult(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;F)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+    private static double sable$fixDistance2(final Vec3 start, final Vec3 hitPos, Operation<Double> original, @Local(argsOnly = true) final Level level) {
+        return Sable.HELPER.distanceSquaredWithSubLevels(level, start, hitPos, original);
     }
 
-    @Redirect(method = "getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;clip(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Ljava/util/Optional;"))
-    private static Optional<Vec3> sable$getBoundingBox(final AABB toClip, final Vec3 start, final Vec3 end, @Local(argsOnly = true) final Entity source, @Local(ordinal = 2) final Entity clipping) {
+    @WrapOperation(method = "getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;clip(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Ljava/util/Optional;"))
+    private static Optional<Vec3> sable$getBoundingBox(final AABB toClip, final Vec3 start, final Vec3 end, Operation<Optional<Vec3>> original, @Local(argsOnly = true) final Entity source, @Local(ordinal = 2) final Entity clipping) {
         final ActiveSableCompanion helper = Sable.HELPER;
-        return sable$getHitPosWithSublevels(source.level(), toClip, start, end, helper.getContaining(source.level(), start), helper.getContaining(clipping.level(), clipping.position()));
+        return sable$getHitPosWithSublevels(source.level(), toClip, start, end, helper.getContaining(source.level(), start), helper.getContaining(clipping.level(), clipping.position()), original);
     }
 
-    @Redirect(method = "getEntityHitResult(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;F)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;clip(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Ljava/util/Optional;"))
-    private static Optional<Vec3> sable$getBoundingBox2(final AABB toClip, final Vec3 start, final Vec3 end, @Local(argsOnly = true) final Level level, @Local(ordinal = 2) final Entity clipping) {
+    @WrapOperation(method = "getEntityHitResult(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;F)Lnet/minecraft/world/phys/EntityHitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;clip(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Ljava/util/Optional;"))
+    private static Optional<Vec3> sable$getBoundingBox2(final AABB toClip, final Vec3 start, final Vec3 end, Operation<Optional<Vec3>> original, @Local(argsOnly = true) final Level level, @Local(ordinal = 2) final Entity clipping) {
         final ActiveSableCompanion helper = Sable.HELPER;
-        return sable$getHitPosWithSublevels(level, toClip, start, end, helper.getContaining(level, start), helper.getContaining(clipping.level(), clipping.position()));
+        return sable$getHitPosWithSublevels(level, toClip, start, end, helper.getContaining(level, start), helper.getContaining(clipping.level(), clipping.position()), original);
     }
 
     @Unique
-    private static @NotNull Optional<Vec3> sable$getHitPosWithSublevels(final Level level, final AABB toClip, Vec3 start, Vec3 end, final SubLevel sourceSubLevel, final SubLevel clippingSubLevel) {
+    private static @NotNull Optional<Vec3> sable$getHitPosWithSublevels(final Level level, final AABB toClip, Vec3 start, Vec3 end, final SubLevel sourceSubLevel, final SubLevel clippingSubLevel, Operation<Optional<Vec3>> vanillaCallback) {
         if (sourceSubLevel == clippingSubLevel) { // either both null, or both same
-            return toClip.clip(start, end);
+            return vanillaCallback.call(toClip, start, end);
         }
 
         if (level instanceof final LevelPoseProviderExtension poseProvider) {
@@ -72,6 +74,6 @@ public class ProjectileUtilMixin {
             }
         }
 
-        return toClip.clip(start, end);
+        return vanillaCallback.call(toClip, start, end);
     }
 }

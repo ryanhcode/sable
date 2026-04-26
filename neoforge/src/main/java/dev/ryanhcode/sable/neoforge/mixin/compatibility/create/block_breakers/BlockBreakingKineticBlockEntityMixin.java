@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.block_breakers;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.kinetics.base.BlockBreakingKineticBlockEntity;
 import com.simibubi.create.content.kinetics.saw.SawBlock;
 import dev.ryanhcode.sable.Sable;
@@ -28,11 +30,11 @@ public abstract class BlockBreakingKineticBlockEntityMixin extends BlockEntity {
 	@Shadow
 	public abstract boolean canBreak(BlockState stateToBreak, float blockHardness);
 
-	@Redirect(remap = false, method = "tick", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/base/BlockBreakingKineticBlockEntity;getBreakingPos()Lnet/minecraft/core/BlockPos;"))
-	private BlockPos sable$preGetBlockToBreak(final BlockBreakingKineticBlockEntity be) {
+	@WrapOperation(remap = false, method = "tick", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/base/BlockBreakingKineticBlockEntity;getBreakingPos()Lnet/minecraft/core/BlockPos;"))
+	private BlockPos sable$preGetBlockToBreak(BlockBreakingKineticBlockEntity instance, Operation<BlockPos> original) {
 		assert this.level != null;
 
-		final BlockPos breakingPos = this.getBlockPos().relative(this.getBlockState().getValue(BlockStateProperties.FACING));
+		final BlockPos breakingPos = original.call(instance);
 		final BlockState originalStateToBreak = this.level.getBlockState(breakingPos);
 
 		if (!this.canBreak(originalStateToBreak, originalStateToBreak.getDestroySpeed(this.level, breakingPos))) {

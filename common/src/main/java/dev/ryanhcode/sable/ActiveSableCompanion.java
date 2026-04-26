@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
@@ -269,6 +270,13 @@ public class ActiveSableCompanion implements SableCompanion {
         );
     }
 
+    public double distanceSquaredWithSubLevels(final Level level, final double aX, final double aY, final double aZ, final double bX, final double bY, final double bZ, Operation<Double> vanillaCallBack) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, new Vector3d(aX, aY, aZ));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return vanillaCallBack.call(globalA, globalB);
+    }
+
     @Override
     public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final Vector3dc b) {
         final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
@@ -285,6 +293,13 @@ public class ActiveSableCompanion implements SableCompanion {
         return globalA.distanceSquared(globalB);
     }
 
+    public double distanceSquaredWithSubLevels(final Level level, final Position a, final Position b, Operation<Double> vanillaCallBack) {
+        final Vec3 globalA = this.projectOutOfSubLevel(level, a);
+        final Vec3 globalB = this.projectOutOfSubLevel(level, b);
+
+        return vanillaCallBack.call(globalA, globalB);
+    }
+
     @Override
     public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final double bX, final double bY, final double bZ) {
         final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
@@ -293,12 +308,26 @@ public class ActiveSableCompanion implements SableCompanion {
         return globalA.distanceSquared(globalB);
     }
 
+    public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final double bX, final double bY, final double bZ, Operation<Double> vanillaCallBack) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return vanillaCallBack.call(globalA, globalB);
+    }
+
     @Override
     public double distanceSquaredWithSubLevels(final Level level, final Position a, final double bX, final double bY, final double bZ) {
         final Vector3dc globalA = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(a));
         final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
 
         return globalA.distanceSquared(globalB);
+    }
+
+    public double distanceSquaredWithSubLevels(final Level level, final Position a, final double bX, final double bY, final double bZ, Operation<Double> vanillaCallBack) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(a));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return vanillaCallBack.call(JOMLConversion.toMojang(globalA), globalB.x(), globalB.y(), globalB.z());
     }
 
     @Override
@@ -354,6 +383,13 @@ public class ActiveSableCompanion implements SableCompanion {
         final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
 
         return rectilinearDistance(globalA, globalB);
+    }
+
+    public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final Vector3dc b, Operation<Double> vanillaCallBack) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, b, new Vector3d());
+
+        return vanillaCallBack.call(globalA, globalB);
     }
 
     @Override
@@ -467,6 +503,10 @@ public class ActiveSableCompanion implements SableCompanion {
 
     @Override
     public @NotNull Vec3 getEyePositionInterpolated(final Entity entity, final float partialTicks) {
+        return this.getEyePositionInterpolated(entity, partialTicks, null);
+    }
+
+    public @NotNull Vec3 getEyePositionInterpolated(final Entity entity, final float partialTicks, Operation<Vec3> original) {
         final SubLevel trackingSubLevel = Sable.HELPER.getTrackingOrVehicleSubLevel(entity);
 
         if (trackingSubLevel instanceof final ClientSubLevel clientSubLevel) {
@@ -482,7 +522,7 @@ public class ActiveSableCompanion implements SableCompanion {
 
             return new Vec3(startPos.x, startPos.y, startPos.z);
         } else {
-            return entity.getEyePosition(partialTicks);
+            return original==null?entity.getEyePosition(partialTicks):original.call(entity, partialTicks);
         }
     }
 

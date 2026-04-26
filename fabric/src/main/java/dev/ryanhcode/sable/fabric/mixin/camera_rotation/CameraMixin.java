@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.fabric.mixin.camera_rotation;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.mixinhelpers.camera.camera_rotation.EntitySubLevelRotationHelper;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.Camera;
@@ -57,9 +59,9 @@ public abstract class CameraMixin {
 
     @Shadow @Deprecated protected abstract void setRotation(float f, float g);
 
-    @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V", ordinal = 1))
-    private void sable$redirectSetRotation(final Camera camera, final float f, final float g) {
-        this.setRotation(this.entity.getViewYRot(f) + 180.0f, -this.entity.getViewXRot(f));
+    @WrapOperation(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V", ordinal = 1))
+    private void sable$redirectSetRotation(Camera instance, float yRot, float xRot, Operation<Void> original) {
+        original.call(instance, this.entity.getViewYRot(yRot) + 180.0f, -this.entity.getViewXRot(xRot));
     }
 
     @Inject(method = "setRotation", at = @At(value = "INVOKE", target = "Lorg/joml/Quaternionf;rotationYXZ(FFF)Lorg/joml/Quaternionf;", shift = At.Shift.AFTER, remap = false))

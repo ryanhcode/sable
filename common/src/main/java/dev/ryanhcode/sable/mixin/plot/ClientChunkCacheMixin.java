@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Makes the chunk access methods in the client chunk cache use the plot system.
  */
-@Mixin(ClientChunkCache.class)
+@Mixin(value = ClientChunkCache.class, priority = 900)
 public abstract class ClientChunkCacheMixin {
 
     @Shadow

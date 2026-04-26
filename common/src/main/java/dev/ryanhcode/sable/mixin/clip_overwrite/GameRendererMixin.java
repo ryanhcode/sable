@@ -28,19 +28,19 @@ public class GameRendererMixin {
     @Final
     private Minecraft minecraft;
 
-    @Redirect(method = "filterHitResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;closerThan(Lnet/minecraft/core/Position;D)Z"))
-    private static boolean sable$closerThan(final Vec3 a, final Position b, final double d) {
+    @WrapOperation(method = "filterHitResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;closerThan(Lnet/minecraft/core/Position;D)Z"))
+    private static boolean sable$closerThan(final Vec3 a, final Position b, final double d, Operation<Double> original) {
         return Sable.HELPER.distanceSquaredWithSubLevels(Minecraft.getInstance().level, a, new Vec3(b.x(), b.y(), b.z())) < d * d;
     }
 
-    @Redirect(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private double sable$distanceToSqr(final Vec3 instance, final Vec3 other) {
-        return Sable.HELPER.distanceSquaredWithSubLevels(this.minecraft.level, instance, other);
+    @WrapOperation(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+    private double sable$distanceToSqr(final Vec3 instance, final Vec3 other,  Operation<Double> original) {
+        return Sable.HELPER.distanceSquaredWithSubLevels(this.minecraft.level, instance, other, original);
     }
 
-    @Redirect(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 sable$getEyePosition(final Entity instance, final float partialTicks) {
-        return Sable.HELPER.getEyePositionInterpolated(instance, partialTicks);
+    @WrapOperation(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 sable$getEyePosition(Entity instance, float partialTicks, Operation<Vec3> original) {
+        return Sable.HELPER.getEyePositionInterpolated(instance, partialTicks, original);
     }
 
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V"))

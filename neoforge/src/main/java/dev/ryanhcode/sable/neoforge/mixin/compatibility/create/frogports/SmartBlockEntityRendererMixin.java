@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.frogports;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
@@ -16,16 +18,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SmartBlockEntityRenderer.class)
 public class SmartBlockEntityRendererMixin<T extends SmartBlockEntity> {
 
-    @Redirect(method = "renderNameplateOnHover", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;cameraOrientation()Lorg/joml/Quaternionf;"))
-    private Quaternionf sable$renderNameTag(final EntityRenderDispatcher instance, @Local(argsOnly = true) final T be) {
+    @WrapOperation(method = "renderNameplateOnHover", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;cameraOrientation()Lorg/joml/Quaternionf;"))
+    private Quaternionf sable$renderNameTag(final EntityRenderDispatcher instance, Operation<Quaternionf> original, @Local(argsOnly = true) final T be) {
         final SubLevel subLevel = Sable.HELPER.getContaining(be);
 
         if (subLevel == null) {
-            return instance.cameraOrientation();
+            return original.call(instance);
         }
 
         final Quaterniondc subLevelOrientation = ((ClientSubLevel) subLevel).renderPose().orientation();
-        return instance.cameraOrientation().premul(new Quaternionf(subLevelOrientation).conjugate());
+        return original.call(instance).premul(new Quaternionf(subLevelOrientation).conjugate());
     }
 
 }

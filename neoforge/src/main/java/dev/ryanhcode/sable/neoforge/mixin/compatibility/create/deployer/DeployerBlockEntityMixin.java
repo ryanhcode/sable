@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.deployer;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.kinetics.deployer.DeployerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -29,9 +31,9 @@ public abstract class DeployerBlockEntityMixin extends SmartBlockEntity {
         super(type, pos, state);
     }
 
-    @Redirect(method = "start", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(DD)D"))
-    private double sable$deployerMin(final double a, final double b, @Local(ordinal = 1) final Vec3 rayOrigin, @Local(ordinal = 0) final BlockHitResult result) {
-        return Math.min(Math.sqrt(Sable.HELPER.distanceSquaredWithSubLevels(this.level, result.getLocation(), rayOrigin)), b);
+    @WrapOperation(method = "start", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(DD)D"))
+    private double sable$deployerMin(final double a, final double b, Operation<Double> original, @Local(ordinal = 1) final Vec3 rayOrigin, @Local(ordinal = 0) final BlockHitResult result) {
+        return original.call(Math.sqrt(Sable.HELPER.distanceSquaredWithSubLevels(this.level, result.getLocation(), rayOrigin)), b);
     }
 
 

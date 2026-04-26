@@ -40,7 +40,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -77,11 +76,11 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
     @Shadow
     public abstract Vec3 getAnchorVec();
 
-    @Redirect(method = "moveCollidedEntitiesOnDisassembly", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toLocalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 sable$applyTransform(final AbstractContraptionEntity instance, final Vec3 localVec, final float partialTicks) {
+    @WrapOperation(method = "moveCollidedEntitiesOnDisassembly", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toLocalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 sable$applyTransform(final AbstractContraptionEntity instance, final Vec3 localVec, final float partialTicks, Operation<Vec3> original) {
         final SubLevel subLevel = Sable.HELPER.getContaining(instance);
 
-        return instance.toLocalVector(subLevel != null ? subLevel.logicalPose().transformPositionInverse(localVec) : localVec, partialTicks);
+        return original.call(instance, subLevel != null ? subLevel.logicalPose().transformPositionInverse(localVec) : localVec, partialTicks);
     }
 
     @WrapOperation(method = "moveCollidedEntitiesOnDisassembly", at = {
@@ -109,34 +108,9 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
         return this.sable$liftProviderContexts;
     }
 
-    /**
-     * @author RyanH
-     * @reason Players shouldn't be saved to the same chunks as contraptions in sub-levels
-     */
-    @Overwrite
-    @Override
-    public CompoundTag saveWithoutId(final CompoundTag nbt) {
-        final Vec3 vec = this.position();
-        final List<Entity> passengers = this.getPassengers();
-
-        for (final Entity entity : passengers) {
-            // Only part added by sable \/
-            if (entity instanceof Player) continue;
-
-            // setPos has world accessing side-effects when removed == null
-            entity.removalReason = RemovalReason.UNLOADED_TO_CHUNK;
-
-            // Gather passengers into same chunk when saving
-            final Vec3 prevVec = entity.position();
-            entity.setPosRaw(vec.x, prevVec.y, vec.z);
-
-            // Super requires all passengers to not be removed in order to write them to the
-            // tag
-            entity.removalReason = null;
-        }
-
-        final CompoundTag tag = super.saveWithoutId(nbt);
-        return tag;
+    @WrapOperation(method = "saveWithoutId", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getPassengers()Ljava/util/List;"))
+    private List filterPlayer(AbstractContraptionEntity instance, Operation<List> original) {
+        return original.call(instance).stream().filter((e) -> !(e instanceof Player)).toList();
     }
 
     @Unique

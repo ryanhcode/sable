@@ -47,8 +47,8 @@ public abstract class ParticleEngineMixin {
         extension.sable$moveWithInheritedVelocity();
     }
 
-    @Redirect(method = "crack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/TerrainParticle;setPower(F)Lnet/minecraft/client/particle/Particle;"))
-    private Particle sable$addCrackParticle(final TerrainParticle particle, final float v, @Local(argsOnly = true) final BlockPos pos, @Local final BlockState state) {
+    @WrapOperation(method = "crack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/TerrainParticle;setPower(F)Lnet/minecraft/client/particle/Particle;"))
+    private Particle sable$addCrackParticle(final TerrainParticle particle, final float v, Operation<Particle> original, @Local(argsOnly = true) final BlockPos pos, @Local final BlockState state) {
         final Vec3 particlePosition = new Vec3(particle.x, particle.y, particle.z);
 
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level, particlePosition);
@@ -60,7 +60,7 @@ public abstract class ParticleEngineMixin {
             particle.yd = globalVelocity.y;
             particle.zd = globalVelocity.z;
 
-            particle.setPower(v);
+            original.call(particle, v);
 
             final Vec3 localVelocity = subLevel.logicalPose().transformNormalInverse(new Vec3(particle.xd, particle.yd, particle.zd));
 
@@ -71,7 +71,7 @@ public abstract class ParticleEngineMixin {
 
             return particle;
         } else {
-            return particle.setPower(v);
+            return original.call(particle, v);
         }
     }
 

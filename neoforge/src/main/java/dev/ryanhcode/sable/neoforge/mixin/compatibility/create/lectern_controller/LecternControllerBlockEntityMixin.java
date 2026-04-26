@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.lectern_controller;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.redstone.link.controller.LecternControllerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -51,9 +53,9 @@ public abstract class LecternControllerBlockEntityMixin extends SmartBlockEntity
         }
     }
 
-    @Redirect(method = "playerInRange", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private static double sable$fixDistanceCheck(final Vec3 a, final Vec3 b, @Local(argsOnly = true) final Level level) {
-        return Sable.HELPER.distanceSquaredWithSubLevels(level, a, b);
+    @WrapOperation(method = "playerInRange", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+    private static double sable$fixDistanceCheck(final Vec3 a, final Vec3 b, Operation<Double> original, @Local(argsOnly = true) final Level level) {
+        return Sable.HELPER.distanceSquaredWithSubLevels(level, a, b, original);
     }
 
     @Override

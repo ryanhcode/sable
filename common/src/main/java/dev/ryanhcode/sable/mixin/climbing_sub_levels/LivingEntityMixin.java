@@ -33,14 +33,13 @@ public abstract class LivingEntityMixin extends Entity {
         super(entityType, level);
     }
 
-    @Redirect(method = "onClimbable", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;blockPosition()Lnet/minecraft/core/BlockPos;"))
-    private BlockPos sable$redirectPos(final LivingEntity instance, @Share("subLevelBlockState") final LocalRef<BlockState> subLevelBlockState) {
+    @WrapOperation(method = "onClimbable", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;blockPosition()Lnet/minecraft/core/BlockPos;"))
+    private BlockPos sable$redirectPos(final LivingEntity instance, Operation<BlockPos> original, @Share("subLevelBlockState") final LocalRef<BlockState> subLevelBlockState) {
         final Level level = this.level();
-        final LivingEntity self = (LivingEntity) (Object) this;
+        final LivingEntity self = LivingEntity.class.cast(this);
 
-        final BlockPos defaultPos = ((EntityMovementExtension) this).sable$getInBlockStatePos();
-        final BlockState defaultState = this.getInBlockState();
-
+        final BlockPos defaultPos = original.call(instance);
+        final BlockState defaultState = level.getBlockState(defaultPos);
         if (defaultState.is(BlockTags.CLIMBABLE) && SablePlatform.INSTANCE.isBlockstateLadder(defaultState, level, defaultPos, self)) {
             return defaultPos;
         }

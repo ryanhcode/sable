@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_rotations_and_riding;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
@@ -33,15 +35,15 @@ public abstract class LocalPlayerMixin extends Player {
         super(level, blockPos, f, gameProfile);
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal =  0))
-    private Vec3 sable$modifyFlightDir(final Vec3 instance, final double x, final double y, final double z) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal =  0))
+    private Vec3 sable$modifyFlightDir(final Vec3 instance, final double x, final double y, final double z, Operation<Vec3> original) {
         final Quaterniondc orientation = EntitySubLevelUtil.getCustomEntityOrientation(this, 1.0f);
         if (orientation == null) {
-            return instance.add(x, y, z);
+            return original.call(instance, x, y, z);
         }
 
         final Vector3d dir = orientation.transform(new Vector3d(x, y, z));
-        return instance.add(dir.x, dir.y, dir.z);
+        return original.call(instance, dir.x, dir.y, dir.z);
     }
 
     @Unique

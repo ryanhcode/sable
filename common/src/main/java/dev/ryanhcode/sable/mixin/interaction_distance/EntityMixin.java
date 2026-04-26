@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.interaction_distance;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import net.minecraft.world.entity.Entity;
@@ -20,6 +22,8 @@ public abstract class EntityMixin {
 
     @Shadow
     public abstract Level level();
+
+    @Shadow public abstract double distanceToSqr(Vec3 vec);
 
     /**
      * @author RyanH
@@ -48,8 +52,8 @@ public abstract class EntityMixin {
      * @author RyanH
      * @reason Overwrite to make distance checks take into account sublevels
      */
-    @Overwrite
-    public double distanceToSqr(final Vec3 pos) {
+    @WrapMethod(method = "distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D")
+    public double distanceToSqr(final Vec3 pos, Operation<Double> callback) {
         final Level level = this.level();
 
         return Sable.HELPER.distanceSquaredWithSubLevels(level, this.position(), pos);

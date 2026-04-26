@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.camera.camera_zoom;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
@@ -152,9 +154,9 @@ public abstract class CameraMixin implements CameraZoomExtension {
         this.sable$pushed = true;
     }
 
-    @Redirect(method = "getMaxZoom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private double sable$getMaxZoom(final Vec3 instance, final Vec3 vec3) {
-        return Sable.HELPER.distanceSquaredWithSubLevels((Level) this.level, instance, vec3);
+    @WrapOperation(method = "getMaxZoom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+    private double sable$getMaxZoom(final Vec3 instance, final Vec3 vec3, Operation<Double> orignal) {
+        return Sable.HELPER.distanceSquaredWithSubLevels((Level) this.level, instance, vec3, orignal);
     }
 
     @Inject(method = "getMaxZoom", at = @At(value = "RETURN"))

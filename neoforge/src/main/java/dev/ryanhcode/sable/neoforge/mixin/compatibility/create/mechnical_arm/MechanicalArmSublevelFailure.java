@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.mechnical_arm;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -34,13 +36,13 @@ public class MechanicalArmSublevelFailure {
 		}
 	}
 
-	@Redirect(method = "flushSettings", at = @At(value = "INVOKE", target = "Lnet/createmod/catnip/lang/LangBuilder;translate(Ljava/lang/String;[Ljava/lang/Object;)Lnet/createmod/catnip/lang/LangBuilder;"))
-	private static LangBuilder sable$relayRemovedPoints(final LangBuilder instance, final String langKey, final Object[] args, @Local(name = "removed") final int removed, @Share("pointsRemovedSublevel") final LocalRef<Integer> pointsRemovedSublevel) {
+	@WrapOperation(method = "flushSettings", at = @At(value = "INVOKE", target = "Lnet/createmod/catnip/lang/LangBuilder;translate(Ljava/lang/String;[Ljava/lang/Object;)Lnet/createmod/catnip/lang/LangBuilder;"))
+	private static LangBuilder sable$relayRemovedPoints(final LangBuilder instance, final String langKey, final Object[] args, Operation<LangBuilder> original, @Local(name = "removed") final int removed, @Share("pointsRemovedSublevel") final LocalRef<Integer> pointsRemovedSublevel) {
 
 		final Integer arg = (Integer) args[0];
 		Component errorComponent = Component.empty();
 		if (pointsRemovedSublevel.get() == 0) {
-			instance.translate(langKey, args);
+			original.call(instance, langKey, args);
 		} else if (arg - pointsRemovedSublevel.get() == 0) {
 			errorComponent = Component.translatable("sable.create.remove.points_removed_sublevel", removed)
 					.withStyle(ChatFormatting.RED);
