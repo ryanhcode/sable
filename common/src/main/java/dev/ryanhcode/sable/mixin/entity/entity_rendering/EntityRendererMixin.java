@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_rendering;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
@@ -39,12 +40,12 @@ public abstract class EntityRendererMixin {
      * @author RyanH
      * @reason Account for sub-levels with sky lighting
      */
-    @Overwrite
-    public final int getPackedLightCoords(final Entity arg, final float f) {
+    @ModifyReturnValue(method = "getPackedLightCoords", at = @At("RETURN"))
+    public final int getPackedLightCoords(int original, final Entity arg, final float f) {
         final Vec3 lightProbeOffset = arg.getLightProbePosition(f).subtract(arg.getEyePosition(f));
         final Vector3d lightProbePosition = JOMLConversion.toJOML(Sable.HELPER.getEyePositionInterpolated(arg, f)).add(lightProbeOffset.x, lightProbeOffset.y, lightProbeOffset.z);
         final BlockPos blockpos = BlockPos.containing(lightProbePosition.x, lightProbePosition.y, lightProbePosition.z);
-        return LightTexture.pack(sable$getSubLevelAccountedBlockLight(arg.level(), LightLayer.BLOCK, blockpos, lightProbePosition), sable$getSubLevelAccountedLight(arg.level(), LightLayer.SKY, blockpos, lightProbePosition));
+        return Math.max(original, LightTexture.pack(sable$getSubLevelAccountedBlockLight(arg.level(), LightLayer.BLOCK, blockpos, lightProbePosition), sable$getSubLevelAccountedLight(arg.level(), LightLayer.SKY, blockpos, lightProbePosition)));
     }
 
     @Redirect(method = "getSkyLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I"))
