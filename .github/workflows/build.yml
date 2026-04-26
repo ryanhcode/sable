@@ -32,3 +32,17 @@ jobs:
 
       - name: Execute Gradle build
         run: ./gradlew build
+
+      - name: Upload Neoforge JAR to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+            archive: false
+            retention-days: 90
+            path: ./neoforge/build/libs/*[^-sources].jar
+
+      - name: Upload Fabric JAR to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+            archive: false
+            retention-days: 90
+            path: ./fabric/build/libs/*[^-sources].jar
