@@ -9,6 +9,7 @@
     "#minecraft:candles",
     "#c:glass_panes",
 
+    { "id": "c:ladders", "required": false },
     "minecraft:ladder",
     "minecraft:iron_bars",
     "#c:fence_gates",
