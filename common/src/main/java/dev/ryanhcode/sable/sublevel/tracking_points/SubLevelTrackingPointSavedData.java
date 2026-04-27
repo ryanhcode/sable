@@ -127,7 +127,7 @@ public class SubLevelTrackingPointSavedData extends SavedData implements SubLeve
      * Generates a tracking point for a player to spawn at
      */
     public @Nullable UUID generateTrackingPoint(final ServerPlayer player) {
-        final ServerSubLevel subLevel = (ServerSubLevel) EntitySubLevelUtil.getTrackingSubLevel(player);
+        final ServerSubLevel subLevel = (ServerSubLevel) Sable.HELPER.getTrackingSubLevel(player);
 
         return this.generateTrackingPoint(player, subLevel);
     }

@@ -42,7 +42,7 @@ public abstract class EntityRendererMixin {
     @Overwrite
     public final int getPackedLightCoords(final Entity arg, final float f) {
         final Vec3 lightProbeOffset = arg.getLightProbePosition(f).subtract(arg.getEyePosition(f));
-        final Vector3d lightProbePosition = JOMLConversion.toJOML(EntitySubLevelUtil.getEyePositionInterpolated(arg, f)).add(lightProbeOffset.x, lightProbeOffset.y, lightProbeOffset.z);
+        final Vector3d lightProbePosition = JOMLConversion.toJOML(Sable.HELPER.getEyePositionInterpolated(arg, f)).add(lightProbeOffset.x, lightProbeOffset.y, lightProbeOffset.z);
         final BlockPos blockpos = BlockPos.containing(lightProbePosition.x, lightProbePosition.y, lightProbePosition.z);
         return LightTexture.pack(sable$getSubLevelAccountedBlockLight(arg.level(), LightLayer.BLOCK, blockpos, lightProbePosition), sable$getSubLevelAccountedLight(arg.level(), LightLayer.SKY, blockpos, lightProbePosition));
     }
@@ -134,11 +134,11 @@ public abstract class EntityRendererMixin {
         }
 
         // on fast moving sub-levels
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(entity);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
 
         if (trackingSubLevel != null) {
             final float pt = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-            final Vec3 positionInterpolated = EntitySubLevelUtil.getEyePositionInterpolated(entity, pt)
+            final Vec3 positionInterpolated = Sable.HELPER.getEyePositionInterpolated(entity, pt)
                     .subtract(0.0, entity.getEyeHeight(), 0.0);
 
 

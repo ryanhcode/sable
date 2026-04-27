@@ -30,7 +30,7 @@ public class EntityRenderDispatcherMixin {
     @Inject(method = "renderHitbox", at = @At("TAIL"))
     private static void renderHitbox(final PoseStack poseStack, final VertexConsumer vertexConsumer, final Entity entity, final float partialTicks, final float g, final float h, final float i, final CallbackInfo ci) {
         // collision hitbox
-        final SubLevel tracking = EntitySubLevelUtil.getTrackingSubLevel(entity);
+        final SubLevel tracking = Sable.HELPER.getTrackingSubLevel(entity);
 
         if (tracking instanceof final ClientSubLevel clientSubLevel) {
             Quaterniondc customOrientation = EntitySubLevelUtil.getCustomEntityOrientation(entity, partialTicks);

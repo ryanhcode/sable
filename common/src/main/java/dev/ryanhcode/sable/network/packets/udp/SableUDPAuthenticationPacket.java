@@ -20,6 +20,10 @@ public record SableUDPAuthenticationPacket(String token) implements SableUDPPack
 
     @Override
     public void handleServer(final MinecraftServer server, final InetSocketAddress sender) {
-        SableUDPServer.getServer(server).receiveAuthenticationPacket(UUID.fromString(this.token), sender);
+        final SableUDPServer udpServer = SableUDPServer.getServer(server);
+
+        if (udpServer != null) {
+            udpServer.receiveAuthenticationPacket(UUID.fromString(this.token), sender);
+        }
     }
 }

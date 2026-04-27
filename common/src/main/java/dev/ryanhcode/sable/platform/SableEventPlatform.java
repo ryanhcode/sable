@@ -4,10 +4,8 @@ import dev.ryanhcode.sable.api.event.SablePostPhysicsTickEvent;
 import dev.ryanhcode.sable.api.event.SablePrePhysicsTickEvent;
 import dev.ryanhcode.sable.api.event.SableSubLevelContainerReadyEvent;
 
-import java.util.ServiceLoader;
-
 public interface SableEventPlatform {
-    SableEventPlatform INSTANCE = ServiceLoader.load(SableEventPlatform.class).findFirst().orElseThrow(() -> new RuntimeException("Failed to find sable event platform"));
+    SableEventPlatform INSTANCE = SablePlatformUtil.load(SableEventPlatform.class);
 
     /**
      * Registers a listener for when Sable has finished initialization for a level and its sub-level container is ready

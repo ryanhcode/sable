@@ -4,8 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.index.SableTags;
@@ -78,6 +76,9 @@ public abstract class EntityMixin implements EntityMovementExtension {
 
     @Shadow
     protected abstract boolean isHorizontalCollisionMinor(Vec3 arg);
+
+    @Unique
+    private BlockPos sable$inBlockStatePos = BlockPos.ZERO;
 
 //    @Unique
 //    private Vector3d sable$trackStartUpDirection = null;
@@ -230,7 +231,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
             if (vehicleSubLevel != null) {
                 this.sable$trackingSubLevel = vehicleSubLevel;
             } else {
-                this.sable$trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(vehicle);
+                this.sable$trackingSubLevel = Sable.HELPER.getTrackingSubLevel(vehicle);
             }
         }
 
@@ -248,6 +249,14 @@ public abstract class EntityMixin implements EntityMovementExtension {
     }
 
     /**
+     * @return the position that the state returned by getInBlockState was gotten from
+     */
+    @Override
+    public BlockPos sable$getInBlockStatePos() {
+        return this.sable$inBlockStatePos;
+    }
+
+    /**
      * @author RyanH
      * @reason Take into account sub-levels
      */
@@ -257,6 +266,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
 
         if (this.inBlockState == null || this.sable$trackingSubLevel != null) {
             this.inBlockState = level.getBlockState(this.blockPosition);
+            this.sable$inBlockStatePos = this.blockPosition;
 
             final Iterable<SubLevel> intersecting = Sable.HELPER.getAllIntersecting(this.level, new BoundingBox3d(this.blockPosition));
 
@@ -265,6 +275,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
                 final SubLevel subLevel = iter.next();
                 final BlockPos localBlockPos = BlockPos.containing(subLevel.logicalPose().transformPositionInverse(this.position.add(0.0, 0.001, 0.0)));
                 this.inBlockState = level.getBlockState(localBlockPos);
+                this.sable$inBlockStatePos = localBlockPos;
             }
         }
 

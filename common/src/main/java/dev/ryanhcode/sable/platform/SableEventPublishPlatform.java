@@ -5,12 +5,10 @@ import dev.ryanhcode.sable.api.event.SablePrePhysicsTickEvent;
 import dev.ryanhcode.sable.api.event.SableSubLevelContainerReadyEvent;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.util.ServiceLoader;
-
 /**
  * Platform responsible for publishing sable events.
  */
 @ApiStatus.Internal
 public interface SableEventPublishPlatform extends SableSubLevelContainerReadyEvent, SablePrePhysicsTickEvent, SablePostPhysicsTickEvent {
-    SableEventPublishPlatform INSTANCE = ServiceLoader.load(SableEventPublishPlatform.class).findFirst().orElseThrow(() -> new RuntimeException("Failed to find sable event publish platform"));
+    SableEventPublishPlatform INSTANCE = SablePlatformUtil.load(SableEventPublishPlatform.class);
 }

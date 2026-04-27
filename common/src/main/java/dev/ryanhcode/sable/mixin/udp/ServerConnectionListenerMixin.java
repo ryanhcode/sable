@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.mixin.udp;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.SableConfig;
 import dev.ryanhcode.sable.mixinterface.udp.ServerConnectionListenerExtension;
 import dev.ryanhcode.sable.network.udp.SableUDPPacket;
 import dev.ryanhcode.sable.network.udp.SableUDPServer;
@@ -15,6 +16,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,13 +39,17 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
 
     @Shadow
     @Final
-    MinecraftServer server;
+    private MinecraftServer server;
 
     @Unique
     private SableUDPServer sable$server = null;
 
     @Inject(method = "startTcpServerListener", at = @At("HEAD"))
     private void sable$startTcpServerListener(final InetAddress inetAddress, final int port, final CallbackInfo ci) {
+        if (SableConfig.DISABLE_UDP_PIPELINE.get()) {
+            return;
+        }
+
         synchronized (this.channels) {
             final Class<? extends Channel> channelClass;
             final EventLoopGroup eventLoopGroup;
@@ -69,13 +75,18 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
                         }
                     })
                     .group(eventLoopGroup)
-                    .bind(port)
+                    .localAddress(inetAddress, port)
+                    .bind()
                     .syncUninterruptibly());
         }
     }
 
     @Inject(method = "startMemoryChannel", at = @At("TAIL"))
     private void sable$startMemoryChannel(final CallbackInfoReturnable<SocketAddress> cir) {
+        if (SableConfig.DISABLE_UDP_PIPELINE.get()) {
+            return;
+        }
+
         synchronized (this.channels) {
             Sable.LOGGER.info("Adding local UDP server channel future");
 
@@ -114,6 +125,7 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
     }
 
     @Override
+    @Nullable
     public SableUDPServer sable$getServer() {
         return this.sable$server;
     }

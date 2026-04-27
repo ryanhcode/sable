@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -22,7 +23,7 @@ public class PathfindingContextMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void sable$init(final CollisionGetter collisionGetter, final Mob mob, final CallbackInfo ci) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(mob);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(mob);
 
         if (trackingSubLevel != null) {
             this.mobPosition = BlockPos.containing(trackingSubLevel.logicalPose().transformPositionInverse(mob.position()));

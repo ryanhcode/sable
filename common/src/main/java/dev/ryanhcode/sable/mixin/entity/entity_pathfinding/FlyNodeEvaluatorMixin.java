@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -26,7 +27,7 @@ public abstract class FlyNodeEvaluatorMixin extends NodeEvaluator {
 
     @Inject(method = "getStart", at = @At("HEAD"))
     private void sable$init(final CallbackInfoReturnable<Node> cir, @Share("mobPosition") final LocalRef<Vec3> mobPosition) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this.mob);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this.mob);
 
         if (trackingSubLevel != null) {
             mobPosition.set(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()));
@@ -64,7 +65,7 @@ public abstract class FlyNodeEvaluatorMixin extends NodeEvaluator {
         final AABB mobBounds = mob.getBoundingBox();
         final boolean small = mobBounds.getSize() < (double) 1.0F;
 
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this.mob);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this.mob);
 
         Vec3 localPosition = this.mob.position();
 

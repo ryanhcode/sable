@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.death_message;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
 import net.minecraft.world.entity.Entity;
@@ -15,7 +16,7 @@ public abstract class EntityMixin {
     private void sable$updateLastSubLevelId(final CallbackInfo ci) {
         final Entity self = (Entity) (Object) this;
 
-        if (EntitySubLevelUtil.getTrackingSubLevel(self) == null && self.onGround()) {
+        if (Sable.HELPER.getTrackingSubLevel(self) == null && self.onGround()) {
             ((EntityMovementExtension) self).sable$setLastTrackingSubLevelID(null);
         }
     }

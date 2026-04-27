@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entities_stick_sublevels.player;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
@@ -28,7 +29,7 @@ public abstract class ServerPlayerMixin extends Entity {
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void tick(final CallbackInfo ci) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this);
 
         if (trackingSubLevel != null && !trackingSubLevel.isRemoved()) {
             final Vector3d entityCenter = JOMLConversion.getAABBCenter(this.getBoundingBox(), this.sable$trackedSubLevelPos);

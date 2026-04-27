@@ -1,15 +1,14 @@
 package dev.ryanhcode.sable.mixin.sublevel_render;
 
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.mixinterface.sublevel_render.vanilla.RenderSectionExtension;
+import foundry.veil.api.client.render.VeilRenderSystem;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,9 +38,11 @@ public class RenderSectionMixin implements RenderSectionExtension {
     @Inject(method = "setDirty", at = @At("HEAD"))
     public void setDirty(final boolean playerChanged, final CallbackInfo ci) {
         if (this.sable$listening && !this.dirty && this.sable$listeners != null) {
-            for (final DirtyListener listener : this.sable$listeners) {
-                listener.markDirty((SectionRenderDispatcher.RenderSection) (Object) this);
-            }
+            VeilRenderSystem.renderThreadExecutor().execute(() -> {
+                for (final DirtyListener listener : this.sable$listeners) {
+                    listener.markDirty((SectionRenderDispatcher.RenderSection) (Object) this);
+                }
+            });
         }
     }
 

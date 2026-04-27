@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinhelpers.CanFallAtleastHelper;
@@ -45,7 +46,7 @@ public abstract class PlayerMixin extends LivingEntity {
 
     @Inject(method = "maybeBackOffFromEdge", at = @At("HEAD"), cancellable = true)
     private void sable$maybeBackOffFromEdge(final Vec3 movement, final MoverType moverType, final CallbackInfoReturnable<Vec3> cir) {
-         final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this);
 
         if (trackingSubLevel != null) {
             final float maxUpStep = this.maxUpStep();

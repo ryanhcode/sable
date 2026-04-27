@@ -18,6 +18,7 @@ import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -42,14 +43,11 @@ public class SableUDPServer {
         this.udpAuthStates = new WeakHashMap<>();
     }
 
-    public static boolean sendPacket(final ServerPlayer player, final SableUDPPacket packet, final boolean flush) {
-        return getServer(player.server).sendUDPPacket(player, packet, flush);
-    }
-
     /**
      * Retrieves the current instance of the UDP server from a {@link MinecraftServer}
      */
     @ApiStatus.Internal
+    @Nullable
     public static SableUDPServer getServer(final MinecraftServer server) {
         return (((ServerConnectionListenerExtension) server.getConnection())).sable$getServer();
     }
@@ -93,7 +91,7 @@ public class SableUDPServer {
      * @param flush  whether to flush the packet immediately
      * @return if the packet has been successfully sent
      */
-    private boolean sendUDPPacket(final ServerPlayer player, final SableUDPPacket packet, final boolean flush) {
+    public boolean sendUDPPacket(final ServerPlayer player, final SableUDPPacket packet, final boolean flush) {
         if (this.channel.eventLoop().inEventLoop())
             throw new IllegalStateException("Cannot send packet from event loop");
 

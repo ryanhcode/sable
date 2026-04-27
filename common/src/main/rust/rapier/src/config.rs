@@ -1,6 +1,6 @@
+use jni::JNIEnv;
 use jni::objects::JClass;
 use jni::sys::{jdouble, jint};
-use jni::JNIEnv;
 use marten::Real;
 
 use crate::PHYSICS_STATE;
@@ -11,7 +11,7 @@ pub const JOINT_SPRING_FREQUENCY: Real = 550.0;
 /// Global damping ratio for joints
 pub const JOINT_SPRING_DAMPING_RATIO: Real = 4.0;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_configFrequencyAndDamping<
     'local,
 >(
@@ -34,7 +34,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_con
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_configSolverIterations<
     'local,
 >(
@@ -59,7 +59,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_con
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_configMinIslandSize<
     'local,
 >(

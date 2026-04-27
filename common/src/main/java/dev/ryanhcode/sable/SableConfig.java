@@ -15,6 +15,7 @@ public final class SableConfig {
     public static final ModConfigSpec.DoubleValue SUB_LEVEL_PUNCH_STRENGTH_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue SUB_LEVEL_PUNCH_DOWNWARD_STRENGTH_MULTIPLIER;
     public static final ModConfigSpec.IntValue SUB_LEVEL_PUNCH_COOLDOWN_TICKS;
+    public static final ModConfigSpec.BooleanValue DISABLE_UDP_PIPELINE;
     public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
 
     static {
@@ -49,6 +50,9 @@ public final class SableConfig {
         SUB_LEVEL_PUNCH_COOLDOWN_TICKS = builder
                 .comment("The cooldown in ticks between sub-level punches")
                 .defineInRange("sub_level_punch_cooldown_ticks", 3, 0, Integer.MAX_VALUE);
+        DISABLE_UDP_PIPELINE = builder
+                .comment("If the entire Sable UDP Networking pipeline should be disabled. This can improve compatibility with certain mods like Replay mod and certain networking setups, but will have worse performance and latency for networking sub-levels.")
+                .define("disable_udp_pipeline", false);
         ATTEMPT_UDP_NETWORKING = builder
                 .comment("If Sable should attempt to authenticate with clients and send them sub-level data over UDP")
                 .define("attempt_udp_networking", true);

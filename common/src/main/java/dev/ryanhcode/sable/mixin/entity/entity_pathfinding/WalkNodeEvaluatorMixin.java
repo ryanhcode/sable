@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -24,7 +25,7 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
     @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBlockY()I"))
     private int sable$redirectGetBlockY(final Mob mob) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(mob);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(mob);
 
         if (trackingSubLevel != null) {
             return Mth.floor(trackingSubLevel.logicalPose().transformPositionInverse(mob.position()).y);
@@ -77,7 +78,7 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
     @Unique
     private SubLevel sable$getTrackingSubLevel() {
-        return EntitySubLevelUtil.getTrackingSubLevel(this.mob);
+        return Sable.HELPER.getTrackingSubLevel(this.mob);
     }
 
 

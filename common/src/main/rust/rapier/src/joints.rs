@@ -1,9 +1,9 @@
 use crate::config::{JOINT_SPRING_DAMPING_RATIO, JOINT_SPRING_FREQUENCY};
 use crate::scene::LevelColliderID;
 use crate::{get_scene_mut_ref, get_scene_ref};
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jboolean, jdouble, jint, jlong};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::{
     GenericJointBuilder, JointAxesMask, JointAxis, RevoluteJointBuilder, SpringCoefficients,
@@ -25,6 +25,9 @@ struct SubLevelJoint {
     pos_b: Vector3<f64>,
     normal_a: Vector3<f64>,
     normal_b: Vector3<f64>,
+
+    rotation_a: Option<Quat>,
+    rotation_b: Option<Quat>,
 
     handle: RapierJointHandle,
 
@@ -59,7 +62,7 @@ pub fn tick(scene_id: jint) {
             .get_mut(joint.handle, false)
             .unwrap();
         impulse_joint.data.contacts_enabled = joint.contacts_enabled;
-        if !joint.fixed {
+        if !joint.fixed && joint.rotation_a.is_none() {
             impulse_joint.data.set_local_axis1(Vector::new(
                 joint.normal_a.x as Real,
                 joint.normal_a.y as Real,
@@ -78,7 +81,7 @@ pub fn tick(scene_id: jint) {
             local_anchor_1.y as Real,
             local_anchor_1.z as Real,
         ));
-        if !joint.fixed {
+        if !joint.fixed && joint.rotation_b.is_none() {
             impulse_joint.data.set_local_axis2(Vector::new(
                 joint.normal_b.x as Real,
                 joint.normal_b.y as Real,
@@ -97,6 +100,12 @@ pub fn tick(scene_id: jint) {
             local_anchor_2.y as Real,
             local_anchor_2.z as Real,
         ));
+        if let Some(rotation_a) = joint.rotation_a {
+            impulse_joint.data.local_frame1.rotation = rotation_a;
+        }
+        if let Some(rotation_b) = joint.rotation_b {
+            impulse_joint.data.local_frame2.rotation = rotation_b;
+        }
     }
 }
 
@@ -109,7 +118,7 @@ const AXES: [JointAxis; 6] = [
     JointAxis::AngZ,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintMotor<
     'local,
 >(
@@ -146,7 +155,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isConstraintValid<
     'local,
 >(
@@ -163,7 +172,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isC
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getConstraintImpulses<
     'local,
 >(
@@ -171,7 +180,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     _class: JClass<'local>,
     scene_id: jint,
     joint_id: jlong,
-    store: JDoubleArray<'local>
+    store: JDoubleArray<'local>,
 ) {
     let scene = get_scene_ref(scene_id);
     let joint = scene.joint_set.joints.get(&joint_id).unwrap();
@@ -190,7 +199,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
     env.set_double_array_region(&store, 0, &arr).unwrap();
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintContactsEnabled<
     'local,
 >(
@@ -209,7 +218,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 // removes a constraint
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeConstraint<
     'local,
 >(
@@ -224,7 +233,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRotaryConstraint<
     'local,
 >(
@@ -291,11 +300,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
-            normal_a: Vector3::new(axis_x_a as f64, axis_y_a as f64, axis_z_a as f64),
-            normal_b: Vector3::new(axis_x_b as f64, axis_y_b as f64, axis_z_b as f64),
+            normal_a: Vector3::new(axis_x_a, axis_y_a, axis_z_a),
+            normal_b: Vector3::new(axis_x_b, axis_y_b, axis_z_b),
+
+            rotation_a: None,
+            rotation_b: None,
 
             handle,
 
@@ -307,7 +319,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFixedConstraint<
     'local,
 >(
@@ -377,11 +389,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
             normal_a: Vector3::new(0.0, 0.0, 0.0),
             normal_b: Vector3::new(0.0, 0.0, 0.0),
+
+            rotation_a: None,
+            rotation_b: None,
 
             handle,
 
@@ -393,7 +408,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFreeConstraint<
     'local,
 >(
@@ -460,11 +475,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
                 Some(id_b as LevelColliderID)
             },
 
-            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
-            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+            pos_a: Vector3::new(local_x_a, local_y_a, local_z_a),
+            pos_b: Vector3::new(local_x_b, local_y_b, local_z_b),
 
             normal_a: Vector3::new(0.0, 0.0, 0.0),
             normal_b: Vector3::new(0.0, 0.0, 0.0),
+
+            rotation_a: None,
+            rotation_b: None,
 
             handle,
 
@@ -474,4 +492,148 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     );
 
     handle_long
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addGenericConstraint<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    scene_id: jint,
+    id_a: jint,
+    id_b: jint,
+    local_x_a: jdouble,
+    local_y_a: jdouble,
+    local_z_a: jdouble,
+    local_q_x_a: jdouble,
+    local_q_y_a: jdouble,
+    local_q_z_a: jdouble,
+    local_q_w_a: jdouble,
+    local_x_b: jdouble,
+    local_y_b: jdouble,
+    local_z_b: jdouble,
+    local_q_x_b: jdouble,
+    local_q_y_b: jdouble,
+    local_q_z_b: jdouble,
+    local_q_w_b: jdouble,
+    locked_axes_mask: jint,
+) -> SableJointHandle {
+    let scene = get_scene_mut_ref(scene_id);
+
+    let rb_a = if id_a == -1 {
+        scene.ground_handle.unwrap()
+    } else {
+        scene.rigid_bodies[&(id_a as LevelColliderID)]
+    };
+
+    let rb_b = if id_b == -1 {
+        scene.ground_handle.unwrap()
+    } else {
+        scene.rigid_bodies[&(id_b as LevelColliderID)]
+    };
+
+    let locked_axes = JointAxesMask::from_bits_truncate(locked_axes_mask as u8);
+
+    let rotation_a = Quat::from_xyzw(
+        local_q_x_a as Real,
+        local_q_y_a as Real,
+        local_q_z_a as Real,
+        local_q_w_a as Real,
+    );
+    let rotation_b = Quat::from_xyzw(
+        local_q_x_b as Real,
+        local_q_y_b as Real,
+        local_q_z_b as Real,
+        local_q_w_b as Real,
+    );
+
+    let mut joint = GenericJointBuilder::new(locked_axes).softness(SpringCoefficients::new(
+        JOINT_SPRING_FREQUENCY,
+        JOINT_SPRING_DAMPING_RATIO,
+    ));
+    joint.0.local_frame1.rotation = rotation_a;
+    joint.0.local_frame2.rotation = rotation_b;
+
+    let handle = scene
+        .impulse_joint_set
+        .insert(rb_a, rb_b, joint.build(), true);
+
+    let (index, generation) = handle.0.into_raw_parts();
+    let handle_long: SableJointHandle = index as jlong | (generation as jlong) << 32;
+
+    scene.joint_set.joints.insert(
+        handle_long,
+        SubLevelJoint {
+            id_a: if id_a == -1 {
+                None
+            } else {
+                Some(id_a as LevelColliderID)
+            },
+            id_b: if id_b == -1 {
+                None
+            } else {
+                Some(id_b as LevelColliderID)
+            },
+
+            pos_a: Vector3::new(local_x_a as f64, local_y_a as f64, local_z_a as f64),
+            pos_b: Vector3::new(local_x_b as f64, local_y_b as f64, local_z_b as f64),
+
+            normal_a: Vector3::new(0.0, 0.0, 0.0),
+            normal_b: Vector3::new(0.0, 0.0, 0.0),
+
+            rotation_a: Some(rotation_a),
+            rotation_b: Some(rotation_b),
+
+            handle,
+
+            fixed: true,
+            contacts_enabled: true,
+        },
+    );
+
+    handle_long
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintFrame<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    scene_id: jint,
+    joint_id: jlong,
+    side: jint,
+    local_x: jdouble,
+    local_y: jdouble,
+    local_z: jdouble,
+    local_q_x: jdouble,
+    local_q_y: jdouble,
+    local_q_z: jdouble,
+    local_q_w: jdouble,
+) {
+    let scene = get_scene_mut_ref(scene_id);
+    let Some(joint) = scene.joint_set.joints.get_mut(&joint_id) else {
+        return;
+    };
+
+    let position = Vector3::new(local_x as f64, local_y as f64, local_z as f64);
+    let rotation = Quat::from_xyzw(
+        local_q_x as Real,
+        local_q_y as Real,
+        local_q_z as Real,
+        local_q_w as Real,
+    );
+
+    match side {
+        0 => {
+            joint.pos_a = position;
+            joint.rotation_a = Some(rotation);
+        }
+        1 => {
+            joint.pos_b = position;
+            joint.rotation_b = Some(rotation);
+        }
+        _ => panic!("Invalid constraint frame side: {}", side),
+    }
 }

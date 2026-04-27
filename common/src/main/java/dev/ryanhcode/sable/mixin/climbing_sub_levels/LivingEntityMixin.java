@@ -1,9 +1,13 @@
 package dev.ryanhcode.sable.mixin.climbing_sub_levels;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
+import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
 import dev.ryanhcode.sable.platform.SablePlatform;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -30,12 +34,13 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     @Redirect(method = "onClimbable", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;blockPosition()Lnet/minecraft/core/BlockPos;"))
-    private BlockPos sable$redirectPos(final LivingEntity instance) {
+    private BlockPos sable$redirectPos(final LivingEntity instance, @Share("subLevelBlockState") final LocalRef<BlockState> subLevelBlockState) {
         final Level level = this.level();
-        final BlockPos defaultPos = instance.blockPosition();
-
         final LivingEntity self = (LivingEntity) (Object) this;
-        final BlockState defaultState = level.getBlockState(defaultPos);
+
+        final BlockPos defaultPos = ((EntityMovementExtension) this).sable$getInBlockStatePos();
+        final BlockState defaultState = this.getInBlockState();
+
         if (defaultState.is(BlockTags.CLIMBABLE) && SablePlatform.INSTANCE.isBlockstateLadder(defaultState, level, defaultPos, self)) {
             return defaultPos;
         }
@@ -48,10 +53,18 @@ public abstract class LivingEntityMixin extends Entity {
             final BlockState state = level.getBlockState(pos);
 
             if (state.is(BlockTags.CLIMBABLE) && SablePlatform.INSTANCE.isBlockstateLadder(state, level, pos, self)) {
+                subLevelBlockState.set(state);
                 return pos.immutable();
             }
         }
 
         return defaultPos;
+    }
+
+
+    @WrapOperation(method = "onClimbable", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getInBlockState()Lnet/minecraft/world/level/block/state/BlockState;"))
+    private BlockState getInBlockState(final LivingEntity instance, final Operation<BlockState> original, @Share("subLevelBlockState") final LocalRef<BlockState> subLevelBlockState) {
+        final BlockState state = subLevelBlockState.get();
+        return state != null ? state :  original.call(instance);
     }
 }

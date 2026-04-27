@@ -33,6 +33,10 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
         this.delegate = delegate;
     }
 
+    private static void logError(final AABB aabb) {
+        Sable.LOGGER.error("Aborting entity get for abnormally large AABB: {}", aabb, new Throwable("Stack Trace"));
+    }
+
     @Override
     public @Nullable T get(final int i) {
         return this.delegate.get(i);
@@ -56,7 +60,7 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
     @Override
     public void get(AABB aABB, final Consumer<T> consumer) {
         if (aABB.getSize() > MAX_GET_SIDE_LENGTH) {
-            Sable.LOGGER.error("Aborting entity get for abnormally large AABB: {}", aABB);
+            logError(aABB);
             return;
         }
 
@@ -88,7 +92,7 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
     @Override
     public <U extends T> void get(final EntityTypeTest<T, U> entityTypeTest, AABB aABB, final AbortableIterationConsumer<U> abortableIterationConsumer) {
         if (aABB.getSize() > MAX_GET_SIDE_LENGTH) {
-            Sable.LOGGER.error("Aborting entity get for abnormally large AABB: {}", aABB);
+            logError(aABB);
             return;
         }
 

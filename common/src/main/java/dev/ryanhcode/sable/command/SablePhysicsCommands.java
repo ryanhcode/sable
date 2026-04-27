@@ -83,9 +83,9 @@ public class SablePhysicsCommands {
                                                 .then(Commands.literal("global")
                                                         .executes((ctx) ->
                                                                 SablePhysicsCommands.executeAddTranslationCommand(ctx, true)))
-                                                        .then(Commands.literal("local")
-                                                                .executes((ctx) ->
-                                                                        SablePhysicsCommands.executeAddTranslationCommand(ctx, false)))
+                                                .then(Commands.literal("local")
+                                                        .executes((ctx) ->
+                                                                SablePhysicsCommands.executeAddTranslationCommand(ctx, false)))
                                         ))
 
                                 .then(Commands.literal("set")
@@ -154,50 +154,47 @@ public class SablePhysicsCommands {
         return 0;
     }
 
-    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithMode(final boolean add)
-    {
-        return Commands.literal(add?"add":"set").then(wrapRotationWithReferenceFrame(add,false)).then(wrapRotationWithReferenceFrame(add,true));
+    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithMode(final boolean add) {
+        return Commands.literal(add ? "add" : "set").then(wrapRotationWithReferenceFrame(add, false)).then(wrapRotationWithReferenceFrame(add, true));
     }
-    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithReferenceFrame(final boolean add, final boolean axis)
-    {
-        final Command<CommandSourceStack> c = (ctx) -> SablePhysicsCommands.executeRotationCommand(ctx,add,axis, true);
-        final Function<ArgumentBuilder<CommandSourceStack, ?>,ArgumentBuilder<CommandSourceStack, ?>> f = (b) -> {
-            if(add)
-                b.then(wrapRotationWithGlobality(axis,true)).then(wrapRotationWithGlobality(axis,false));
+
+    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithReferenceFrame(final boolean add, final boolean axis) {
+        final Command<CommandSourceStack> c = (ctx) -> SablePhysicsCommands.executeRotationCommand(ctx, add, axis, true);
+        final Function<ArgumentBuilder<CommandSourceStack, ?>, ArgumentBuilder<CommandSourceStack, ?>> f = (b) -> {
+            if (add)
+                b.then(wrapRotationWithGlobality(axis, true)).then(wrapRotationWithGlobality(axis, false));
             return b;
         };
-        final ArgumentBuilder<CommandSourceStack, ?> b = axis?
-                Commands.argument("axis", Vec3ArgumentAbsolute.vec3()).then(f.apply(Commands.argument("angle", DoubleArgumentType.doubleArg()).executes(c))):
+        final ArgumentBuilder<CommandSourceStack, ?> b = axis ?
+                Commands.argument("axis", Vec3ArgumentAbsolute.vec3()).then(f.apply(Commands.argument("angle", DoubleArgumentType.doubleArg()).executes(c))) :
                 f.apply(Commands.argument("rotation", RotationArgument.rotation()).executes(c));
 
-        return Commands.literal(axis?"axis":"entity").then(b);
-    }
-    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithGlobality(final boolean axis, final boolean global)
-    {
-        return Commands.literal(global?"global":"local").executes((ctx) ->
-                SablePhysicsCommands.executeRotationCommand(ctx,true,axis, global));
+        return Commands.literal(axis ? "axis" : "entity").then(b);
     }
 
-    private static int executeRotationCommand(final CommandContext<CommandSourceStack> ctx,final boolean add,final boolean axis, final boolean global) throws CommandSyntaxException {
+    private static ArgumentBuilder<CommandSourceStack, ?> wrapRotationWithGlobality(final boolean axis, final boolean global) {
+        return Commands.literal(global ? "global" : "local").executes((ctx) ->
+                SablePhysicsCommands.executeRotationCommand(ctx, true, axis, global));
+    }
 
-
+    private static int executeRotationCommand(final CommandContext<CommandSourceStack> ctx, final boolean add, final boolean axis, final boolean global) throws CommandSyntaxException {
         final PhysicsPipeline pipeline = SableCommandHelper.requireSubLevelPhysicsPipeline(ctx);
 
         final Quaterniond orientation = new Quaterniond();
 
-        Vec2 rotation2=new Vec2(0,0);
-        Vec3 rotationAxis=new Vec3(0,0,0);
-        double rotationAngle=0;
+        Vec2 rotation2 = new Vec2(0, 0);
+        Vec3 rotationAxis = new Vec3(0, 0, 0);
+        double rotationAngle = 0;
 
-        if(axis) {
+        if (axis) {
             rotationAxis = ctx.getArgument("axis", Vec3.class);
-            rotationAngle = ctx.getArgument("angle",Double.class);
-            orientation.fromAxisAngleDeg(rotationAxis.x,rotationAxis.y,rotationAxis.z,rotationAngle);
+            rotationAngle = ctx.getArgument("angle", Double.class);
+            orientation.fromAxisAngleDeg(rotationAxis.x, rotationAxis.y, rotationAxis.z, rotationAngle);
 
-            if(rotationAxis.lengthSqr()==0)
+            if (rotationAxis.lengthSqr() == 0) {
                 throw SableCommandHelper.ERROR_NO_AXIS_FOR_ROTATION.create();
-        }else
-        {
+            }
+        } else {
             rotation2 = RotationArgument.getRotation(ctx, "rotation").getRotation(ctx.getSource());
             orientation.rotateY(-Math.toRadians(rotation2.y));
             orientation.rotateX(Math.toRadians(rotation2.x));
@@ -211,23 +208,29 @@ public class SablePhysicsCommands {
 
         for (final ServerSubLevel subLevel : subLevels) {
             final Pose3d pose = subLevel.logicalPose();
-            if(add) {
+            if (add) {
                 if (global) {
                     pose.orientation().premul(orientation);
                 } else {
                     pose.orientation().mul(orientation);
                 }
-            }else
+            } else {
                 pose.orientation().set(orientation);
+            }
             pipeline.teleport(subLevel, pose.position(), pose.orientation());
         }
 
-        if(axis) {
-            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex("commands.sable.physics.rotation.add.success", ctx, subLevels, 1,
-                    getGlobalComponent(global), rotationAxis.x + ", " + rotationAxis.y + ", "+ rotationAxis.z + ", " + rotationAngle);
-        }else
-        {
-            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex("commands.sable.physics.rotation.add.success", ctx, subLevels, 1,
+        if (axis) {
+            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex(
+                    add ? "commands.sable.physics.rotation.add.success"
+                            : "commands.sable.physics.rotation.set.success",
+                    ctx, subLevels, 1,
+                    getGlobalComponent(global), rotationAxis.x + ", " + rotationAxis.y + ", " + rotationAxis.z + ", " + rotationAngle);
+        } else {
+            SableCommandHelper.sendSuccessDescribingSubLevelsAtIndex(
+                    add ? "commands.sable.physics.rotation.add.success"
+                            : "commands.sable.physics.rotation.set.success",
+                    ctx, subLevels, 1,
                     getGlobalComponent(global), rotation2.x + ", " + rotation2.y);
         }
         return 0;

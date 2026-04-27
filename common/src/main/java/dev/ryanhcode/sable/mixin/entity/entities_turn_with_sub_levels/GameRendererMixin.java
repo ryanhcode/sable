@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entities_turn_with_sub_levels;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -36,7 +37,7 @@ public class GameRendererMixin {
     @Inject(method = "renderLevel", at = @At("HEAD"))
     public void renderLevel(final DeltaTracker deltaTracker, final CallbackInfo ci) {
         final LocalPlayer player = this.minecraft.player;
-        final SubLevel standingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(player);
+        final SubLevel standingSubLevel = Sable.HELPER.getTrackingSubLevel(player);
 
         if (standingSubLevel != null && player.getVehicle() == null && !standingSubLevel.isRemoved() && !EntitySubLevelUtil.hasCustomEntityOrientation(player)) {
             final Quaterniondc current = ((ClientSubLevel) standingSubLevel).renderPose().orientation();

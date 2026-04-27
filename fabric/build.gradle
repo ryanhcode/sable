@@ -17,14 +17,18 @@ dependencies {
     modImplementation fabricApi.module("fabric-resource-loader-v0", project.fabric_version)
     modImplementation fabricApi.module("fabric-convention-tags-v2", project.fabric_version)
 
+    include(implementation("org.apache.maven:maven-artifact:3.8.5"))
+
     include(modApi("dev.ryanhcode.sable-companion:sable-companion-fabric-$minecraft_version:$sable_companion_version"))
 
     modCompileOnly "maven.modrinth:sodium:$rootProject.sodium_version"
     modCompileOnly "maven.modrinth:distanthorizons:$rootProject.distant_horizons_version"
+    modCompileOnly "maven.modrinth:sodium-extras:fabric-${minecraft_version}-$sodiumextras_version"
 
     include(modApi("foundry.veil:veil-fabric-${project.minecraft_version}:${project.veil_version}"))
 
     include(modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeconfigapiport_version}")) //source: https://github.com/Fuzss/forgeconfigapiport-fabric
+    include(implementation('org.tukaani:xz:1.10'))
 }
 
 loom {

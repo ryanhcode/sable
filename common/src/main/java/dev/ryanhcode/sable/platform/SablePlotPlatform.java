@@ -4,11 +4,8 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.chunk.LevelChunk;
 
-import java.util.ServiceLoader;
-
 public interface SablePlotPlatform {
-
-    SablePlotPlatform INSTANCE = ServiceLoader.load(SablePlotPlatform.class).findFirst().orElseThrow(() -> new RuntimeException("Failed to find sable plot platform"));
+    SablePlotPlatform INSTANCE = SablePlatformUtil.load(SablePlotPlatform.class);
 
     void readLightData(final CompoundTag tag, final RegistryAccess registryAccess, final LevelChunk chunk);
 

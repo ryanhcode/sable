@@ -57,7 +57,7 @@ public abstract class PathNavigationMixin {
 
     @Inject(method = "createPath(Ljava/util/Set;IZIF)Lnet/minecraft/world/level/pathfinder/Path;", at = @At("HEAD"), cancellable = true)
     private void sable$createPath(final Set<BlockPos> globalSet, final int i, final boolean bl, final int j, final float f, final CallbackInfoReturnable<Path> cir) {
-        SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this.mob);
+        SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this.mob);
 
         final Iterator<BlockPos> iter = globalSet.iterator();
         while (trackingSubLevel == null && iter.hasNext()) {

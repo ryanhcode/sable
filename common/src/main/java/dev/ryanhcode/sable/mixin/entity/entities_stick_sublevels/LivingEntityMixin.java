@@ -135,7 +135,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntitySt
 
         Vec3 delta = currentPos.subtract(oldPos);
 
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this);
 
         if (trackingSubLevel != null && (countLocalPlayer || !(((Object)this) instanceof final Player player && player.isLocalPlayer()))) {
             final Pose3d pose = trackingSubLevel.logicalPose();

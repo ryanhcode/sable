@@ -117,7 +117,7 @@ public class TrackBlockOutlineMixin {
 
     @Redirect(method = "pickCurves", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
     private static Vec3 sable$getEyePosition(final LocalPlayer entity, final float partialTicks) {
-        return EntitySubLevelUtil.getEyePositionInterpolated(entity, partialTicks);
+        return Sable.HELPER.getEyePositionInterpolated(entity, partialTicks);
     }
 
     @Redirect(method = "pickCurves", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))

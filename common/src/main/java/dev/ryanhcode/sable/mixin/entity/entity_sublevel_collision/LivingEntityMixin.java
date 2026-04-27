@@ -134,7 +134,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityMo
 
                 this.addDeltaMovement(JOMLConversion.toMojang(collisionInfo.globalDirection()).scale(relativeVelocity.length() * 0.65));
 
-                if (EntitySubLevelUtil.getTrackingSubLevel(this) == null) {
+                if (Sable.HELPER.getTrackingSubLevel(this) == null) {
                     this.addDeltaMovement(JOMLConversion.toMojang(pointVelocity));
                 }
             } else {

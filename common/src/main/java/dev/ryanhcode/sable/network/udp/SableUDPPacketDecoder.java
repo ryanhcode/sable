@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.network.udp;
 
+import dev.ryanhcode.sable.Sable;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
@@ -37,15 +38,21 @@ public class SableUDPPacketDecoder extends MessageToMessageDecoder<DatagramPacke
             }
 
             final SableUDPPacketType packetType = SableUDPPacketType.VALUES[packetID];
-            final SableUDPPacket packet = packetType.create(new RegistryFriendlyByteBuf(byteBuf, null));
+            final SableUDPPacket packet;
+
+            try {
+                packet = packetType.create(new RegistryFriendlyByteBuf(byteBuf, null));
+            } catch (final Exception e) {
+                Sable.LOGGER.error("Failed to decode UDP packet of type {} from {}", packetType, msg.sender(), e);
+                return;
+            }
 
             if (byteBuf.readableBytes() > 0) {
-                throw new IOException(
-                        "SableUDPPacket %s (%s) was larger than expected, found %d bytes extra".formatted(packetType, packet.getClass().getSimpleName(), byteBuf.readableBytes())
-                );
-            } else {
-                out.add(new AddressedSableUDPPacket(packet, msg.sender()));
+                Sable.LOGGER.error("SableUDPPacket {} ({}) was larger than expected, found {} bytes extra", packetType, packet.getClass().getSimpleName(), byteBuf.readableBytes());
+                return;
             }
+
+            out.add(new AddressedSableUDPPacket(packet, msg.sender()));
         }
     }
 }

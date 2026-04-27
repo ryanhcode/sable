@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.render.dynamic_shade;
 
+import dev.ryanhcode.sable.Sable;
 import foundry.veil.Veil;
 import foundry.veil.api.client.render.shader.processor.ShaderPreProcessor;
 import io.github.ocelot.glslprocessor.api.GlslInjectionPoint;
@@ -44,7 +45,21 @@ public class SableDynamicDirectionalShadingPreProcessor implements ShaderPreProc
             return;
         }
 
-        ctx.include(tree, Veil.veilPath("light"), IncludeOverloadStrategy.SOURCE);
+        // ADRENO X1-85 COMPATIBILITY FIX
+        //
+        // The original Veil light.glsl uses:
+        //   uniform float[6] VeilBlockFaceBrightness;
+        //   with VeilBlockFaceBrightness[i] array access
+        //
+        // On Qualcomm Adreno X1-85 (Windows on ARM), array uniforms cause 276ms stalls
+        // because the OpenGL-to-D3D12 translation layer has to JIT recompile the shader.
+        //
+        // SOLUTION: Inline the light.glsl content with scalar uniforms instead of arrays:
+        //   uniform float VeilBlockFaceBrightness_0..5;
+        //   This avoids the driver stall.
+        //
+        // Note: We use SOURCE to include our patched light.glsl
+        ctx.include(tree, Sable.sablePath("shaders/include/light_adreno_compatible"), IncludeOverloadStrategy.SOURCE);
 
         tree.getBody().add(GlslInjectionPoint.BEFORE_MAIN, GlslParser.parseExpression("uniform float SableEnableNormalLighting;"));
         tree.getBody().add(GlslInjectionPoint.BEFORE_MAIN, GlslParser.parseExpression("uniform float SableSkyLightScale;"));

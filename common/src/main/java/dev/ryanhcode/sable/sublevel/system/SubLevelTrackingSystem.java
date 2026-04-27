@@ -363,10 +363,11 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
 
             final int maxBatchSize = 16;
 
-            if (SableUDPServer.getServer(this.level.getServer()).isConnectedTo(player)) {
+            final SableUDPServer udpServer = SableUDPServer.getServer(this.level.getServer());
+            if (udpServer != null && udpServer.isConnectedTo(player)) {
                 final Iterator<ClientboundSableSnapshotDualPacket.Entry> iter = entries.iterator();
 
-                SableUDPServer.sendPacket(player, new ClientboundSableSnapshotInfoDualPacket(msSinceLastSend, this.interpolationTick, false), true);
+                udpServer.sendUDPPacket(player, new ClientboundSableSnapshotInfoDualPacket(msSinceLastSend, this.interpolationTick, false), true);
                 while (iter.hasNext()) {
                     final List<ClientboundSableSnapshotDualPacket.Entry> batch = new ObjectArrayList<>();
 
@@ -374,7 +375,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
                         batch.add(iter.next());
                     }
 
-                    SableUDPServer.sendPacket(player, new ClientboundSableSnapshotDualPacket(this.interpolationTick, batch), true);
+                    udpServer.sendUDPPacket(player, new ClientboundSableSnapshotDualPacket(this.interpolationTick, batch), true);
                 }
             } else {
                 // We have to fallback to TCP, unfortunately...

@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable;
 
 import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
@@ -11,6 +12,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.LevelPoseProviderExtension;
+import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
 import dev.ryanhcode.sable.mixinterface.plot.SubLevelContainerHolder;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
@@ -29,11 +31,14 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.BiFunction;
 
 /**
@@ -376,6 +381,68 @@ public class ActiveSableCompanion implements SableCompanion {
     public boolean isInPlotGrid(final Level level, final int chunkX, final int chunkZ) {
         final SubLevelContainer container = SubLevelContainer.getContainer(level);
         return container != null && container.inBounds(chunkX, chunkZ);
+    }
+
+    @Override
+    public @Nullable SubLevel getTrackingSubLevel(final Entity entity) {
+        return ((EntityMovementExtension) entity).sable$getTrackingSubLevel();
+    }
+
+    @Override
+    public @Nullable SubLevel getLastTrackingSubLevel(final Entity entity) {
+        final UUID uuid = ((EntityMovementExtension) entity).sable$getLastTrackingSubLevelID();
+        if (uuid != null) {
+            final SubLevelContainer container = SubLevelContainer.getContainer(entity.level());
+            return container.getSubLevel(uuid);
+        }
+        return null;
+    }
+
+    @Override
+    public @Nullable SubLevel getTrackingOrVehicleSubLevel(final Entity entity) {
+        SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
+
+        if (trackingSubLevel == null) {
+            trackingSubLevel = Sable.HELPER.getVehicleSubLevel(entity);
+        }
+
+        return trackingSubLevel;
+    }
+
+    @Override
+    public @Nullable SubLevel getVehicleSubLevel(final Entity entity) {
+        if (entity.getVehicle() != null) {
+            return Sable.HELPER.getContaining(entity.getVehicle());
+        }
+
+        return null;
+    }
+
+    @Override
+    public @NotNull Vec3 getEyePositionInterpolated(final Entity entity, final float partialTicks) {
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingOrVehicleSubLevel(entity);
+
+        if (trackingSubLevel instanceof final ClientSubLevel clientSubLevel) {
+            final Vector3d startPos = new Vector3d(entity.xo, entity.yo + entity.getEyeHeight(), entity.zo);
+            final Vector3d endPos = new Vector3d(entity.getX(), entity.getY() + entity.getEyeHeight(), entity.getZ());
+
+            final Pose3dc renderPose = clientSubLevel.renderPose(partialTicks);
+            clientSubLevel.lastPose().transformPositionInverse(startPos);
+            clientSubLevel.logicalPose().transformPositionInverse(endPos);
+
+            startPos.lerp(endPos, partialTicks);
+            renderPose.transformPosition(startPos);
+
+            return new Vec3(startPos.x, startPos.y, startPos.z);
+        } else {
+            return entity.getEyePosition(partialTicks);
+        }
+    }
+
+    @Override
+    public @NotNull Vector3d getFeetPos(final Entity entity, final float distanceDown) {
+        final Quaterniondc orientation = EntitySubLevelUtil.getCustomEntityOrientation(entity, 1.0f);
+        return Sable.HELPER.getFeetPos(entity, distanceDown, orientation);
     }
 
     @Override

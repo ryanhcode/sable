@@ -3,9 +3,12 @@ package dev.ryanhcode.sable.physics.impl.rapier.constraint;
 import dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis;
 import dev.ryanhcode.sable.api.physics.constraint.PhysicsConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
+import org.jetbrains.annotations.ApiStatus;
 import org.joml.Vector3d;
 
+@ApiStatus.Internal
 public abstract class RapierConstraintHandle implements PhysicsConstraintHandle {
+
     /**
      * The handle to use for {@link dev.ryanhcode.sable.physics.impl.rapier.Rapier3D} methods
      */
@@ -20,8 +23,9 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
 
     /**
      * Creates a new constraint handle
+     *
      * @param sceneID the scene ID that this constraint is in
-     * @param handle the handle from the physics engine
+     * @param handle  the handle from the physics engine
      */
     protected RapierConstraintHandle(final int sceneID, final long handle) {
         this.sceneID = sceneID;
@@ -50,12 +54,12 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
     /**
      * Adds / sets a motor on this joint
      *
-     * @param axis        The axis on which the motor operates
-     * @param target      The target position along that axis [m | rad]
-     * @param stiffness   How stiff the motor should act, or P in the PD controller
-     * @param damping     How much damping the motor should have, or D in the PD controller
+     * @param axis          The axis on which the motor operates
+     * @param target        The target position along that axis [m | rad]
+     * @param stiffness     How stiff the motor should act, or P in the PD controller
+     * @param damping       How much damping the motor should have, or D in the PD controller
      * @param hasForceLimit If the motor should have a force limit
-     * @param maxForce    The maximum force the motor can apply
+     * @param maxForce      The maximum force the motor can apply
      */
     @Override
     public void setMotor(final ConstraintJointAxis axis, final double target, final double stiffness, final double damping, final boolean hasForceLimit, final double maxForce) {

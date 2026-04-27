@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -22,7 +23,7 @@ public abstract class ItemEntityMixin extends Entity {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;horizontalDistanceSqr()D"))
     private double sable$shouldTickPhysics(final Vec3 instance) {
-        if (EntitySubLevelUtil.getTrackingSubLevel(this) != null)
+        if (Sable.HELPER.getTrackingSubLevel(this) != null)
             return 1.0;
 
         return instance.horizontalDistance();

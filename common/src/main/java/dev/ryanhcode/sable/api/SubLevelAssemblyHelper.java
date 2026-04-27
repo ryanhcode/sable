@@ -28,6 +28,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Clearable;
+import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
@@ -347,6 +348,9 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("z", newPos.getZ());
                 }
 
+                if (blockEntity instanceof final RandomizableContainer container) {
+                    container.setLootTable(null);
+                }
                 if (blockEntity instanceof final Clearable clearable) {
                     clearable.clearContent();
                 }
@@ -378,8 +382,7 @@ public class SubLevelAssemblyHelper {
             try {
                 final LevelChunk levelchunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
                 final BlockState subLevelState = states.get(i);
-                final BlockState oldState = Blocks.AIR.defaultBlockState();
-                SubLevelAssemblyHelper.markAndNotifyBlock(resultingLevel, pos, levelchunk, oldState, subLevelState, 3, 512);
+                SubLevelAssemblyHelper.markAndNotifyBlock(resultingLevel, pos, levelchunk, Blocks.AIR.defaultBlockState(), subLevelState, 3, 512);
             } catch (final Exception e) {
                 Sable.LOGGER.error("Failed to mark & notify block {} (untransformed = {})", pos, untransformed, e);
             }
@@ -387,6 +390,7 @@ public class SubLevelAssemblyHelper {
             i++;
         }
 
+        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
         // destroy all the old blocks
         for (final BlockPos block : blocks) {
             final BlockState subLevelState = Blocks.AIR.defaultBlockState();
@@ -400,6 +404,7 @@ public class SubLevelAssemblyHelper {
                 Sable.LOGGER.error("Failed to destroy old block during assembly {}", block, e);
             }
         }
+        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, false);
 
         for (final BlockPos block : blocks) {
             final BlockState subLevelState = Blocks.AIR.defaultBlockState();
@@ -407,33 +412,33 @@ public class SubLevelAssemblyHelper {
         }
     }
 
-    public static void markAndNotifyBlock(final Level level, final BlockPos pPos, @Nullable final LevelChunk levelchunk, final BlockState blockstate, final BlockState pState, final int pFlags, final int pRecursionLeft) {
-        final Block block = pState.getBlock();
-        final BlockState blockstate1 = level.getBlockState(pPos);
-        if (blockstate1 == pState) {
-            if (blockstate != blockstate1) {
-                level.setBlocksDirty(pPos, blockstate, blockstate1);
+    public static void markAndNotifyBlock(final Level level, final BlockPos pPos, @Nullable final LevelChunk levelchunk, final BlockState oldState, final BlockState newState, final int pFlags, final int pRecursionLeft) {
+        final Block block = newState.getBlock();
+        final BlockState worldState = level.getBlockState(pPos);
+        if (worldState == newState) {
+            if (oldState != worldState) {
+                level.setBlocksDirty(pPos, oldState, worldState);
             }
 
-            if ((pFlags & 2) != 0 && (!level.isClientSide || (pFlags & 4) == 0) && (level.isClientSide || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
-                level.sendBlockUpdated(pPos, blockstate, pState, pFlags);
+            if ((pFlags & 2) != 0 && levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING)) {
+                level.sendBlockUpdated(pPos, oldState, newState, pFlags);
             }
 
             if ((pFlags & 1) != 0) {
-                level.blockUpdated(pPos, blockstate.getBlock());
-                if (!level.isClientSide && pState.hasAnalogOutputSignal()) {
+                level.blockUpdated(pPos, oldState.getBlock());
+                if (newState.hasAnalogOutputSignal()) {
                     level.updateNeighbourForOutputSignal(pPos, block);
                 }
             }
 
             if ((pFlags & 16) == 0 && pRecursionLeft > 0) {
                 final int i = pFlags & -34;
-                blockstate.updateIndirectNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
-                pState.updateNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
-                pState.updateIndirectNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
+                oldState.updateIndirectNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
+                newState.updateNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
+                newState.updateIndirectNeighbourShapes(level, pPos, i, pRecursionLeft - 1);
             }
 
-            level.onBlockStateChange(pPos, blockstate, blockstate1);
+            level.onBlockStateChange(pPos, oldState, worldState);
         }
     }
 

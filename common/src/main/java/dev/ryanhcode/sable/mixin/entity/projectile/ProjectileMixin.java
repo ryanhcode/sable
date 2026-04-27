@@ -33,7 +33,7 @@ public abstract class ProjectileMixin extends Entity {
 
     @WrapOperation(method = "shootFromRotation", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/Projectile;shoot(DDDFF)V"))
     private void sable$zeroVelocityBeforeShooting(final Projectile instance, final double x, final double y, final double z, final float velocity, final float inaccuracy, final Operation<Void> original, @Local(argsOnly = true) final Entity shooter) {
-        final SubLevel containing = EntitySubLevelUtil.getVehicleSubLevel(shooter);
+        final SubLevel containing = Sable.HELPER.getVehicleSubLevel(shooter);
 
         if (containing == null) {
             original.call(instance, x, y, z, velocity, inaccuracy);

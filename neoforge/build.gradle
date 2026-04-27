@@ -72,6 +72,10 @@ dependencies {
         }
     }
 
+    additionalRuntimeClasspath("org.tukaani:xz:1.10")
+    jarJar(implementation("org.tukaani:xz:1.10"))
+
+
     compileOnly "maven.modrinth:distanthorizons:$rootProject.distant_horizons_version"
     compileOnly "maven.modrinth:backpacks-for-dummies:$rootProject.backpacks_for_dummies_version"
 
@@ -88,6 +92,7 @@ dependencies {
 
     compileOnly "maven.modrinth:sodium:$sodium_version"
     compileOnly("maven.modrinth:iris:$iris_version") { transitive = false }
+    compileOnly("maven.modrinth:sodium-extras:neoforge-${minecraft_version}-$sodiumextras_version") { transitive = false }
 
     jarJar(api("foundry.veil:veil-neoforge-${project.minecraft_version}:${project.veil_version}") {
         exclude group: "maven.modrinth"

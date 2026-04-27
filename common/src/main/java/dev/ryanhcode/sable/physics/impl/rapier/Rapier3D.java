@@ -9,9 +9,13 @@ import dev.ryanhcode.sable.physics.impl.rapier.collider.RapierVoxelColliderData;
 import net.minecraft.Util;
 import net.minecraft.Util.OS;
 import net.minecraft.server.level.ServerLevel;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3dc;
 import org.joml.Vector3dc;
+import org.tukaani.xz.XZInputStream;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -57,19 +61,33 @@ public class Rapier3D {
 
     private static void loadLibrary() {
         final String nativeName = getNativeName();
-        try (final InputStream is = Rapier3D.class.getResourceAsStream("/natives/" + LIB_NAME + "/" + nativeName)) {
+        try (final InputStream is = Rapier3D.class.getResourceAsStream("/natives/" + LIB_NAME + "/sable_rapier_binaries.tar.xz")) {
             if (is == null) {
-                throw new FileNotFoundException(LIB_NAME);
+                throw new FileNotFoundException("sable_rapier_binaries.tar.xz");
             }
+            try (final XZInputStream is2 = new XZInputStream(is);
+                 final TarArchiveInputStream ti = new TarArchiveInputStream(is2)) {
 
-            final Path tempFile = Files.createTempFile(LIB_TMP_DIR_PREFIX, null);
-            Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            System.load(tempFile.toAbsolutePath().toString());
-            ENABLED = true;
+                TarArchiveEntry entry;
+                while ((entry = ti.getNextEntry()) != null) {
+                    if (entry.getName().equals(nativeName)) {
+                        final String[] split = nativeName.split("\\.");
+                        final Path tempFile = Files.createTempFile(split[0], "." + split[1]);
+                        Files.copy(ti, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                        System.load(tempFile.toAbsolutePath().toString());
+                        ENABLED = true;
+                        return;
+                    }
+                }
+
+                throw new FileNotFoundException(nativeName);
+            }
         } catch (final Throwable t) {
             ENABLED = false;
 
-            Sable.LOGGER.error("Sable has failed to load the natives needed for its Rapier pipeline. Native library name {}. Please report with system details and logs to {}", nativeName, Sable.ISSUE_TRACKER_URL, t);
+            Sable.LOGGER.error(
+                    "Sable has failed to load the natives needed for its Rapier pipeline. Native library name {}. Please report with system details and logs to {}",
+                    nativeName, Sable.ISSUE_TRACKER_URL, t);
         }
     }
 
@@ -368,6 +386,56 @@ public class Rapier3D {
                                                 double localOrientationYB,
                                                 double localOrientationZB,
                                                 double localOrientationWB);
+
+    /**
+     * Adds a generic constraint between two objects.
+     *
+     * @param id                 the object ID
+     * @param otherId            the other object ID
+     * @param localAnchorXA      the local anchor X on the first object
+     * @param localAnchorYA      the local anchor Y on the first object
+     * @param localAnchorZA      the local anchor Z on the first object
+     * @param localOrientationXA the local orientation X of the first object
+     * @param localOrientationYA the local orientation Y of the first object
+     * @param localOrientationZA the local orientation Z of the first object
+     * @param localOrientationWA the local orientation W of the first object
+     * @param localAnchorXB      the local anchor X on the second object
+     * @param localAnchorYB      the local anchor Y on the second object
+     * @param localAnchorZB      the local anchor Z on the second object
+     * @param localOrientationXB the local orientation X of the second object
+     * @param localOrientationYB the local orientation Y of the second object
+     * @param localOrientationZB the local orientation Z of the second object
+     * @param localOrientationWB the local orientation W of the second object
+     * @param lockedAxesMask     bit mask of locked axes; bit {@code n} corresponds to {@link dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis#ordinal()}
+     */
+    @ApiStatus.Internal
+    public static native long addGenericConstraint(final int dimensionID,
+                                                   int id,
+                                                   int otherId,
+                                                   double localAnchorXA,
+                                                   double localAnchorYA,
+                                                   double localAnchorZA,
+                                                   double localOrientationXA,
+                                                   double localOrientationYA,
+                                                   double localOrientationZA,
+                                                   double localOrientationWA,
+                                                   double localAnchorXB,
+                                                   double localAnchorYB,
+                                                   double localAnchorZB,
+                                                   double localOrientationXB,
+                                                   double localOrientationYB,
+                                                   double localOrientationZB,
+                                                   double localOrientationWB,
+                                                   int lockedAxesMask);
+
+    /**
+     * Sets the local frame on one side of a constraint.
+     *
+     * @param handle the handle of the constraint
+     * @param side   {@code 0} for the first body, {@code 1} for the second body
+     */
+    @ApiStatus.Internal
+    public static native void setConstraintFrame(final int dimensionID, long handle, int side, double localPosX, double localPosY, double localPosZ, double localOrientationX, double localOrientationY, double localOrientationZ, double localOrientationW);
 
     /**
      * Sets if contacts are enabled between the two bodies in the constraint

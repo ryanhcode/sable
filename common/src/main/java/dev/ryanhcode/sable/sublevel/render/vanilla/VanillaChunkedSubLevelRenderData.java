@@ -16,6 +16,7 @@ import dev.ryanhcode.sable.sublevel.water_occlusion.WaterOcclusionContainer;
 import dev.ryanhcode.sable.sublevel.water_occlusion.WaterOcclusionRegion;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectLists;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.PrioritizeChunkUpdates;
@@ -55,11 +56,11 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
     /**
      * All render sections this renderer stores
      */
-    private final ObjectArrayList<SectionRenderDispatcher.RenderSection> allRenderSections = new ObjectArrayList<>();
+    private final ObjectList<SectionRenderDispatcher.RenderSection> allRenderSections = new ObjectArrayList<>();
     /**
      * All dirty render sections this renderer stores
      */
-    private final ObjectArrayList<SectionRenderDispatcher.RenderSection> dirtyRenderSections = new ObjectArrayList<>();
+    private final ObjectList<SectionRenderDispatcher.RenderSection> dirtyRenderSections = new ObjectArrayList<>();
     /**
      * The grid of render sections
      */

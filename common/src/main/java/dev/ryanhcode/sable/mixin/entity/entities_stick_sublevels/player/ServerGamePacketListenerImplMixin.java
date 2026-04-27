@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.mixin.entity.entities_stick_sublevels.player;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.mixinterface.entity.entities_stick_sublevels.player.ServerboundMovePlayerPacketExtension;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -29,7 +30,7 @@ public class ServerGamePacketListenerImplMixin {
      */
     @WrapOperation(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z"))
     private boolean sable$disableMovedTooQuicklyCheck(final ServerPlayer instance, final Operation<Boolean> original) {
-        if (EntitySubLevelUtil.getTrackingSubLevel(instance) != null) {
+        if (Sable.HELPER.getTrackingSubLevel(instance) != null) {
             return true;
         }
 

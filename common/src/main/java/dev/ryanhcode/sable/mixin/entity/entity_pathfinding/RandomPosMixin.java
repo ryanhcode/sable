@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -19,7 +20,7 @@ public class RandomPosMixin {
      */
     @Overwrite
     public static BlockPos generateRandomPosTowardDirection(final PathfinderMob mob, final int someInteger, final RandomSource random, final BlockPos pos) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(mob);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(mob);
         Vec3 effectiveMobPos = mob.position();
 
         if (trackingSubLevel != null) {

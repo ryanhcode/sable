@@ -88,7 +88,7 @@ public class SubLevelSelector {
                     yield Collections.emptySet();
                 }
 
-                final ServerSubLevel subLevel = (ServerSubLevel) EntitySubLevelUtil.getTrackingSubLevel(source.getEntity());
+                final ServerSubLevel subLevel = (ServerSubLevel) Sable.HELPER.getTrackingSubLevel(source.getEntity());
 
                 if (subLevel != null) {
                     yield Collections.singleton(subLevel);

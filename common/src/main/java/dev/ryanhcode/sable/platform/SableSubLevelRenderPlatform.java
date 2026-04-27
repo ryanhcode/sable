@@ -13,11 +13,10 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.ServiceLoader;
 
 @ApiStatus.Internal
 public interface SableSubLevelRenderPlatform {
-    SableSubLevelRenderPlatform INSTANCE = ServiceLoader.load(SableSubLevelRenderPlatform.class).findFirst().orElseThrow(() -> new RuntimeException("Failed to find sable block render platform"));
+    SableSubLevelRenderPlatform INSTANCE = SablePlatformUtil.load(SableSubLevelRenderPlatform.class);
 
     void tesselateBlock(
             final SingleBlockSubLevelWrapper blockAndTintGetter,

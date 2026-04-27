@@ -19,6 +19,7 @@ import foundry.veil.api.client.render.rendertype.VeilRenderType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
@@ -133,17 +134,15 @@ public abstract class SodiumWorldRendererMixin implements SodiumWorldRendererExt
             final Iterable<ClientSubLevel> sublevels = SubLevelContainer.getContainer(this.level).getAllSubLevels();
             final RenderRegionCache renderRegionCache = new RenderRegionCache();
 
-            // TODO: Tie this into the Sodium setting for Always Defer Chunk Updates
-            final PrioritizeChunkUpdates chunkUpdates = PrioritizeChunkUpdates.NEARBY;
-
+            final PrioritizeChunkUpdates chunkUpdates = SodiumClientMod.options().performance.alwaysDeferChunkUpdates ? PrioritizeChunkUpdates.NONE : PrioritizeChunkUpdates.NEARBY;
             for (final ClientSubLevel sublevel : sublevels) {
                 sublevel.getRenderData().compileSections(chunkUpdates, renderRegionCache, camera);
             }
             return;
         }
 
-        for (final SubLevel clientSubLevel : SubLevelContainer.getContainer(this.level).getAllSubLevels()) {
-            this.sable$getOrCreateSubLevelRenderSectionManager((ClientSubLevel) clientSubLevel);
+        for (final ClientSubLevel clientSubLevel : SubLevelContainer.getContainer(this.level).getAllSubLevels()) {
+            this.sable$getOrCreateSubLevelRenderSectionManager(clientSubLevel);
         }
 
         final ObjectIterator<Map.Entry<ClientSubLevel, RenderSectionManager>> iter = this.sable$subLevelSectionManagers.entrySet().iterator();

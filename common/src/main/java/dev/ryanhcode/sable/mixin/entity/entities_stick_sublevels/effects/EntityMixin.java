@@ -70,7 +70,7 @@ public abstract class EntityMixin {
     private void sable$spawnSprintParticle(final CallbackInfo ci, @Local(ordinal = 0) final BlockPos blockPos, @Share("localPosition") final LocalRef<Vec3> localPosition) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level, blockPos);
 
-        final Vec3 feetPos = EntitySubLevelUtil.getFeetPos((Entity) (Object) this, 0.0f);
+        final Vec3 feetPos = JOMLConversion.toMojang(Sable.HELPER.getFeetPos((Entity) (Object) this, 0.0f));
         localPosition.set(feetPos);
 
         if (subLevel != null) {
@@ -130,8 +130,8 @@ public abstract class EntityMixin {
      */
     @Inject(method = "getOnPos(F)Lnet/minecraft/core/BlockPos;", at = @At("HEAD"), cancellable = true)
     private void sable$preGetOnPos(final float distance, final CallbackInfoReturnable<BlockPos> cir) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel((Entity) (Object) this);
-        final Vec3 feetPos = EntitySubLevelUtil.getFeetPos((Entity) (Object) this, Math.max(0.1f, distance));
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel((Entity) (Object) this);
+        final Vec3 feetPos = JOMLConversion.toMojang(Sable.HELPER.getFeetPos((Entity) (Object) this, Math.max(0.1f, distance)));
 
         if (trackingSubLevel != null) {
             final Vec3 localPos = trackingSubLevel.logicalPose().transformPositionInverse(feetPos);

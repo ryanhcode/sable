@@ -24,7 +24,7 @@ public class TamableAnimalMixin {
 
 	@WrapOperation(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;canTeleportTo(Lnet/minecraft/core/BlockPos;)Z"))
 	private static boolean sable$blockPosition(final TamableAnimal instance, final BlockPos blockPos, final Operation<Boolean> original) {
-		final SubLevel subLevel = EntitySubLevelUtil.getTrackingSubLevel(instance.getOwner());
+		final SubLevel subLevel = Sable.HELPER.getTrackingSubLevel(instance.getOwner());
 		if(subLevel != null) {
 			final BlockPos pos = BlockPos.containing(subLevel.logicalPose().transformPositionInverse(blockPos.getCenter()));
 			if (original.call(instance, pos)) {

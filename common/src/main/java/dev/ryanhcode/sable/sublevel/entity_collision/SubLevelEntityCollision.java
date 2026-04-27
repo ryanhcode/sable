@@ -1,7 +1,6 @@
 package dev.ryanhcode.sable.sublevel.entity_collision;
 
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.math.LevelReusedVectors;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
@@ -41,7 +40,7 @@ public class SubLevelEntityCollision {
 
     /**
      * Handles collision between an {@link Entity} and {@link SubLevel SubLevels}
-     *
+     * <p>
      * cursed as hell but we ball
      *
      * @param entity             The entity to collide
@@ -53,7 +52,7 @@ public class SubLevelEntityCollision {
             final CollisionInfo collisionInfo = new CollisionInfo();
             collisionInfo.motion = collisionMotionMoj;
 
-            final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(entity);
+            final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
             if (trackingSubLevel != null) {
                 entity.setOnGround(true);
                 collisionInfo.verticalCollisionBelow = true;
@@ -66,7 +65,7 @@ public class SubLevelEntityCollision {
             return collisionInfo;
         }
 
-        final SubLevel existingTrackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(entity);
+        final SubLevel existingTrackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
 
         if (existingTrackingSubLevel != null &&
                 EntitySubLevelUtil.shouldKick(entity) &&
@@ -123,7 +122,7 @@ public class SubLevelEntityCollision {
         }
 
         final Vec3 originalEntityPosition = entity.position();
-        final Vec3 originalEntityFootPosition = EntitySubLevelUtil.getFeetPos(entity, 0.0f, customEntityOrientation);
+        final Vector3dc originalEntityFootPosition = Sable.HELPER.getFeetPos(entity, 0.0f, customEntityOrientation);
 
         final Vector3d entityBoundsCenter = JOMLConversion.getAABBCenter(entityBounds, sink.entityBoundsCenter);
         transformEntityBoundsCenter(sink, customEntityOrientation, entity, entityBoundsCenter);
@@ -194,7 +193,7 @@ public class SubLevelEntityCollision {
 
             // iterate through all sub-levels that COULD intersect
             for (final SubLevel subLevel : intersecting) {
-                if (EntitySubLevelUtil.getVehicleSubLevel(entity) == subLevel) {
+                if (Sable.HELPER.getVehicleSubLevel(entity) == subLevel) {
                     continue;
                 }
 
@@ -440,8 +439,9 @@ public class SubLevelEntityCollision {
             }
         }
 
-        collisionInfo.inheritedMotion = EntitySubLevelUtil.getFeetPos(entity, 0.0f, customEntityOrientation)
-                .subtract(originalEntityFootPosition);
+        collisionInfo.inheritedMotion = JOMLConversion.toMojang(
+                Sable.HELPER.getFeetPos(entity, 0.0f, customEntityOrientation)
+                        .sub(originalEntityFootPosition));
 
         if (collisionInfo.inheritedMotion.lengthSqr() < 1e-8) {
             collisionInfo.inheritedMotion = null;
@@ -458,7 +458,7 @@ public class SubLevelEntityCollision {
         return collisionInfo;
     }
 
-    public static void transformEntityBoundsCenter(final LevelReusedVectors sink, final Quaterniondc customOrientation, final Entity entity,  final Vector3d center) {
+    public static void transformEntityBoundsCenter(final LevelReusedVectors sink, final Quaterniondc customOrientation, final Entity entity, final Vector3d center) {
         if (customOrientation == null) {
             return;
         }

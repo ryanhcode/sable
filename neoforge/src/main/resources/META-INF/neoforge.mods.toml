@@ -18,6 +18,12 @@ logoFile = "icon.png"
 "mixin.world.chunk_ticking" = false
 "mixin.world.tick_scheduler" = false
 
+[[mixins]]
+config = "sable.mixins.json"
+
+[[mixins]]
+config = "sable-neoforge.mixins.json"
+
 [[dependencies.sable]]
 modId = "neoforge"
 type = "required"
@@ -40,6 +46,13 @@ ordering = "AFTER"
 side = "CLIENT"
 
 [[dependencies.sable]]
+modId = "create"
+type = "optional"
+versionRange = "${create_version_range}"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.sable]]
 modId = "sablecompanion"
 type = "incompatible"
 versionRange = "(${sable_companion_version},)"
@@ -52,9 +65,3 @@ type = "incompatible"
 [[dependencies.sable]]
 modId = "littletiles"
 type = "incompatible"
-
-[[mixins]]
-config = "sable.mixins.json"
-
-[[mixins]]
-config = "sable-neoforge.mixins.json"

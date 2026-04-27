@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.mixin.entity.falling_block;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -23,7 +24,7 @@ public abstract class FallingBlockEntityMixin extends Entity {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;onGround()Z", shift = At.Shift.BEFORE))
     private void sable$beforeOnGroundCheck(final CallbackInfo ci, @Local(ordinal = 0) final LocalRef<BlockPos> blockPos) {
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this);
 
         if (trackingSubLevel != null) {
             blockPos.set(BlockPos.containing(trackingSubLevel.logicalPose().transformPositionInverse(this.position())));

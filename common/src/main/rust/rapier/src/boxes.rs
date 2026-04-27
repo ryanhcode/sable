@@ -1,6 +1,6 @@
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jdouble, jint};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::RigidBodyBuilder;
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
@@ -10,7 +10,7 @@ use rapier3d::math::Vector;
 use crate::get_scene_mut;
 use crate::scene::LevelColliderID;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createBox<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -63,7 +63,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
     scene.rigid_bodies.insert(id as LevelColliderID, handle);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeBox<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,

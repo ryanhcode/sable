@@ -7,12 +7,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ServiceLoader;
-
 @ApiStatus.Internal
 public interface SablePlatform {
-
-    SablePlatform INSTANCE = ServiceLoader.load(SablePlatform.class).findFirst().orElseThrow(() -> new RuntimeException("Failed to find sable platform"));
+    SablePlatform INSTANCE = SablePlatformUtil.load(SablePlatform.class);
 
     /**
      * Checks if the specified level is a wrapped level from Create.

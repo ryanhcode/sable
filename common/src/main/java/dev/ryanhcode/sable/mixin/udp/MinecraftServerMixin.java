@@ -19,7 +19,9 @@ public class MinecraftServerMixin {
     @Inject(method = "tickServer", at = @At("TAIL"))
     private void sable$keepUdpSocketsAlive(final BooleanSupplier booleanSupplier, final CallbackInfo ci) {
         final SableUDPServer server = SableUDPServer.getServer((MinecraftServer) (Object) this);
-        if (server == null) return;
+        if (server == null) {
+            return;
+        }
 
         final long time = System.currentTimeMillis();
 

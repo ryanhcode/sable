@@ -49,7 +49,7 @@ public class ServerEntityMixin {
            actuallyInSubLevel.set(true);
         }
 
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this.entity);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this.entity);
 
         Vec3 pos = this.entity.position();
         if (trackingSubLevel != null) {

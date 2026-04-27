@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_rotations_and_riding;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.mixinhelpers.camera.camera_rotation.EntitySubLevelRotationHelper;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -44,7 +45,7 @@ public class EntityRenderDispatcherMixin {
 
         final Vec3 eyeOffset = entity.getEyePosition().subtract(entity.position());
 
-        final Vec3 offset = EntitySubLevelUtil.getEyePositionInterpolated(entity, h).subtract(entity.getEyePosition(h));
+        final Vec3 offset = Sable.HELPER.getEyePositionInterpolated(entity, h).subtract(entity.getEyePosition(h));
         poseStack.translate(offset.x, offset.y, offset.z);
 
         poseStack.translate(eyeOffset.x, eyeOffset.y, eyeOffset.z);

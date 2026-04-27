@@ -12,6 +12,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.ExceptionCollector;
 import net.minecraft.world.level.ChunkPos;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -242,6 +243,12 @@ public class SubLevelStorage implements AutoCloseable {
         }
 
         exceptionCollector.throwIfPresent();
+    }
+
+    @NotNull
+    @ApiStatus.Internal
+    public Path getFolder() {
+        return this.folder;
     }
 
     /**

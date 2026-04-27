@@ -192,7 +192,7 @@ public abstract class EntityMixin implements IEntityExtension {
                                     final SableInterimCalculation interim = interimCalcs.computeIfAbsent(fluidType, t -> new SableInterimCalculation());
                                     interim.fluidHeight = Math.max(fluidLevelY - minYVertex, interim.fluidHeight);
 
-                                    if (EntitySubLevelUtil.getTrackingSubLevel((Entity) (Object) this) == null && helper.getContaining((Entity) (Object) this) != subLevel) {
+                                    if (Sable.HELPER.getTrackingSubLevel((Entity) (Object) this) == null && helper.getContaining((Entity) (Object) this) != subLevel) {
                                         ((EntityMovementExtension) this).sable$setTrackingSubLevel(subLevel);
                                     }
 

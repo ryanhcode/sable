@@ -76,7 +76,7 @@ public record ServerboundPunchSubLevelPacket(BlockPos punchedBlock, Vector3dc lo
         final Player player = context.player();
         if (!player.onGround() && !player.isInWater() && !player.getAbilities().flying && !player.onClimbable()) return;
 
-        final ServerSubLevel standingSubLevel = (ServerSubLevel) EntitySubLevelUtil.getTrackingSubLevel(player);
+        final ServerSubLevel standingSubLevel = (ServerSubLevel) Sable.HELPER.getTrackingSubLevel(player);
 
         final SubLevelPhysicsSystem physicsSystem = container.physicsSystem();
         final SubLevel targetSubLevel = Sable.HELPER.getContaining(level, this.punchedBlock);

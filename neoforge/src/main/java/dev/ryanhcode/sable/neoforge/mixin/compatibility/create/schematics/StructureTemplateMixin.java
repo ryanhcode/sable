@@ -64,7 +64,7 @@ public abstract class StructureTemplateMixin implements StructureTemplateExtensi
 
         entities.removeIf(entity -> {
             final SubLevel entitySubLevel = helper.getContaining(entity);
-            return !(entitySubLevel == schematicSubLevel || EntitySubLevelUtil.getTrackingSubLevel(entity) == schematicSubLevel);
+            return !(entitySubLevel == schematicSubLevel || Sable.HELPER.getTrackingSubLevel(entity) == schematicSubLevel);
         });
     }
 

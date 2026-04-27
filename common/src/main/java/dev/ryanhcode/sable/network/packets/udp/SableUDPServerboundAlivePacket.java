@@ -19,6 +19,10 @@ public record SableUDPServerboundAlivePacket() implements SableUDPPacket {
 
     @Override
     public void handleServer(final MinecraftServer server, final InetSocketAddress sender) {
-        SableUDPServer.getServer(server).receiveAlivePacket(sender);
+        final SableUDPServer udpServer = SableUDPServer.getServer(server);
+
+        if (udpServer != null) {
+            udpServer.receiveAlivePacket(sender);
+        }
     }
 }

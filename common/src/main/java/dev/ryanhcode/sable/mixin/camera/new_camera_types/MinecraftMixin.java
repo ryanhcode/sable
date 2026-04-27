@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.camera.new_camera_types;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.mixinhelpers.camera.new_camera_types.SableCameraTypes;
 import dev.ryanhcode.sable.mixinterface.camera.camera_zoom.CameraZoomExtension;
@@ -50,7 +51,7 @@ public class MinecraftMixin {
             final Camera camera = this.gameRenderer.getMainCamera();
             ((CameraZoomExtension) camera).sable$setZoomAmount(0.0f);
 
-            final SubLevel subLevel = EntitySubLevelUtil.getVehicleSubLevel(this.cameraEntity);
+            final SubLevel subLevel = Sable.HELPER.getVehicleSubLevel(this.cameraEntity);
 
             if (subLevel != null) {
                 final Vec3 globalLookDir = subLevel.logicalPose().transformNormalInverse(this.player.getLookAngle());
@@ -62,7 +63,7 @@ public class MinecraftMixin {
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;setCameraType(Lnet/minecraft/client/CameraType;)V", shift = At.Shift.AFTER))
     public void sable$postCycleCameraType(final CallbackInfo ci) {
         while (this.options.getCameraType() == SableCameraTypes.SUB_LEVEL_VIEW || this.options.getCameraType() == SableCameraTypes.SUB_LEVEL_VIEW_UNLOCKED) {
-            final SubLevel subLevel = EntitySubLevelUtil.getVehicleSubLevel(this.cameraEntity);
+            final SubLevel subLevel = Sable.HELPER.getVehicleSubLevel(this.cameraEntity);
             if (subLevel != null) break;
 
             this.options.setCameraType(this.options.getCameraType().cycle());
@@ -73,7 +74,7 @@ public class MinecraftMixin {
         if (cameraType == SableCameraTypes.SUB_LEVEL_VIEW) {
             this.player.displayClientMessage(Component.translatable("camera_type.sub_level_view").withColor(0xffaaaaaa), true);
         } else if (cameraType == SableCameraTypes.SUB_LEVEL_VIEW_UNLOCKED) {
-            final SubLevel subLevel = EntitySubLevelUtil.getVehicleSubLevel(this.cameraEntity);
+            final SubLevel subLevel = Sable.HELPER.getVehicleSubLevel(this.cameraEntity);
 
             // View view orientation
             if (subLevel != null) {

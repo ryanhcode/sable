@@ -1,5 +1,5 @@
-use crate::scene::LevelColliderID;
 use crate::PHYSICS_STATE;
+use crate::scene::LevelColliderID;
 use rapier3d::dynamics::MassProperties;
 use rapier3d::geometry::{Shape, ShapeType, TypedShape};
 use rapier3d::math::Vector;
@@ -80,7 +80,7 @@ impl Shape for LevelCollider {
                     panic!("No scene with given ID!");
                 };
 
-                let sable_body = &scene.level_colliders[&(self.id.unwrap() as usize)];
+                let sable_body = &scene.level_colliders[&{ self.id.unwrap() }];
 
                 let center_of_mass = sable_body.center_of_mass.unwrap();
                 let local_min = sable_body.local_bounds_min.unwrap();

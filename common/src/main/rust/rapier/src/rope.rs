@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
+use jni::JNIEnv;
 use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jboolean, jdouble, jint, jlong, jsize};
-use jni::JNIEnv;
 use marten::Real;
 use rapier3d::dynamics::{GenericJointBuilder, JointAxis, RigidBodyBuilder, SpringCoefficients};
 use rapier3d::geometry::{ColliderBuilder, SharedShape};
@@ -36,7 +36,7 @@ struct RopeStrand {
     start_attachment: Option<RopeAttachment>,
     end_attachment: Option<RopeAttachment>,
 }
-
+#[derive(Default)]
 pub struct RopeMap {
     counting_id: usize,
     ropes: HashMap<usize, RopeStrand>,
@@ -95,17 +95,7 @@ pub fn tick(scene_id: jint) {
     }
 }
 
-impl RopeMap {
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            counting_id: 0,
-            ropes: HashMap::new(),
-        }
-    }
-}
-
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_createRope<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -162,12 +152,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
         joints,
     };
 
-    scene.rope_map.counting_id = scene.rope_map.counting_id + 1;
+    scene.rope_map.counting_id += 1;
     let id = scene.rope_map.counting_id;
 
     scene.rope_map.ropes.insert(id, strand);
 
-    return id as jlong;
+    id as jlong
 }
 
 fn add_rope_joint(
@@ -190,15 +180,10 @@ fn add_rope_joint(
         MIN_BOUND_STIFFNESS,
         MIN_BOUND_DAMPING,
     );
-    let handle = impulse_joint_set.insert(
-        point_handle_0.clone(),
-        point_handle_1.clone(),
-        joint.build(),
-        true,
-    );
+    let handle = impulse_joint_set.insert(*point_handle_0, *point_handle_1, joint.build(), true);
     let damp_handle = impulse_joint_set.insert(
-        point_handle_0.clone(),
-        point_handle_1.clone(),
+        *point_handle_0,
+        *point_handle_1,
         GenericJointBuilder::new(JointAxesMask::empty())
             .softness(SpringCoefficients::new(
                 JOINT_SPRING_FREQUENCY,
@@ -208,17 +193,14 @@ fn add_rope_joint(
         true,
     );
 
-    let damp_joint = &mut impulse_joint_set
-        .get_mut(damp_handle.clone(), false)
-        .unwrap()
-        .data;
+    let damp_joint = &mut impulse_joint_set.get_mut(damp_handle, false).unwrap().data;
 
     let damping_strength = 18.0;
     damp_joint.set_motor_velocity(JointAxis::LinX, 0.0, damping_strength);
     damp_joint.set_motor_velocity(JointAxis::LinY, 0.0, damping_strength);
     damp_joint.set_motor_velocity(JointAxis::LinZ, 0.0, damping_strength);
 
-    return (handle, damp_handle);
+    (handle, damp_handle)
 }
 
 fn create_rope_body(scene_id: i32, coordinate: Vector, point_radius: Real) -> RigidBodyHandle {
@@ -250,7 +232,7 @@ fn create_rope_body(scene_id: i32, coordinate: Vector, point_radius: Real) -> Ri
 }
 
 /// Removes a rope
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_queryRope<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -265,12 +247,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_que
         .points
         .iter()
         .flat_map(|x| {
-            let pos = scene
-                .rigid_body_set
-                .get(x.clone())
-                .unwrap()
-                .position()
-                .translation;
+            let pos = scene.rigid_body_set.get(*x).unwrap().position().translation;
             vec![pos.x as f64, pos.y as f64, pos.z as f64]
         })
         .collect();
@@ -280,11 +257,11 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_que
         .unwrap();
     env.set_double_array_region(&double_array, 0, &flattened)
         .unwrap();
-    return double_array;
+    double_array
 }
 
 /// Removes a rope
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRope<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -307,7 +284,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
 }
 
 /// Sets the joint
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeFirstSegmentLength<
     'local,
 >(
@@ -324,7 +301,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     strand.first_joint_length = length as Real;
     let first_joint = &mut scene
         .impulse_joint_set
-        .get_mut(strand.joints.first().unwrap().0.clone(), true)
+        .get_mut(strand.joints.first().unwrap().0, true)
         .unwrap()
         .data;
     first_joint.set_limits(JointAxis::LinX, [0.0, length as Real]);
@@ -336,7 +313,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     );
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeRopePointAtStart<
     'local,
 >(
@@ -361,7 +338,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
 
     let new_first_joint = &mut scene
         .impulse_joint_set
-        .get_mut(strand.joints.get(0).unwrap().0.clone(), false)
+        .get_mut(strand.joints.first().unwrap().0, false)
         .unwrap()
         .data;
     new_first_joint.set_limits(JointAxis::LinX, [0.0, strand.first_joint_length]);
@@ -373,15 +350,14 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
     );
 
     if strand.start_attachment.is_some() {
-        scene.impulse_joint_set.remove(
-            (strand.start_attachment.as_ref().unwrap().joint).clone(),
-            true,
-        );
+        scene
+            .impulse_joint_set
+            .remove(strand.start_attachment.as_ref().unwrap().joint, true);
         strand.start_attachment = None;
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRopePointAtStart<
     'local,
 >(
@@ -401,7 +377,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     // set joint that will no longer be the first
     let old_joint = &mut scene
         .impulse_joint_set
-        .get_mut(strand.joints.get(0).unwrap().0.clone(), false)
+        .get_mut(strand.joints.first().unwrap().0, false)
         .unwrap()
         .data;
     old_joint.set_limits(JointAxis::LinX, [0.0, 1.0]);
@@ -417,22 +393,21 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         add_rope_joint(
             &mut scene.impulse_joint_set,
             &handle,
-            strand.points.get(0).unwrap(),
+            strand.points.first().unwrap(),
             strand.first_joint_length,
         ),
     );
     strand.points.insert(0, handle);
 
     if strand.start_attachment.is_some() {
-        scene.impulse_joint_set.remove(
-            (strand.start_attachment.as_ref().unwrap().joint).clone(),
-            true,
-        );
+        scene
+            .impulse_joint_set
+            .remove(strand.start_attachment.as_ref().unwrap().joint, true);
         strand.start_attachment = None;
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wakeUpRope<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -444,16 +419,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     let strand = scene.rope_map.ropes.get_mut(&(rope_id as usize)).unwrap();
 
     for point in &strand.points {
-        scene
-            .rigid_body_set
-            .get_mut(point.clone())
-            .unwrap()
-            .wake_up(true);
+        scene.rigid_body_set.get_mut(*point).unwrap().wake_up(true);
     }
 }
 
 /// Sets the attachment at a given end
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setRopeAttachment<
     'local,
 >(
@@ -480,11 +451,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     let sub_level_body = if sub_level_id == -1 {
         scene.ground_handle.unwrap()
     } else {
-        scene
+        *scene
             .rigid_bodies
             .get(&(sub_level_id as LevelColliderID))
             .unwrap()
-            .clone()
     };
 
     let joint = RopeJointBuilder::new(0.0)
@@ -494,12 +464,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
             JOINT_SPRING_FREQUENCY,
             JOINT_SPRING_DAMPING_RATIO,
         ));
-    let joint = scene.impulse_joint_set.insert(
-        sub_level_body.clone(),
-        rope_body.clone(),
-        joint.build(),
-        true,
-    );
+    let joint = scene
+        .impulse_joint_set
+        .insert(sub_level_body, *rope_body, joint.build(), true);
 
     if if end > 0 {
         &strand.end_attachment

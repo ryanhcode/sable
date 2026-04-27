@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entities_stick_sublevels.player;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -28,7 +29,7 @@ public abstract class LocalPlayerMixin extends Entity {
     private void sable$preSendPosition(final CallbackInfo ci) {
         this.sable$oldPos = null;
 
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(this);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(this);
         if (trackingSubLevel != null && !trackingSubLevel.isRemoved()) {
             final Vec3 pos = this.position();
             this.sable$oldPos = new Vec3(pos.x, pos.y, pos.z);

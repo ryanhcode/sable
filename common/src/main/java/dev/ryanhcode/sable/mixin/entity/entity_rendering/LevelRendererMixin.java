@@ -48,7 +48,7 @@ public class LevelRendererMixin {
 
         if (subLevel == null) {
             // Tracking sub-levels
-            final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(entity);
+            final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
 
             if (trackingSubLevel instanceof final ClientSubLevel clientSubLevel && !entity.isPassenger()) {
                 final Vector3d oldTrackingPosLocal = trackingSubLevel.lastPose().transformPositionInverse(new Vector3d(entity.xOld, entity.yOld, entity.zOld));

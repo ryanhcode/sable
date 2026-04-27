@@ -1,6 +1,6 @@
 package dev.ryanhcode.sable.mixin.clip_overwrite;
 
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
+import dev.ryanhcode.sable.Sable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,7 +12,6 @@ public class EntityMixin {
 
     @Redirect(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 sable$getEyePosition(final Entity instance, final float partialTicks) {
-        return EntitySubLevelUtil.getEyePositionInterpolated(instance, partialTicks);
+        return Sable.HELPER.getEyePositionInterpolated(instance, partialTicks);
     }
-
 }

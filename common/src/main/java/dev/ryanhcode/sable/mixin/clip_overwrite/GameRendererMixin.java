@@ -40,7 +40,7 @@ public class GameRendererMixin {
 
     @Redirect(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 sable$getEyePosition(final Entity instance, final float partialTicks) {
-        return EntitySubLevelUtil.getEyePositionInterpolated(instance, partialTicks);
+        return Sable.HELPER.getEyePositionInterpolated(instance, partialTicks);
     }
 
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V"))

@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -38,7 +39,7 @@ public class CameraMixin {
                                    @Local(argsOnly = true) final Entity entity,
                                    @Local(argsOnly = true) final float partialTicks) {
 
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingOrVehicleSubLevel(entity);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingOrVehicleSubLevel(entity);
 
         if (trackingSubLevel instanceof final ClientSubLevel clientSubLevel) {
             final double yOffset = Mth.lerp(partialTicks, this.eyeHeightOld, this.eyeHeight);

@@ -7,6 +7,7 @@ import dev.ryanhcode.sable.api.physics.constraint.PhysicsConstraintConfiguration
 import dev.ryanhcode.sable.api.physics.constraint.PhysicsConstraintHandle;
 import dev.ryanhcode.sable.api.physics.constraint.fixed.FixedConstraintConfiguration;
 import dev.ryanhcode.sable.api.physics.constraint.free.FreeConstraintConfiguration;
+import dev.ryanhcode.sable.api.physics.constraint.generic.GenericConstraintConfiguration;
 import dev.ryanhcode.sable.api.physics.constraint.rotary.RotaryConstraintConfiguration;
 import dev.ryanhcode.sable.api.physics.mass.MassTracker;
 import dev.ryanhcode.sable.api.physics.object.box.BoxHandle;
@@ -23,6 +24,7 @@ import dev.ryanhcode.sable.physics.impl.rapier.collider.RapierVoxelColliderBaker
 import dev.ryanhcode.sable.physics.impl.rapier.collider.RapierVoxelColliderData;
 import dev.ryanhcode.sable.physics.impl.rapier.constraint.fixed.RapierFixedConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.constraint.free.RapierFreeConstraintHandle;
+import dev.ryanhcode.sable.physics.impl.rapier.constraint.generic.RapierGenericConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.constraint.rotary.RapierRotaryConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.rope.RapierRopeHandle;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
@@ -642,6 +644,10 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
 
         if (configuration instanceof final FreeConstraintConfiguration config) {
             return (T) RapierFreeConstraintHandle.create(this.level, sublevelA, sublevelB, config);
+        }
+
+        if (configuration instanceof final GenericConstraintConfiguration config) {
+            return (T) RapierGenericConstraintHandle.create(this.level, sublevelA, sublevelB, config);
         }
 
         Sable.LOGGER.error("Unknown constraint configuration type: {}", configuration.getClass().getName());

@@ -139,12 +139,22 @@ jar {
     }
 }
 
+String createModVersionRange() {
+    def createNeoforgeVersion = create_version.split("-")[0]
+    def parts = createNeoforgeVersion.split("\\.").collect {it.toInteger() }
+    def newMinor = parts[1] + 1
+    def upperBounds = "${parts[0]}.$newMinor.0"
+    
+    return "[$createNeoforgeVersion,$upperBounds)"
+}
+
 processResources {
     var expandProps = [
             'version'                      : version,
             'group'                        : project.group, //Else we target the task's group.
             'minecraft_version'            : minecraft_version,
             'minecraft_version_range'      : minecraft_version_range,
+            'create_version_range'         : createModVersionRange(),
             'fabric_version'               : fabric_version,
             'fabric_loader_version'        : fabric_loader_version,
             'mod_name'                     : mod_name,
@@ -184,6 +194,7 @@ publishing {
     }
 
     repositories {
+        mavenLocal()
         maven {
             url = System.getenv('local_maven_url')
 

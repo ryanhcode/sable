@@ -1,4 +1,3 @@
- - Improve Lithium compatibility
- - Various mixin compatibility improvements
- - Improve logging when Sable Rapier natives fail to load
- - Add Sable Rapier support for AArch64 Linux machines
+ - Allow for the entire UDP pipeline to be disabled
+ - Adjust compatibility with Create's Mechanical Harvester
+ - Tweak assembly handling

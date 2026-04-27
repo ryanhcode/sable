@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -19,7 +20,7 @@ public abstract class GroundPathNavigationMixin {
 
     @Inject(method = "createPath(Lnet/minecraft/world/entity/Entity;I)Lnet/minecraft/world/level/pathfinder/Path;", at = @At("HEAD"), cancellable = true)
     private void sable$createPath(final Entity entity, final int i, final CallbackInfoReturnable<Path> cir){
-        final SubLevel trackingSubLevel = EntitySubLevelUtil.getTrackingSubLevel(entity);
+        final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(entity);
         if (trackingSubLevel != null) {
             final BlockPos localPos = BlockPos.containing(trackingSubLevel.logicalPose().transformPositionInverse(entity.position()));
             cir.setReturnValue(this.createPath(localPos, i));

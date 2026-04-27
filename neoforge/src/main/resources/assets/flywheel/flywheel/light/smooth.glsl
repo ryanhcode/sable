@@ -1,9 +1,3 @@
-#ifdef FLW_EMBEDDED
-flat in float flw_skyLightScale;
-flat in uint flw_vertexLightingSceneId;
-in vec4 flw_vertexLightingPos;
-#endif
-
 void flw_shaderLight() {
     uint sceneId = 0;
     vec4 vertexLightingPos;

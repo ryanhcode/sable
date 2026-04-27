@@ -1,7 +1,9 @@
+//! A sparse voxel world.
+
 use crate::octree::SubLevelOctree;
+use jni::JNIEnv;
 use jni::descriptors::Desc;
 use jni::objects::{GlobalRef, JMethodID};
-use jni::JNIEnv;
 
 /// log_2 of the size of a chunk
 pub const CHUNK_SHIFT: u8 = 4;
@@ -14,8 +16,6 @@ pub const CHUNK_MASK: i32 = (CHUNK_SIZE - 1) as i32;
 
 /// (Block Physics ID, Voxel Physics State)
 pub type BlockState = (u32, VoxelPhysicsState);
-
-/// A sparse voxel world.
 
 /// A 16x16x16 voxel chunk.
 /// Blocks are stored in xzy order. (x fastest changing)
@@ -61,18 +61,18 @@ impl ChunkSection {
     /// If the coordinate is out of bounds, behavior is undefined.
     pub fn get_block(&self, x: i32, y: i32, z: i32) -> BlockState {
         let index = self.get_index(x, y, z);
-        unsafe { self.blocks.get_unchecked(index).clone() }
+        unsafe { *self.blocks.get_unchecked(index) }
     }
 }
 
 #[derive(Debug)]
 pub struct SableMethodID(pub JMethodID);
 
-unsafe impl<'local, 'other_local> Desc<'local, JMethodID> for &SableMethodID {
+unsafe impl<'local> Desc<'local, JMethodID> for &SableMethodID {
     type Output = JMethodID;
 
     fn lookup(self, _env: &mut JNIEnv<'local>) -> jni::errors::Result<Self::Output> {
-        return Ok(self.0);
+        Ok(self.0)
     }
 }
 
@@ -104,15 +104,15 @@ pub const NO_HOOKS_USER_DATA: u32 = 0;
 
 impl VoxelColliderData {
     pub fn get_user_data(&self) -> u32 {
-        return if self.contact_events.is_some() || self.friction != 1.0 || self.restitution != 0.0 {
+        if self.contact_events.is_some() || self.friction != 1.0 || self.restitution != 0.0 {
             NEEDS_HOOKS_USER_DATA
         } else {
             NO_HOOKS_USER_DATA
-        };
+        }
     }
 
     pub fn needs_hooks(data: u32) -> bool {
-        return data & NEEDS_HOOKS_USER_DATA > 0;
+        data & NEEDS_HOOKS_USER_DATA > 0
     }
 }
 
@@ -127,8 +127,8 @@ pub struct OctreeChunkSection {
 impl OctreeChunkSection {
     pub fn new() -> Self {
         Self {
-            octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT as i32),
-            liquid_octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT as i32),
+            octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT),
+            liquid_octree: SubLevelOctree::new(OCTREE_CHUNK_SHIFT),
         }
     }
 }
