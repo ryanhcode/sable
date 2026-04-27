@@ -454,9 +454,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
                 joints::tick(scene_id);
 
                 let Some(scene) = state.scenes.get_mut(&scene_id) else {
-                    return;
+                    panic!("No scene with given ID!");
                 };
-
+            
                 compute_buoyancy(scene);
             }
         }
