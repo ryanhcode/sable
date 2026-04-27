@@ -1,9 +1,9 @@
 import org.apache.tools.ant.taskdefs.condition.Os
-
 import org.tukaani.xz.LZMA2Options
 import org.tukaani.xz.XZOutputStream
 
 import java.nio.file.Files
+
 buildscript {
     dependencies {
         classpath 'org.tukaani:xz:1.10'
@@ -18,25 +18,28 @@ plugins {
 def mac(arch) {
     [triple: "${arch}-apple-darwin", arch: arch, os: "macos", ext: "dylib", lib: true]
 }
+
 def linux(arch) {
     [triple: "${arch}-unknown-linux-gnu", arch: arch, os: "linux", ext: "so", lib: true]
 }
+
 def freebsd(arch) {
     [triple: "${arch}-unknown-freebsd", arch: arch, os: "freebsd", ext: ".so", lib: true]
 }
+
 def windows(arch) {
     [triple: "${arch}-pc-windows-msvc", arch: arch, os: "windows", ext: "dll", lib: false]
 }
 
 def supportedTargets = [
-    mac("x86_64"),
-    mac("aarch64"),
-    linux("x86_64"),
-    linux("aarch64"),
-    windows("x86_64"),
-    windows("aarch64"),
-    freebsd("x86_64"),
-    // freebsd("aarch64"),
+        mac("x86_64"),
+        mac("aarch64"),
+        linux("x86_64"),
+        linux("aarch64"),
+        windows("x86_64"),
+        windows("aarch64"),
+        freebsd("x86_64"),
+        // freebsd("aarch64"),
 ]
 def pinnedRustVersion = 'nightly-2026-01-29'
 def rustRootDir = file("src/main/rust")
@@ -93,7 +96,8 @@ tasks.register('buildImages') {
 tasks.register('cleanRust', Exec) {
     group = 'rust'
     workingDir rustProjectDir
-    commandLine project.ext.zigbuildCargo // only need to use zigbuild cargo since both containers share the same target folder
+    commandLine project.ext.zigbuildCargo
+    // only need to use zigbuild cargo since both containers share the same target folder
     args 'clean'
     dependsOn createContainersDirectory
 }
@@ -103,26 +107,36 @@ def compileRustTaskName = { target ->
 }
 
 def commandLineForTarget(target) {
-    if(target.triple.contains('msvc')) {
-        [project.ext.xWinCargo, 'xwin', 'build', '--release', '--target', target.triple].flatten()
+    if (target.triple.contains('msvc')) {
+        [project.ext.xWinCargo, 'xwin', 'build', '--target', target.triple].flatten()
         // support meme platforms, this does nothing by default because the target is disabled
-    } else if(target.triple == 'aarch64-unknown-freebsd') {
-        [project.ext.zigbuildCargo, 'zigbuild', '-Z', 'build-std', '--release', '--target', target.triple].flatten()
+    } else if (target.triple == 'aarch64-unknown-freebsd') {
+        [project.ext.zigbuildCargo, 'zigbuild', '-Z', 'build-std', '--target', target.triple].flatten()
     } else {
-        [project.ext.zigbuildCargo, 'zigbuild', '--release', '--target', target.triple].flatten()
+        [project.ext.zigbuildCargo, 'zigbuild', '--target', target.triple].flatten()
     }
-
 }
+
 def nativesNameForTarget(target) {
     "sable_rapier_${target.arch}_${target.os}.${target.ext}"
 }
+
 supportedTargets.forEach { target ->
     tasks.register(compileRustTaskName(target), Exec) {
         group = 'rust'
         workingDir rustProjectDir
         description = "Cross-compiles natives for the ${target.triple} target"
-        commandLine = commandLineForTarget(target)
+        def commands= commandLineForTarget(target)
+        commands.add('--release')
+        commandLine = commands
     }
+}
+
+tasks.register("compileRustDev", Exec) {
+    group = 'rust'
+    workingDir rustProjectDir
+    description = "Compiles debug natives"
+    commandLine = [project.ext.zigbuildCargo, 'zigbuild'].flatten()
 }
 
 tasks.register('buildRustNatives') {
@@ -133,13 +147,21 @@ tasks.register('buildRustNatives') {
     finalizedBy copyRustNatives
 }
 
+tasks.register('buildRustNativesDev') {
+    group = 'build'
+    description = 'Compiles all Rust natives and moves them to resources.'
+
+    dependsOn compileRustDev
+    finalizedBy copyRustNativesDev
+}
+
 tasks.register('copyRustNatives', Copy) {
     group = 'rust'
     into nativesDir
     mustRunAfter(buildRustNatives)
 
     supportedTargets.forEach { target ->
-        from(file("$rustRootDir/target/${target.triple}/release/${ if(target.lib) {"lib"} else {""}}sable_rapier.${target.ext}")) {
+        from(file("$rustRootDir/target/${target.triple}/release/${if (target.lib) { "lib" } else { "" }}sable_rapier.${target.ext}")) {
             rename { nativesNameForTarget(target) }
         }
     }
@@ -149,9 +171,13 @@ tasks.register('copyRustNatives', Copy) {
 tasks.register('copyRustNativesDev', Copy) {
     group = 'rust'
     into nativesDir
+    mustRunAfter(buildRustNativesDev)
 
     supportedTargets.forEach { target ->
-        from(file("$rustRootDir/target/debug/${ if(target.lib) {"lib"} else {""}}sable_rapier.${target.ext}")) {
+        var library = file("$rustRootDir/target/debug/${if (target.lib) { "lib" } else { "" }}sable_rapier.${target.ext}")
+        if (!library.exists()) return
+
+        from(library) {
             rename { nativesNameForTarget(target) }
         }
     }
@@ -164,15 +190,15 @@ tasks.register('packRustNatives', Tar) {
 
     mustRunAfter copyRustNatives, copyRustNativesDev
     supportedTargets.forEach { target ->
-        var f = nativesNameForTarget(target);
+        var f = nativesNameForTarget(target)
         // No, you can't use rename here in case you were wondering.
         from(file("${nativesDir}/${f}")) { eachFile { setPath f } }
     }
     doLast {
-        byte[] bytes = Files.readAllBytes(getArchiveFile().get().asFile.toPath());
-        try (var f = new FileOutputStream(getArchiveFile().get().asFile))  {
+        byte[] bytes = Files.readAllBytes(getArchiveFile().get().asFile.toPath())
+        try (var f = new FileOutputStream(getArchiveFile().get().asFile)) {
             try (var x = new XZOutputStream(f, new LZMA2Options(LZMA2Options.PRESET_MAX))) {
-                x.write(bytes);
+                x.write(bytes)
             }
         }
         supportedTargets.forEach { t ->
@@ -224,6 +250,7 @@ dependencies {
     implementation("foundry.veil:veil-common-${project.minecraft_version}:${project.veil_version}") {
         exclude group: "maven.modrinth"
     }
+    compileOnly("foundry.imguimc:imguimc-common-${project.minecraft_version}:${project.imguimc_version}")
 
     compileOnly("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeconfigapiport_version}") {
         transitive = false

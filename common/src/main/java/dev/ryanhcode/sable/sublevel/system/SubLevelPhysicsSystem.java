@@ -2,11 +2,7 @@ package dev.ryanhcode.sable.sublevel.system;
 
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.SableConfig;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.block.BlockEntitySubLevelActor;
-import dev.ryanhcode.sable.companion.math.BoundingBox3d;
-import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
-import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.api.physics.PhysicsPipeline;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.physics.mass.MassTracker;
@@ -14,6 +10,9 @@ import dev.ryanhcode.sable.api.physics.object.ArbitraryPhysicsObject;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelObserver;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
+import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
+import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.mixinterface.plot.SubLevelContainerHolder;
 import dev.ryanhcode.sable.mixinterface.toast.SableToastableServer;
 import dev.ryanhcode.sable.physics.config.PhysicsConfigData;
@@ -506,9 +505,8 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
                     return;
                 }
 
-                serverSubLevel.updateMergedMassData((float) this.getPartialPhysicsTick());
-
                 if (notifyPipeline) {
+                    serverSubLevel.updateMergedMassData((float) this.getPartialPhysicsTick());
                     this.pipeline.onStatsChanged(serverSubLevel);
                 }
             }

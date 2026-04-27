@@ -32,9 +32,9 @@ public class CameraMixin {
 
     @WrapOperation(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
     private void sable$setPosition(final Camera instance,
-                                   final double d,
-                                   final double e,
-                                   final double f,
+                                   final double x,
+                                   final double y,
+                                   final double z,
                                    final Operation<Void> original,
                                    @Local(argsOnly = true) final Entity entity,
                                    @Local(argsOnly = true) final float partialTicks) {
@@ -58,7 +58,7 @@ public class CameraMixin {
             return;
         }
 
-        original.call(instance, d, e, f);
+        original.call(instance, x, y, z);
 
     }
 

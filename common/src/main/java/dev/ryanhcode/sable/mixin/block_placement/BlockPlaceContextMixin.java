@@ -124,7 +124,7 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
                 Mth.floor(localBase.maxZ()));
 
         for (final BlockPos position : stream) {
-            final boolean replaced = this.getLevel().getBlockState(position).canBeReplaced((BlockPlaceContext) (Object) this);
+            final boolean replaced = replaceClicked || this.getLevel().getBlockState(position).canBeReplaced((BlockPlaceContext) (Object) this);
 
             Vector3d inWorldBoxPosition = new Vector3d(position.getX() + 0.5, position.getY() + 0.5, position.getZ() + 0.5);
             final Quaterniond inWorldBoxOrientation = new Quaterniond();

@@ -1,17 +1,15 @@
 package dev.ryanhcode.sable.mixin.compatibility.vista;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.mehvahdjukaar.moonlight.api.client.util.LOD;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
-import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -37,21 +35,27 @@ public class LODMixin {
     @Final
     private Vec3 cameraPosition;
 
-    @WrapOperation(method = "isPlaneCulled(Lnet/minecraft/core/Direction;FFF)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;step()Lorg/joml/Vector3f;"))
-    private Vector3f sable$step(final Direction instance, final Operation<Vector3f> original) {
-        final Vector3f dir = original.call(instance);
-        final ClientSubLevel clientSubLevel = Sable.HELPER.getContainingClient(this.objCenter);
-        if(clientSubLevel != null) {
-            sable$direction.set(dir);
-            clientSubLevel.renderPose().transformNormal(sable$direction);
-            dir.set(sable$direction);
+    @Unique
+    private Vec3 sable$localPos = null;
+
+    @WrapMethod(method = "isPlaneCulled(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;FF)Z")
+    private boolean sable$isPlaneCulled(Vec3 planeNormal, Vec3 offset, final float discRadius, final float cosTolerance, final Operation<Boolean> original) {
+        final ClientSubLevel clientSubLevel = Sable.HELPER.getContainingClient(this.sable$localPos);
+
+        if (clientSubLevel != null) {
+            planeNormal = clientSubLevel.renderPose().transformNormal(planeNormal);
+
+            if (offset != null)
+                offset = clientSubLevel.renderPose().transformNormal(offset);
         }
-        return dir;
+
+        return original.call(planeNormal, offset, discRadius, cosTolerance);
     }
 
     @Inject(method = "<init>(Lnet/minecraft/client/Camera;Lnet/minecraft/world/phys/Vec3;)V", at = @At("TAIL"))
-    private void sable$init(Camera camera, Vec3 objCenter, CallbackInfo ci) {
-        ClientLevel level = Minecraft.getInstance().level;
+    private void sable$init(final Camera camera, final Vec3 objCenter, final CallbackInfo ci) {
+        final ClientLevel level = Minecraft.getInstance().level;
+        this.sable$localPos = objCenter;
         this.objCenter = Sable.HELPER.projectOutOfSubLevel(level, objCenter);
         this.distSq = LOD.isScoping() ? (double) 1.0F : Sable.HELPER.distanceSquaredWithSubLevels(level, this.cameraPosition, objCenter);
     }

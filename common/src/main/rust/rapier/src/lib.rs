@@ -612,6 +612,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 
             rigid_body.set_linear_damping(scene.universal_drag);
             rigid_body.set_angular_damping(scene.universal_drag);
+            rigid_body.enable_gyroscopic_forces(true);
 
             let handle = scene.rigid_body_set.insert(rigid_body);
 

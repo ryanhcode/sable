@@ -1,6 +1,0 @@
-[target.x86_64-pc-windows-gnu]
-rustflags = ["-C", "link-arg=-Wl,-Brepro"]
-
-[target.x86_64-apple-darwin]
-# Required to avoid a rustc hang when building for this target.
-rustflags = ["-C", "codegen-units=2"]

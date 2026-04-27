@@ -1,5 +1,5 @@
 plugins {
-    id "me.modmuss50.mod-publish-plugin" version "1.1.0" // https://github.com/modmuss50/mod-publish-plugin
+    id 'me.modmuss50.mod-publish-plugin'
     id 'multiloader-loader'
     id 'net.neoforged.moddev'
 }
@@ -98,4 +98,5 @@ dependencies {
         exclude group: "maven.modrinth"
         exclude group: "me.fallenbreath"
     })
+    compileOnly("foundry.imguimc:imguimc-neoforge-${project.minecraft_version}:${project.imguimc_version}")
 }

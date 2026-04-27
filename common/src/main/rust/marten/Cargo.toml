@@ -9,6 +9,3 @@ log.workspace = true
 fern.workspace = true
 humantime.workspace = true
 colored.workspace = true
-
-#rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = ["simd-nightly", "parallel"] }
-#parry3d = { version = "0.26.0", features = ["simd-nightly"] }

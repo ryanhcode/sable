@@ -12,9 +12,9 @@ colored.workspace = true
 log.workspace = true
 humantime.workspace = true
 
-rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = [
+rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "38e92f117590862481a53df6fc69a5d893e29186", features = [
     "simd-nightly",
-    # "parallel",
+    "parallel",
 ] }
 #rapier3d = { version = "0.26.1", features = [ "simd-stable" ] }
 

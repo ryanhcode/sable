@@ -38,8 +38,10 @@ public abstract class EntityMixin {
      * @reason Overwrite to make distance checks take into account sublevels
      */
     @Overwrite
-    public double distanceToSqr(final double d, final double e, final double f) {
-        return this.distanceToSqr(new Vec3(d, e, f));
+    public double distanceToSqr(final double x, final double y, final double z) {
+        final Level level = this.level();
+
+        return Sable.HELPER.distanceSquaredWithSubLevels(level, this.position(), x, y, z);
     }
 
     /**

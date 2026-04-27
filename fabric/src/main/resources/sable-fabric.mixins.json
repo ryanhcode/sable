@@ -5,6 +5,7 @@
   "minVersion": "0.8",
   "plugin": "dev.ryanhcode.sable.plugin.SableMixinPlugin",
   "client": [
+    "block_outline_render.LevelRendererMixin",
     "camera_rotation.CameraMixin",
     "compatibility.sodiumextras.EmbyToolsMixin",
     "dynamic_directional_shading.SectionCompilerMixin",

@@ -270,11 +270,19 @@ public class ActiveSableCompanion implements SableCompanion {
     }
 
     @Override
-    public double distanceSquaredWithSubLevels(final Level level, final Position a, final Position b) {
-        final Vec3 globalA = this.projectOutOfSubLevel(level, a);
-        final Vec3 globalB = this.projectOutOfSubLevel(level, b);
+    public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final Vector3dc b) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, b, new Vector3d());
 
-        return globalA.distanceToSqr(globalB);
+        return globalA.distanceSquared(globalB);
+    }
+
+    @Override
+    public double distanceSquaredWithSubLevels(final Level level, final Position a, final Position b) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(a));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(b));
+
+        return globalA.distanceSquared(globalB);
     }
 
     @Override
@@ -301,12 +309,51 @@ public class ActiveSableCompanion implements SableCompanion {
         return globalA.distanceSquared(globalB);
     }
 
+    private static double rectilinearDistance(final Vector3dc a, final Vector3dc b) {
+        final double d0 = Math.abs(b.x() - a.x());
+        final double d1 = Math.abs(b.y() - a.y());
+        final double d2 = Math.abs(b.z() - a.z());
+        return Math.max(d0, Math.max(d1, d2));
+    }
+
     @Override
-    public double distanceSquaredWithSubLevels(final Level level, final Vector3dc a, final Vector3dc b) {
+    public double rectilinearDistanceWithSubLevels(final Level level, final Vector3dc a, final Vector3dc b) {
         final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
         final Vector3dc globalB = this.projectOutOfSubLevel(level, b, new Vector3d());
 
-        return globalA.distanceSquared(globalB);
+        return rectilinearDistance(globalA, globalB);
+    }
+
+    @Override
+    public double rectilinearDistanceWithSubLevels(final Level level, final Position a, final Position b) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(a));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(b));
+
+        return rectilinearDistance(globalA, globalB);
+    }
+
+    @Override
+    public double rectilinearDistanceWithSubLevels(final Level level, final Vector3dc a, final double bX, final double bY, final double bZ) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, a, new Vector3d());
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return rectilinearDistance(globalA, globalB);
+    }
+
+    @Override
+    public double rectilinearDistanceWithSubLevels(final Level level, final Position a, final double bX, final double bY, final double bZ) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, JOMLConversion.toJOML(a));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return rectilinearDistance(globalA, globalB);
+    }
+
+    @Override
+    public double rectilinearDistanceWithSubLevels(final Level level, final double aX, final double aY, final double aZ, final double bX, final double bY, final double bZ) {
+        final Vector3dc globalA = this.projectOutOfSubLevel(level, new Vector3d(aX, aY, aZ));
+        final Vector3dc globalB = this.projectOutOfSubLevel(level, new Vector3d(bX, bY, bZ));
+
+        return rectilinearDistance(globalA, globalB);
     }
 
     @Override

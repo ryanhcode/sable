@@ -49,23 +49,6 @@ public class ServerChunkCacheMixin {
         this.sable$emptyChunk = new EmptyLevelChunk(serverLevel, new ChunkPos(0, 0), serverLevel.registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS));
     }
 
-    // TODO: Remove if chunk ticking works as intended
-    /*@WrapOperation(method = "tickChunks", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayListWithCapacity(I)Ljava/util/ArrayList;", remap = false))
-    private ArrayList<ServerChunkCache.ChunkAndHolder> tickChunks(final int initialArraySize, final Operation<ArrayList<ServerChunkCache.ChunkAndHolder>> original) {
-        final ArrayList<ServerChunkCache.ChunkAndHolder> list = original.call(initialArraySize);
-
-        final SubLevelContainer container = this.sable$getPlotContainer();
-        for (final SubLevel subLevel : container.getAllSubLevels()) {
-            final Collection<PlotChunkHolder> chunks = subLevel.getPlot().getLoadedChunks();
-            for (final PlotChunkHolder plotChunkHolder : chunks) {
-                if (!this.chunkMap.visibleChunkMap.containsKey(plotChunkHolder.getPos().toLong()))
-                    list.add(new ServerChunkCache.ChunkAndHolder(plotChunkHolder.getChunk(), plotChunkHolder));
-            }
-        }
-
-        return list;
-    }*/
-
     @Unique
     private @NotNull SubLevelContainer sable$getPlotContainer() {
         final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
