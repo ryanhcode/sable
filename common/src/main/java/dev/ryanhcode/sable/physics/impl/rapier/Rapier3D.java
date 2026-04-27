@@ -6,19 +6,15 @@ import dev.ryanhcode.sable.api.physics.callback.BlockSubLevelCollisionCallback;
 import dev.ryanhcode.sable.api.physics.mass.MassData;
 import dev.ryanhcode.sable.mixinterface.physics.ServerLevelSceneExtension;
 import dev.ryanhcode.sable.physics.impl.rapier.collider.RapierVoxelColliderData;
-import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FrameInputStream;
-import net.jpountz.xxhash.XXHashFactory;
 import net.minecraft.Util;
 import net.minecraft.Util.OS;
 import net.minecraft.server.level.ServerLevel;
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3dc;
 import org.joml.Vector3dc;
-import org.tukaani.xz.XZInputStream;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -35,7 +31,6 @@ public class Rapier3D {
 
     private static final String NATIVE_DIR = ".sable/natives";
     private static final String LIB_NAME = "sable_rapier";
-    private static final String LIB_TMP_DIR_PREFIX = LIB_NAME + "_natives";
     public static boolean ENABLED = false;
 
     private static int countingSceneID = 0;
@@ -655,11 +650,14 @@ public class Rapier3D {
 
     public static native void dispose();
 
+    @ApiStatus.Internal
     public static void setMassPropertiesFrom(final int dimensionID, final int id, final MassData massTracker) {
         final Matrix3dc inertiaTensor = massTracker.getInertiaTensor();
         final Vector3dc centerOfMass = massTracker.getCenterOfMass();
         final double mass = massTracker.getMass();
 
+        // This is only called in one location and the center of mass can't be null
+        //noinspection DataFlowIssue
         final double[] centerOfMassArray = new double[]{centerOfMass.x(), centerOfMass.y(), centerOfMass.z()};
         final double[] inertiaTensorArray = new double[]{
                 inertiaTensor.m00(), inertiaTensor.m01(), inertiaTensor.m02(),
