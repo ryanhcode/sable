@@ -1,12 +1,11 @@
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.tukaani.xz.LZMA2Options
-import org.tukaani.xz.XZOutputStream
+import net.jpountz.lz4.LZ4FrameOutputStream
 
 import java.nio.file.Files
 
 buildscript {
     dependencies {
-        classpath 'org.tukaani:xz:1.10'
+        classpath 'at.yawk.lz4:lz4-java:1.11.0'
     }
 }
 
@@ -185,7 +184,7 @@ tasks.register('copyRustNativesDev', Copy) {
 }
 tasks.register('packRustNatives', Tar) {
     group = 'rust'
-    archiveFile.set file("${nativesDir}/sable_rapier_binaries.tar.xz")
+    archiveFile.set file("${nativesDir}/sable_rapier_binaries.tar.l4z")
     into nativesDir
 
     mustRunAfter copyRustNatives, copyRustNativesDev
@@ -197,7 +196,7 @@ tasks.register('packRustNatives', Tar) {
     doLast {
         byte[] bytes = Files.readAllBytes(getArchiveFile().get().asFile.toPath())
         try (var f = new FileOutputStream(getArchiveFile().get().asFile)) {
-            try (var x = new XZOutputStream(f, new LZMA2Options(LZMA2Options.PRESET_MAX))) {
+            try (var x = new LZ4FrameOutputStream(f, LZ4FrameOutputStream.BLOCKSIZE.SIZE_4MB, bytes.length, LZ4FrameOutputStream.FLG.Bits.BLOCK_INDEPENDENCE)) {
                 x.write(bytes)
             }
         }

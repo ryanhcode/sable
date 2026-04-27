@@ -72,10 +72,6 @@ dependencies {
         }
     }
 
-    additionalRuntimeClasspath("org.tukaani:xz:1.10")
-    jarJar(implementation("org.tukaani:xz:1.10"))
-
-
     compileOnly "maven.modrinth:distanthorizons:$rootProject.distant_horizons_version"
     compileOnly "maven.modrinth:backpacks-for-dummies:$rootProject.backpacks_for_dummies_version"
 

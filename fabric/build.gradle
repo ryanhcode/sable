@@ -29,7 +29,6 @@ dependencies {
     modCompileOnly("foundry.imguimc:imguimc-fabric-${project.minecraft_version}:${project.imguimc_version}")
 
     include(modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeconfigapiport_version}")) //source: https://github.com/Fuzss/forgeconfigapiport-fabric
-    include(implementation('org.tukaani:xz:1.10'))
 }
 
 loom {
