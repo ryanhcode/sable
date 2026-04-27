@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.arrows_hit_blocks;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -37,16 +39,17 @@ public abstract class AbstractArrowMixin extends Entity {
         super(entityType, level);
     }
 
-    @Redirect(method = "onHitBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
+    @WrapOperation(method = "onHitBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
     private void sable$setDeltaMovement(final AbstractArrow arrow,
                                         final Vec3 difference,
+                                        Operation<Void> original,
                                         @Local(argsOnly = true) final BlockHitResult blockHitResult,
                                         @Share("difference") final LocalRef<Vec3> differenceRef,
                                         @Share("subLevel") final LocalRef<SubLevel> subLevelRef) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level(), blockHitResult.getLocation());
 
         if (subLevel == null) {
-            arrow.setDeltaMovement(difference);
+            original.call(arrow, difference);
             return;
         }
 
@@ -63,17 +66,18 @@ public abstract class AbstractArrowMixin extends Entity {
         subLevelRef.set(subLevel);
     }
 
-    @Redirect(method = "onHitBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;setPosRaw(DDD)V"))
+    @WrapOperation(method = "onHitBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;setPosRaw(DDD)V"))
     private void sable$setPosRaw(final AbstractArrow instance,
                                  final double x,
                                  final double y,
                                  final double z,
+                                 Operation<Void> original,
                                  @Share("subLevel") final LocalRef<SubLevel> subLevelRef,
                                  @Share("difference") final LocalRef<Vec3> differenceRef) {
         final Vec3 difference = differenceRef.get();
 
         if (difference == null) {
-            instance.setPosRaw(x, y, z);
+            original.call(instance, x, y, z);
             return;
         }
 
@@ -81,7 +85,7 @@ public abstract class AbstractArrowMixin extends Entity {
         final SubLevel subLevel = subLevelRef.get();
         final Vec3 localPosition = subLevel.logicalPose().transformPositionInverse(this.position());
 
-        instance.setPosRaw(localPosition.x - nudge.x, localPosition.y - nudge.y, localPosition.z - nudge.z);
+        original.call(instance, localPosition.x - nudge.x, localPosition.y - nudge.y, localPosition.z - nudge.z);
 
         final Vec3 vec3 = this.getDeltaMovement();
         final double d = vec3.horizontalDistance();

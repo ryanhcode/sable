@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.basin_interactions;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.simple.DeferralBehaviour;
 import dev.ryanhcode.sable.ActiveSableCompanion;
@@ -34,9 +36,9 @@ public abstract class BasinOperatingBlockEntityMixin {
         this.sable$forceUpdateTicks++;
     }
 
-    @Redirect(method = "getBasin", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;"))
-    private BlockEntity sable$accountForSubLevels(final Level level, final BlockPos pos) {
+    @WrapOperation(method = "getBasin", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;"))
+    private BlockEntity sable$accountForSubLevels(final Level level, final BlockPos pos, Operation<BlockEntity> original) {
         final ActiveSableCompanion helper = Sable.HELPER;
-        return helper.runIncludingSubLevels(level, pos.getCenter(), true, helper.getContaining(level, pos), (subLevel, internalPos) -> level.getBlockEntity(internalPos));
+        return helper.runIncludingSubLevels(level, pos.getCenter(), true, helper.getContaining(level, pos), (subLevel, internalPos) -> original.call(level, internalPos));
     }
 }

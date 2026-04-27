@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.tracks;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.trains.track.TrackTargetingClient;
 import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
@@ -20,9 +22,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TrackTargetingClient.class)
 public class TrackTargetingClientMixin {
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Ldev/engine_room/flywheel/lib/transform/PoseTransformStack;translate(Lnet/minecraft/world/phys/Vec3;)Ldev/engine_room/flywheel/lib/transform/Translate;"))
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Ldev/engine_room/flywheel/lib/transform/PoseTransformStack;translate(Lnet/minecraft/world/phys/Vec3;)Ldev/engine_room/flywheel/lib/transform/Translate;"))
     private static Translate sable$manipulateMatrixStack(final PoseTransformStack instance,
                                                          final Vec3 vec3,
+                                                         Operation<Translate> original,
                                                          @Local(ordinal = 0) final Minecraft minecraft, @Local(ordinal = 0) final BlockPos pos,
                                                          @Local(argsOnly = true) final Vec3 camera) {
         final ClientLevel level = minecraft.level;
@@ -35,7 +38,7 @@ public class TrackTargetingClientMixin {
             return instance.translate(renderPos.x() - camera.x(), renderPos.y() - camera.y(), renderPos.z() - camera.z()).rotate(renderOrientation);
         }
 
-        return instance.translate(vec3);
+        return original.call(instance, vec3);
     }
 
 }

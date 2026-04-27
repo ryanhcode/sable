@@ -47,8 +47,8 @@ public abstract class NozzleBEFixesMixin extends SmartBlockEntity {
 		return original.call(value, 3, max);
 	}
 
-	@Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
-	public void sable$checkDirection(final Level instance, final ParticleOptions particleOptions, final double x, final double y, final double z, final double mx, final double my, final double mz, @Local(ordinal = 0) final Vec3 origin, @Local(ordinal = 1) final Vec3 start) {
+	@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
+	public void sable$checkDirection(final Level instance, final ParticleOptions particleOptions, final double x, final double y, final double z, final double mx, final double my, final double mz, Operation<Void> original, @Local(ordinal = 0) final Vec3 origin, @Local(ordinal = 1) final Vec3 start) {
 		final Vec3 direction = start.subtract(origin).normalize();
 
 		final Direction nearest = Direction.getNearest(direction.x, direction.y, direction.z);
@@ -56,6 +56,6 @@ public abstract class NozzleBEFixesMixin extends SmartBlockEntity {
 			return;
 		}
 
-		instance.addParticle(particleOptions, x, y, z, mx, my, mz);
+		original.call(instance, particleOptions, x, y, z, mx, my, mz);
 	}
 }

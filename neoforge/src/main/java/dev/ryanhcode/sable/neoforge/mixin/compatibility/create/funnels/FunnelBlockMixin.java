@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.funnels;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.logistics.funnel.FunnelBlock;
 import dev.ryanhcode.sable.Sable;
@@ -17,12 +19,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(FunnelBlock.class)
 public class FunnelBlockMixin {
 
-    @Redirect(method = "entityInside",
+    @WrapOperation(method = "entityInside",
             at = @At(value = "INVOKE",
                     target = "Lnet/createmod/catnip/math/VecHelper;getCenterOf(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/phys/Vec3;"),
             remap = false)
-    private Vec3 sable$projectFunnelPos(final Vec3i pos, @Local(argsOnly = true) final Level level) {
-        return JOMLConversion.toMojang(Sable.HELPER.projectOutOfSubLevel(level, JOMLConversion.atCenterOf(pos)));
+    private Vec3 sable$projectFunnelPos(final Vec3i pos, Operation<Vec3> original, @Local(argsOnly = true) final Level level) {
+        return JOMLConversion.toMojang(Sable.HELPER.projectOutOfSubLevel(level, JOMLConversion.toJOML(original.call(pos))));
     }
 
 }

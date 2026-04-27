@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.frogports;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorPackage;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainPackageInteractionHandler;
@@ -16,9 +18,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ChainPackageInteractionHandler.class)
 public class ChainPackageInteractionHandlerMixin {
 
-    @Redirect(method = "lambda$onUse$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition()Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$getTraceOrigin(final LocalPlayer instance, @Local(argsOnly = true) final ChainConveyorPackage.ChainConveyorPackagePhysicsData data) {
-        Vec3 origin = instance.getEyePosition();
+    @WrapOperation(method = "lambda$onUse$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition()Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$getTraceOrigin(final LocalPlayer instance, Operation<Vec3> original, @Local(argsOnly = true) final ChainConveyorPackage.ChainConveyorPackagePhysicsData data) {
+        Vec3 origin = original.call(instance);
 
         final SubLevel subLevel = Sable.HELPER.getContainingClient(data.targetPos);
         if (subLevel != null) {
@@ -28,9 +30,9 @@ public class ChainPackageInteractionHandlerMixin {
         return origin;
     }
 
-    @Redirect(method = "lambda$onUse$0", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/foundation/utility/RaycastHelper;getTraceTarget(Lnet/minecraft/world/entity/player/Player;DLnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$getTraceTarget(final Player playerIn, final double range, final Vec3 from, @Local(argsOnly = true) final ChainConveyorPackage.ChainConveyorPackagePhysicsData data) {
-        Vec3 target = RaycastHelper.getTraceTarget(playerIn, range, playerIn.getEyePosition());
+    @WrapOperation(method = "lambda$onUse$0", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/foundation/utility/RaycastHelper;getTraceTarget(Lnet/minecraft/world/entity/player/Player;DLnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$getTraceTarget(final Player playerIn, final double range, final Vec3 from, Operation<Vec3> original, @Local(argsOnly = true) final ChainConveyorPackage.ChainConveyorPackagePhysicsData data) {
+        Vec3 target = original.call(playerIn, range, from);
 
         final SubLevel subLevel = Sable.HELPER.getContainingClient(data.targetPos);
         if (subLevel != null) {

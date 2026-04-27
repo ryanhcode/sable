@@ -106,9 +106,10 @@ public abstract class EntityMixin implements EntityMovementExtension {
         }
     }
 
-    @Redirect(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 sable$collideRedirect(final Entity entity, final Vec3 collisionMotion) {
-        final Entity self = (Entity) (Object) this;
+
+    @WrapOperation(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    public Vec3 sable$collideRedirect(final Entity entity, final Vec3 collisionMotion, Operation<Vec3> original) {
+        final Entity self = Entity.class.cast(this);
         final Vec3 motion = collisionMotion;
 
         Vec3 velocity = Vec3.ZERO;
@@ -155,7 +156,7 @@ public abstract class EntityMixin implements EntityMovementExtension {
 //        }
 
         final Vec3 beforeVanillaCollision = this.sable$collisionInfo.motion;
-        final Vec3 afterVanillaCollision = this.collide(beforeVanillaCollision);
+        final Vec3 afterVanillaCollision = original.call(entity, beforeVanillaCollision);
 
         final boolean xCollision = !Mth.equal(beforeVanillaCollision.x, afterVanillaCollision.x);
         final boolean zCollision = !Mth.equal(beforeVanillaCollision.z, afterVanillaCollision.z);

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.behaviour_compatibility.block_breaking_behaviour;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.kinetics.saw.SawMovementBehaviour;
@@ -18,12 +20,12 @@ public class SawMovementBehaviourMixin {
         return Math.sqrt(Sable.HELPER.distanceSquaredWithSubLevels(context.world, instance, vec3));
     }
 
-    @Redirect(method = "dropItemFromCutTree", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;relativeMotion:Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 sable$fixRelativeMotion(final MovementContext instance, @Local(argsOnly = true) final MovementContext context, @Local(ordinal = 0) final Vec3 dropPos) {
+    @WrapOperation(method = "dropItemFromCutTree", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;relativeMotion:Lnet/minecraft/world/phys/Vec3;"))
+    public Vec3 sable$fixRelativeMotion(final MovementContext instance, Operation<Vec3> original, @Local(argsOnly = true) final MovementContext context, @Local(ordinal = 0) final Vec3 dropPos) {
         final ActiveSableCompanion helper = Sable.HELPER;
         final SubLevel parentSublevel = helper.getContaining(context.world, context.contraption.anchor);
         final SubLevel targetSublevel = helper.getContaining(context.world, dropPos);
-        Vec3 orignalMotion = context.relativeMotion;
+        Vec3 orignalMotion = original.call(context);
 
         if (parentSublevel != null) {
             orignalMotion = parentSublevel.logicalPose().transformNormal(orignalMotion);

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.particle;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
@@ -32,21 +34,21 @@ public abstract class TerrainParticleMixin extends Particle {
         super(clientLevel, d, e, f);
     }
 
-    @Redirect(method = "getLightColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I"))
-    private int sable$getLightColor(final BlockAndTintGetter blockAndTintGetter, final BlockPos blockPos, @Local final int existingColor) {
+    @WrapOperation(method = "getLightColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I"))
+    private int sable$getLightColor(final BlockAndTintGetter blockAndTintGetter, final BlockPos blockPos, Operation<Integer> original, @Local final int existingColor) {
 
         final ClientSubLevelContainer container = SubLevelContainer.getContainer(Minecraft.getInstance().level);
         assert container != null;
         final SubLevel subLevel = Sable.HELPER.getContainingClient(this.pos);
 
         if (subLevel instanceof final ClientSubLevel clientSubLevel) {
-            final int color = LevelRenderer.getLightColor(blockAndTintGetter, blockPos);
+            final int color = original.call(blockAndTintGetter, blockPos);
             return clientSubLevel.scaleLightColor(color);
         } else if (container.inBounds(blockPos)) {
             return existingColor;
         }
 
-        return LevelRenderer.getLightColor(blockAndTintGetter, blockPos);
+        return original.call(blockAndTintGetter, blockPos);
     }
 
 }

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.pmweather;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.protomanly.pmweather.block.entity.RadarBlockEntity;
 import dev.protomanly.pmweather.render.RadarRenderer;
@@ -29,12 +31,12 @@ public class RadarRendererMixin {
         return BlockPos.containing(globalPos);
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
-    public Vec3 sable$renderWorldPos(final Vec3 instance, final double x, final double y, final double z, @Local final RadarBlockEntity blockEntity) {
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
+    public Vec3 sable$renderWorldPos(final Vec3 instance, final double x, final double y, final double z, Operation<Vec3> original, @Local final RadarBlockEntity blockEntity) {
         final SubLevel subLevel = Sable.HELPER.getContaining(blockEntity);
 
         if (subLevel == null) {
-            return instance.multiply(x, y, z);
+            return original.call(instance, x, y, z);
         }
 
         final Vec3 globalDir = subLevel.logicalPose().transformNormal(new Vec3(instance.x, 0, instance.z));
@@ -42,17 +44,17 @@ public class RadarRendererMixin {
         return new Vec3(globalDir.x, 0.0, globalDir.z).multiply(x, y, z);
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec2;normalized()Lnet/minecraft/world/phys/Vec2;", ordinal = 0))
-    public Vec2 sable$renderWind(final Vec2 instance, @Local final RadarBlockEntity blockEntity) {
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec2;normalized()Lnet/minecraft/world/phys/Vec2;", ordinal = 0))
+    public Vec2 sable$renderWind(final Vec2 instance, Operation<Vec2> original, @Local final RadarBlockEntity blockEntity) {
         final SubLevel subLevel = Sable.HELPER.getContaining(blockEntity);
 
         if (subLevel == null) {
-            return instance.normalized();
+            return original.call(instance);
         }
 
         final Vec3 globalDir = subLevel.logicalPose().transformNormal(new Vec3(instance.x, 0.0, instance.y));
 
-        return new Vec2((float) globalDir.x, (float) globalDir.z).normalized();
+        return original.call(new Vec2((float) globalDir.x, (float) globalDir.z));
     }
 
 }

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.fluid_handling;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.fluids.OpenEndedPipe;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
@@ -36,8 +38,8 @@ public abstract class OpenEndedPipeMixin {
         this.sable$plotOutputPos = this.outputPos;
     }
 
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    private BlockState sable$getBlockstateInclSublevels(final Level level, final BlockPos pos) {
+    @WrapOperation(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
+    private BlockState sable$getBlockstateInclSublevels(final Level level, final BlockPos pos, Operation<BlockState> original) {
         this.outputPos = this.sable$plotOutputPos;
 
         final ActiveSableCompanion helper = Sable.HELPER;
@@ -45,7 +47,7 @@ public abstract class OpenEndedPipeMixin {
         BlockState gatheredState = helper.runIncludingSubLevels(level, checkPos, true, helper.getContaining(level, checkPos), this::sable$gatherState);
         if (gatheredState == null) {
             this.outputPos = this.sable$plotOutputPos;
-            gatheredState = level.getBlockState(this.sable$plotOutputPos);
+            gatheredState = original.call(level, this.sable$plotOutputPos);
         }
 
         return gatheredState;
@@ -62,10 +64,10 @@ public abstract class OpenEndedPipeMixin {
         return null;
     }
 
-    @Redirect(method = "provideFluidToSpace",
+    @WrapOperation(method = "provideFluidToSpace",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z", ordinal = 1))
-    private boolean sable$preventInWorldPlace(final Level instance, final BlockPos pPos, final BlockState pNesubleveltate, final int pFlags) {
-        return instance.setBlock(this.sable$plotOutputPos, pNesubleveltate, 3);
+    private boolean sable$preventInWorldPlace(final Level instance, final BlockPos pPos, final BlockState pNesubleveltate, final int pFlags, Operation<Boolean> original) {
+        return original.call(instance, this.sable$plotOutputPos, pNesubleveltate, 3);
     }
 
 }

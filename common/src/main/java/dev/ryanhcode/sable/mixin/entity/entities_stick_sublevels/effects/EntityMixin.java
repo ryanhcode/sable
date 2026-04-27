@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entities_stick_sublevels.effects;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -94,12 +96,12 @@ public abstract class EntityMixin {
     }
 
 
-    @Redirect(method = "spawnSprintParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
-    private void sable$addParticle(final Level instance, final ParticleOptions particleOptions, final double d, final double e, final double f, final double g, final double h, final double i, @Share("localPosition") final LocalRef<Vec3> localPosition, @Local(ordinal = 0) final BlockPos pos) {
+    @WrapOperation(method = "spawnSprintParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
+    private void sable$addParticle(final Level instance, final ParticleOptions particleOptions, final double d, final double e, final double f, final double g, final double h, final double i, Operation<Void> original, @Share("localPosition") final LocalRef<Vec3> localPosition, @Local(ordinal = 0) final BlockPos pos) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level, pos);
 
         if (subLevel == null) {
-            instance.addParticle(particleOptions, d, e, f, g, h, i);
+            original.call(instance, particleOptions, d, e, f, g, h, i);
             return;
         }
 
@@ -122,7 +124,7 @@ public abstract class EntityMixin {
             v = v.subtract(upDir.x * dot, upDir.y * dot, upDir.z * dot).add(upDir.x * 1.5, upDir.y * 1.5, upDir.z * 1.5);
         }
 
-        instance.addParticle(particleOptions, p.x, p.y, p.z, v.x, v.y, v.z);
+        original.call(instance, particleOptions, p.x, p.y, p.z, v.x, v.y, v.z);
     }
 
     /**

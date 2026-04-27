@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.sublevel_render.impl.sodium;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.ryanhcode.sable.Sable;
@@ -83,9 +85,9 @@ public abstract class SodiumWorldRendererMixin implements SodiumWorldRendererExt
      * @author RyanH
      * @reason Account for sub-levels in the visible chunk count
      */
-    @Overwrite
-    public int getVisibleChunkCount() {
-        int sum = this.renderSectionManager.getVisibleChunkCount();
+    @WrapMethod(method = "getVisibleChunkCount")
+    public int getVisibleChunkCount(Operation<Integer> original) {
+        int sum = original.call();
 
         for (final RenderSectionManager manager : this.sable$subLevelSectionManagers.values()) {
             sum += manager.getVisibleChunkCount();

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
@@ -23,14 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(WalkNodeEvaluator.class)
 public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 
-    @Redirect(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBlockY()I"))
-    private int sable$redirectGetBlockY(final Mob mob) {
+    @WrapOperation(method = "getStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBlockY()I"))
+    private int sable$redirectGetBlockY(final Mob mob, Operation<Integer> original) {
         final SubLevel trackingSubLevel = Sable.HELPER.getTrackingSubLevel(mob);
 
         if (trackingSubLevel != null) {
             return Mth.floor(trackingSubLevel.logicalPose().transformPositionInverse(mob.position()).y);
         } else {
-            return mob.getBlockY();
+            return original.call(mob);
         }
     }
     @Inject(method = "getStart", at = @At("HEAD"))
@@ -97,14 +99,14 @@ public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
         return mobPosition.get().y;
     }
 
-    @Redirect(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    private AABB sable$canReachWithoutCollision(final Mob instance) {
+    @WrapOperation(method = "canReachWithoutCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
+    private AABB sable$canReachWithoutCollision(final Mob instance, Operation<AABB> original) {
         final SubLevel trackingSubLevel = this.sable$getTrackingSubLevel();
 
         if (trackingSubLevel != null) {
-            return instance.getBoundingBox().move(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()).subtract(this.mob.position()));
+            return original.call(instance).move(trackingSubLevel.logicalPose().transformPositionInverse(this.mob.position()).subtract(this.mob.position()));
         }
 
-        return instance.getBoundingBox();
+        return original.call(instance);
     }
 }

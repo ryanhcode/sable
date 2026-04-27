@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.frogports;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlockEntity;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorRidingHandler;
@@ -24,17 +26,17 @@ public class ChainConveyorRidingHandlerMixin {
                 .sub(playerPosition.x, playerPosition.y, playerPosition.z));
     }
 
-    @Redirect(method = "updateTargetPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
-    private static Vec3 sable$fixLookAngle(final LocalPlayer instance, @Local(ordinal = 1) final BlockPos connection, @Local final ChainConveyorBlockEntity clbe) {
+    @WrapOperation(method = "updateTargetPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 sable$fixLookAngle(final LocalPlayer instance, Operation<Vec3> original, @Local(ordinal = 1) final BlockPos connection, @Local final ChainConveyorBlockEntity clbe) {
         final SubLevel subLevel = Sable.HELPER.getContaining(clbe);
 
         if (subLevel != null) {
             final Pose3dc pose = subLevel.logicalPose();
-            final Vec3 lookAngle = instance.getLookAngle();
+            final Vec3 lookAngle = original.call(instance);
             return pose.transformNormalInverse(lookAngle);
         }
 
-        return instance.getLookAngle();
+        return original.call(instance);
     }
 
 }

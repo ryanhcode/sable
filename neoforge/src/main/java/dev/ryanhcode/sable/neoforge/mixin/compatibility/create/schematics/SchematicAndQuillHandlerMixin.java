@@ -45,8 +45,8 @@ public abstract class SchematicAndQuillHandlerMixin {
     @Shadow
     public BlockPos secondPos;
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;containing(Lnet/minecraft/core/Position;)Lnet/minecraft/core/BlockPos;"))
-    private BlockPos sable$containing(Position position) {
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;containing(Lnet/minecraft/core/Position;)Lnet/minecraft/core/BlockPos;"))
+    private BlockPos sable$containing(Position position, Operation<BlockPos> original) {
         if (this.firstPos != null) {
             final SubLevel subLevel = Sable.HELPER.getContainingClient(this.firstPos);
 
@@ -55,7 +55,7 @@ public abstract class SchematicAndQuillHandlerMixin {
             }
         }
 
-        return BlockPos.containing(position);
+        return original.call(position);
     }
 
     @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/BlockHitResult;getBlockPos()Lnet/minecraft/core/BlockPos;"))

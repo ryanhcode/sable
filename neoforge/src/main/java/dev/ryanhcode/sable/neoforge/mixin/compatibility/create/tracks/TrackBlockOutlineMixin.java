@@ -66,24 +66,25 @@ public class TrackBlockOutlineMixin {
     /**
      * Translating the render of normal block outlines, rotation is needed here
      * */
-    @Redirect(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
+    @WrapOperation(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
     private static void sable$translateBlockFactoringSubLevels(final PoseStack instance,
                                                                final double x,
                                                                final double y,
                                                                final double z,
+                                                               Operation<Void> original,
                                                                @Local(name = "camPos") final Vec3 camPos,
                                                                @Local(name = "pos") final BlockPos pos) {
         final Level level = Minecraft.getInstance().level;
 
         if (level == null) {
-            instance.translate(x, y, z);
+            original.call(instance, x, y, z);
             return;
         }
 
         final ClientSubLevel subLevel = (ClientSubLevel) Sable.HELPER.getContaining(level, pos);
 
         if (subLevel == null) {
-            instance.translate(x, y, z);
+            original.call(instance, x, y, z);
             return;
         }
 

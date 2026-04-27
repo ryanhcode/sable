@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.elevator_controls;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.elevator.ElevatorControlsHandler;
 import dev.ryanhcode.sable.Sable;
@@ -16,11 +18,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ElevatorControlsHandler.class)
 public class ElevatorControlsHandlerMixin {
 
-    @Redirect(method = "onScroll",
+    @WrapOperation(method = "onScroll",
             at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    private static AABB sable$projectAABB(final AbstractContraptionEntity instance) {
-        final SubLevel subLevel = Sable.HELPER.getContaining(instance.level(), instance.getBoundingBox().getCenter());
-        final AABB projectedBB = instance.getBoundingBox();
+    private static AABB sable$projectAABB(final AbstractContraptionEntity instance, Operation<AABB> original) {
+        final SubLevel subLevel = Sable.HELPER.getContaining(instance.level(), original.call(instance).getCenter());
+        final AABB projectedBB = original.call(instance);
 
         if (subLevel != null) {
             final BoundingBox3d bb = new BoundingBox3d(projectedBB);

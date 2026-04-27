@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.sublevel_render;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.mixinterface.BlockEntityRenderDispatcherExtension;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -21,11 +23,11 @@ public abstract class BlockEntityRenderDispatcherMixin implements BlockEntityRen
     @Unique
     private Vec3 sable$cameraPos;
 
-    @Redirect(method = "setupAndRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I"))
-    private static int sable$getLightColor(final BlockAndTintGetter blockAndTintGetter, final BlockPos blockPos) {
+    @WrapOperation(method = "setupAndRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I"))
+    private static int sable$getLightColor(final BlockAndTintGetter blockAndTintGetter, final BlockPos blockPos, Operation<Integer> original) {
         final ClientSubLevel subLevel = Sable.HELPER.getContainingClient(blockPos);
 
-        final int existingColor = LevelRenderer.getLightColor(blockAndTintGetter, blockPos);
+        final int existingColor = original.call(blockAndTintGetter, blockPos);
         return subLevel != null ? subLevel.scaleLightColor(existingColor) : existingColor;
     }
 

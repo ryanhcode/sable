@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.fabric.mixin.entities_stick_sublevels.effects;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -19,8 +21,8 @@ public abstract class LivingEntityMixin extends Entity {
     /**
      * Changes the blockpos offset to use getOnPos
      */
-    @Redirect(method = "playBlockFallSound", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    private BlockState playBlockFallSound(final Level instance, final BlockPos blockPos) {
-        return instance.getBlockState(this.getOnPos(0.2f));
+    @WrapOperation(method = "playBlockFallSound", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
+    private BlockState playBlockFallSound(Level instance, BlockPos pos, Operation<BlockState> original) {
+        return original.call(instance, this.getOnPos(0.2f));
     }
 }

@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.block_placement;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
@@ -47,32 +49,32 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
     @Shadow
     public abstract BlockPos getClickedPos();
 
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;getFacingAxis(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/Direction$Axis;)Lnet/minecraft/core/Direction;"))
-    private Direction sable$getFacingAxis(final Entity player, final Direction.Axis axis) {
+    @WrapOperation(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;getFacingAxis(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/Direction$Axis;)Lnet/minecraft/core/Direction;"))
+    private Direction sable$getFacingAxis(final Entity player, final Direction.Axis axis, Operation<Direction> original) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.getLevel(), this.getClickedPos());
 
         if (subLevel != null) {
             SubLevelHelper.pushEntityLocal(subLevel, player);
-            final Direction facingAxis = Direction.getFacingAxis(player, axis);
+            final Direction facingAxis = original.call(player, axis);
             SubLevelHelper.popEntityLocal(subLevel, player);
             return facingAxis;
         }
 
-        return Direction.getFacingAxis(player, axis);
+        return original.call(player, axis);
     }
 
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;orderedByNearest(Lnet/minecraft/world/entity/Entity;)[Lnet/minecraft/core/Direction;"))
-    private Direction[] sable$orderedByNearest(final Entity player) {
+    @WrapOperation(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;orderedByNearest(Lnet/minecraft/world/entity/Entity;)[Lnet/minecraft/core/Direction;"))
+    private Direction[] sable$orderedByNearest(final Entity player, Operation<Direction[]> original) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.getLevel(), this.getClickedPos());
 
         if (subLevel != null) {
             SubLevelHelper.pushEntityLocal(subLevel, player);
-            final Direction[] nearest = Direction.orderedByNearest(player);
+            final Direction[] nearest = original.call(player);
             SubLevelHelper.popEntityLocal(subLevel, player);
             return nearest;
         }
 
-        return Direction.orderedByNearest(player);
+        return original.call(player);
     }
 
     @Inject(method = "canPlace", at = @At("HEAD"), cancellable = true)

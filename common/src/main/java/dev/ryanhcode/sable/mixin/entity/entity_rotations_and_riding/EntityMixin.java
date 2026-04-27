@@ -129,10 +129,10 @@ public abstract class EntityMixin {
         entity.setPos(pos);
     }
 
-    @Redirect(method = "saveWithoutId", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;put(Ljava/lang/String;Lnet/minecraft/nbt/Tag;)Lnet/minecraft/nbt/Tag;", ordinal = 0))
-    public Tag sable$fixPassengerSaving(final CompoundTag instance, final String string, final Tag tag) {
-        if (!EntitySubLevelUtil.shouldKick((Entity) (Object) this)) {
-            return instance.put(string, tag);
+    @WrapOperation(method = "saveWithoutId", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;put(Ljava/lang/String;Lnet/minecraft/nbt/Tag;)Lnet/minecraft/nbt/Tag;", ordinal = 0))
+    public Tag sable$fixPassengerSaving(final CompoundTag instance, final String string, final Tag tag, Operation<Tag> original) {
+        if (!EntitySubLevelUtil.shouldKick(Entity.class.cast(this))) {
+            return original.call(instance, string, tag);
         }
 
         final SubLevel subLevel = Sable.HELPER.getContaining(this.vehicle);
@@ -151,9 +151,9 @@ public abstract class EntityMixin {
                 }
             }
 
-            return instance.put(string, newPositionTag);
+            return original.call(instance, string, newPositionTag);
         }
 
-        return instance.put(string, tag);
+        return original.call(instance, string, tag);
     }
 }

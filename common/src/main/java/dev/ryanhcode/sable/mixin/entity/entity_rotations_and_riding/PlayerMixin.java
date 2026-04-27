@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_rotations_and_riding;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
@@ -71,15 +73,15 @@ public abstract class PlayerMixin extends LivingEntity {
                 .add(upDeltaMovement.get().x * scalar, upDeltaMovement.get().y * scalar, upDeltaMovement.get().z * scalar));
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;minmax(Lnet/minecraft/world/phys/AABB;)Lnet/minecraft/world/phys/AABB;"))
-    public AABB sable$fixRidingBoundingBox(final AABB usBoundingBox, AABB vehicleBoundingBox) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;minmax(Lnet/minecraft/world/phys/AABB;)Lnet/minecraft/world/phys/AABB;"))
+    public AABB sable$fixRidingBoundingBox(final AABB usBoundingBox, AABB vehicleBoundingBox, Operation<AABB> original) {
         final Entity vehicle = this.getVehicle();
         final SubLevel vehicleSubLevel = Sable.HELPER.getContaining(vehicle);
-        if (vehicleSubLevel == null) return usBoundingBox.minmax(vehicleBoundingBox);
+        if (vehicleSubLevel == null) return original.call(usBoundingBox, vehicleBoundingBox);
 
         final BoundingBox3d bb = new BoundingBox3d(vehicleBoundingBox);
         vehicleBoundingBox = bb.transform(vehicleSubLevel.logicalPose(), bb).toMojang();
 
-        return usBoundingBox.minmax(vehicleBoundingBox);
+        return original.call(usBoundingBox, vehicleBoundingBox);
     }
 }

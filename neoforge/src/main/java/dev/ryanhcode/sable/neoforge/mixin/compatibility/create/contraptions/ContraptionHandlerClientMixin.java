@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.contraptions;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.ContraptionHandlerClient;
 import dev.ryanhcode.sable.ActiveSableCompanion;
@@ -28,19 +30,19 @@ public abstract class ContraptionHandlerClientMixin {
         return Math.sqrt(Sable.HELPER.distanceSquaredWithSubLevels(Minecraft.getInstance().level, eyePos, itemPos));
     }
 
-    @Redirect(method = "rightClickingOnContraptionsGetsHandledLocally",
+    @WrapOperation(method = "rightClickingOnContraptionsGetsHandledLocally",
             at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"))
-    private static AABB sable$moveBoundingBoxToProjectedPos(final AbstractContraptionEntity instance){
+    private static AABB sable$moveBoundingBoxToProjectedPos(final AbstractContraptionEntity instance, Operation<AABB> original){
         final Vec3 projectedPos = Sable.HELPER.projectOutOfSubLevel(instance.level(), instance.getAnchorVec());
-        final AABB boundingBox = instance.getBoundingBox();
+        final AABB boundingBox = original.call(instance);
 
         return boundingBox.move(Vec3.ZERO.subtract(boundingBox.getCenter())).move(projectedPos);
     }
 
-    @Redirect(method = "rayTraceContraption",
+    @WrapOperation(method = "rayTraceContraption",
                 at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toLocalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"),
                 remap = false)
-    private static Vec3 sable$projectedContraptionClip(final AbstractContraptionEntity abce, Vec3 localVec, final float partialTicks){
+    private static Vec3 sable$projectedContraptionClip(final AbstractContraptionEntity abce, Vec3 localVec, final float partialTicks, Operation<Vec3> original){
         final ActiveSableCompanion helper = Sable.HELPER;
         final SubLevel sublevel1 = helper.getContaining(abce.level(), localVec);
         final SubLevel contraptionSublevel = helper.getContaining(abce);
@@ -53,6 +55,6 @@ public abstract class ContraptionHandlerClientMixin {
                 localVec = contraptionSublevel.logicalPose().transformPositionInverse(localVec);
         }
 
-        return abce.toLocalVector(localVec, 1);
+        return original.call(abce, localVec, 1f);
     }
 }

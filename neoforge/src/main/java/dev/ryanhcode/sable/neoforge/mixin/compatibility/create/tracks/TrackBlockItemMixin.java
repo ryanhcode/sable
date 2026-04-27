@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.tracks;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.trains.track.TrackBlockItem;
 import com.simibubi.create.content.trains.track.TrackTargetingBlockItem;
@@ -17,13 +19,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin({ TrackBlockItem.class, TrackTargetingBlockItem.class })
 public class TrackBlockItemMixin {
 
-    @Redirect(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
-    public Vec3 sable$getLookAngle(final Player instance, @Local(argsOnly = true) final UseOnContext context) {
+    @WrapOperation(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
+    public Vec3 sable$getLookAngle(final Player instance, Operation<Vec3> original, @Local(argsOnly = true) final UseOnContext context) {
         final Level level = context.getLevel();
         final BlockPos clickedPos = context.getClickedPos();
         final SubLevel subLevel = Sable.HELPER.getContaining(level, clickedPos);
 
-        Vec3 lookAngle = instance.getLookAngle();
+        Vec3 lookAngle = original.call(instance);
         if (subLevel != null) {
             lookAngle = subLevel.logicalPose().transformNormalInverse(lookAngle);
         }
