@@ -37,6 +37,8 @@ loom {
     if (aw.exists()) {
         accessWidenerPath.set(aw)
     }
+    enableTransitiveAccessWideners = true
+
     runs {
         def client = client {
             client()
