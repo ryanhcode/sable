@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use jni::JNIEnv;
-use jni::objects::{JClass, JDoubleArray, JObject};
+use jni::objects::GlobalRef;
 use jni::sys::{jboolean, jdouble, jint};
 use marten::Real;
 use marten::level::{SableMethodID, VoxelColliderData};
@@ -41,45 +40,18 @@ impl VoxelColliderMap {
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_newVoxelCollider<
-    'local,
->(
-    mut env: JNIEnv<'static>,
-    _class: JClass<'local>,
+pub fn new_voxel_collider(
     friction: jdouble,
     volume: jdouble,
     restitution: jdouble,
     is_fluid: jboolean,
-    contact_events: JObject,
     dynamic: jboolean,
+    global_ref: Option<GlobalRef>,
+    global_method: Option<SableMethodID>,
 ) -> jint {
     let state = unsafe { get_physics_state_mut() };
 
     let next_index = state.voxel_collider_map.voxel_colliders.len();
-
-    let global_ref = if contact_events.is_null() {
-        None
-    } else {
-        Some(env.new_global_ref(contact_events).unwrap())
-    };
-
-    let global_method = if let Some(global_ref_value) = &global_ref {
-        let class = env.get_object_class(global_ref_value).unwrap();
-
-        let id = SableMethodID(
-            env.get_method_id(
-                class,
-                String::from("onCollision"),
-                String::from("(IIIDDDD)[D"),
-            )
-            .unwrap(),
-        );
-        Some(id)
-    } else {
-        None
-    };
-
     state
         .voxel_collider_map
         .voxel_colliders
@@ -97,21 +69,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
     next_index as jint
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addVoxelColliderBox<
-    'local,
->(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    index: jint,
-    box_bounds: JDoubleArray<'local>,
-) {
+pub fn add_voxel_collider_box(index: jint, bounds: [jdouble; 6]) {
     let state = unsafe { get_physics_state_mut() };
-
-    let mut bounds: [jdouble; 6] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    env.get_double_array_region(box_bounds, 0, &mut bounds)
-        .unwrap();
-
     if let Some(data) = &mut state.voxel_collider_map.voxel_colliders[index as usize] {
         data.collision_boxes.push((
             bounds[0] as f32,
@@ -124,14 +83,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_clearVoxelColliderBoxes<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    index: jint,
-) {
+pub fn clear_voxel_collider_boxes(index: jint) {
     let state = unsafe { get_physics_state_mut() };
 
     if let Some(data) = &mut state.voxel_collider_map.voxel_colliders[index as usize] {

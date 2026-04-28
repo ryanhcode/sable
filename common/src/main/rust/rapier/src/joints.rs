@@ -1,8 +1,6 @@
 use crate::config::{JOINT_SPRING_DAMPING_RATIO, JOINT_SPRING_FREQUENCY};
 use crate::scene::LevelColliderID;
 use crate::{get_scene_mut_ref, get_scene_ref};
-use jni::JNIEnv;
-use jni::objects::{JClass, JDoubleArray};
 use jni::sys::{jboolean, jdouble, jint, jlong};
 use marten::Real;
 use rapier3d::dynamics::{
@@ -118,12 +116,7 @@ const AXES: [JointAxis; 6] = [
     JointAxis::AngZ,
 ];
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintMotor<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn set_constraint_motor(
     scene_id: jint,
     joint_id: jlong,
     axis: jint,
@@ -155,15 +148,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isConstraintValid<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    joint_id: jlong,
-) -> jboolean {
+pub fn is_constraint_valid(scene_id: jint, joint_id: jlong) -> jboolean {
     let scene = get_scene_ref(scene_id);
     if scene.joint_set.joints.contains_key(&joint_id) {
         1
@@ -172,43 +157,22 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isC
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getConstraintImpulses<
-    'local,
->(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    joint_id: jlong,
-    store: JDoubleArray<'local>,
-) {
+pub fn get_constraint_impulses(scene_id: jint, joint_id: jlong) -> [jdouble; 6] {
     let scene = get_scene_ref(scene_id);
     let joint = scene.joint_set.joints.get(&joint_id).unwrap();
     let impulse_joint = scene.impulse_joint_set.get(joint.handle).unwrap();
     let impulses = impulse_joint.impulses;
-
-    let arr: [jdouble; 6] = [
+    [
         impulses[0] as jdouble,
         impulses[1] as jdouble,
         impulses[2] as jdouble,
         impulses[3] as jdouble,
         impulses[4] as jdouble,
         impulses[5] as jdouble,
-    ];
-
-    env.set_double_array_region(&store, 0, &arr).unwrap();
+    ]
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintContactsEnabled<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    joint_id: jlong,
-    enabled: jboolean,
-) {
+pub fn set_constraint_contacts_enabled(scene_id: jint, joint_id: jlong, enabled: jboolean) {
     let scene = get_scene_mut_ref(scene_id);
     let Some(joint) = scene.joint_set.joints.get_mut(&joint_id) else {
         return;
@@ -217,28 +181,15 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     joint.contacts_enabled = enabled > 0;
 }
 
-// removes a constraint
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_removeConstraint<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    scene_id: jint,
-    joint_id: jlong,
-) {
+/// removes a constraint
+pub fn remove_constraint(scene_id: jint, joint_id: jlong) {
     let scene = get_scene_mut_ref(scene_id);
     if let Some(joint) = scene.joint_set.joints.remove(&joint_id) {
         scene.impulse_joint_set.remove(joint.handle, true);
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addRotaryConstraint<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_rotary_constraint(
     scene_id: jint,
     id_a: jint,
     id_b: jint,
@@ -319,12 +270,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFixedConstraint<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_fixed_constraint(
     scene_id: jint,
     id_a: jint,
     id_b: jint,
@@ -408,12 +354,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addFreeConstraint<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_free_constraint(
     scene_id: jint,
     id_a: jint,
     id_b: jint,
@@ -494,12 +435,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_addGenericConstraint<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn add_generic_constraint(
     scene_id: jint,
     id_a: jint,
     id_b: jint,
@@ -595,12 +531,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     handle_long
 }
 
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintFrame<
-    'local,
->(
-    _env: JNIEnv<'local>,
-    _class: JClass<'local>,
+pub fn set_constraint_frame(
     scene_id: jint,
     joint_id: jlong,
     side: jint,
