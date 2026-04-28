@@ -256,6 +256,8 @@ dependencies {
         transitive = false
     }
 
+    compileOnly "rearth.oritech:oritech-common-${project.minecraft_version}:${project.oritech_version}"
+
     implementation "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:${forgeconfigapiport_version}"
     //source: https://github.com/Fuzss/forgeconfigapiport
 }
