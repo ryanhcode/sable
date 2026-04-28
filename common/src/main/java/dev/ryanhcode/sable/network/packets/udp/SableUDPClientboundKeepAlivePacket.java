@@ -4,6 +4,7 @@ import dev.ryanhcode.sable.mixinterface.udp.ConnectionExtension;
 import dev.ryanhcode.sable.network.udp.AddressedSableUDPPacket;
 import dev.ryanhcode.sable.network.udp.SableUDPPacket;
 import dev.ryanhcode.sable.network.udp.SableUDPPacketType;
+import dev.ryanhcode.sable.network.udp.SableUDPServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -30,7 +31,9 @@ public record SableUDPClientboundKeepAlivePacket() implements SableUDPPacket {
         final Channel channel = connectionExtension.sable$getUDPChannel();
 
         final InetSocketAddress baseAddress = ((InetSocketAddress) connection.getRemoteAddress());
-        final InetSocketAddress remoteAddress = new InetSocketAddress(baseAddress.getAddress(), baseAddress.getPort());
+        final InetSocketAddress remoteAddress = new InetSocketAddress(
+                baseAddress.getAddress(),
+                SableUDPServer.getUDPPort(baseAddress.getPort()));
 
         channel.eventLoop().execute(() -> {
             final SableUDPServerboundAlivePacket packet = new SableUDPServerboundAlivePacket();

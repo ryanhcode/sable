@@ -5,6 +5,7 @@ import dev.ryanhcode.sable.mixinterface.udp.ConnectionExtension;
 import dev.ryanhcode.sable.network.packets.udp.SableUDPAuthenticationPacket;
 import dev.ryanhcode.sable.network.tcp.SableTCPPacket;
 import dev.ryanhcode.sable.network.udp.AddressedSableUDPPacket;
+import dev.ryanhcode.sable.network.udp.SableUDPServer;
 import foundry.veil.api.network.handler.PacketContext;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -44,7 +45,10 @@ public record ClientboundSableUDPActivationPacket(UUID uuid) implements SableTCP
         final Channel channel = connectionExtension.sable$getUDPChannel();
 
         final InetSocketAddress baseAddress = ((InetSocketAddress) connection.getRemoteAddress());
-        final InetSocketAddress remoteAddress = new InetSocketAddress(baseAddress.getAddress(), baseAddress.getPort());
+        final InetSocketAddress remoteAddress = new InetSocketAddress(
+                baseAddress.getAddress(),
+                SableUDPServer.getUDPPort(baseAddress.getPort())
+        );
 
         Sable.LOGGER.info("Received authentication request, sending response over UDP to {}", remoteAddress);
 
