@@ -7,6 +7,7 @@ import dev.ryanhcode.sable.physics.floating_block.FloatingBlockMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.BubbleColumnBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -100,6 +101,38 @@ public class PhysicsBlockPropertyHelper {
         if (location == null)
             return null;
         return FloatingBlockMaterialDataHandler.allMaterials.get(location);
+    }
+
+    /**
+     * Gets the buoyancy of a fluid block
+     *
+     * @param state The state of the block
+     * @return The buoyancy of the fluid
+     */
+    public static double getFluidBuoyancy(final BlockState state) {
+        if (state.getBlock() instanceof BubbleColumnBlock) {
+            if (state.getValue(BubbleColumnBlock.DRAG_DOWN)) {
+                return -1.0;
+            } else {
+                return 3.0;
+            }
+        }
+
+        return ((BlockStateExtension) state).sable$getProperty(PhysicsBlockPropertyTypes.BUOYANCY.get());
+    }
+
+    /**
+     * Gets the viscosity of a fluid block
+     *
+     * @param state The state of the block
+     * @return The viscosity of the fluid
+     */
+    public static double getFluidViscosity(final BlockState state) {
+        if (state.getBlock() instanceof BubbleColumnBlock) {
+            return 1.0;
+        }
+        
+        return ((BlockStateExtension) state).sable$getProperty(PhysicsBlockPropertyTypes.VISCOSITY.get());
     }
 
 }
