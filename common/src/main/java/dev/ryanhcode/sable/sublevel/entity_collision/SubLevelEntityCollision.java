@@ -275,26 +275,29 @@ public class SubLevelEntityCollision {
                         }
 
                         final Iterator<BoundingBox3dc> iterator = ((FastVoxelShapeIterable) voxelShape).sable$allBoxes();
-                        while (iterator.hasNext()) {
-                            final BoundingBox3dc box = iterator.next();
-                            box.center(center);
-                            cubeOBB.getPosition().set(block.getX() + center.x,
-                                    block.getY() + center.y,
-                                    block.getZ() + center.z);
-                            subLevelPose.transformPosition(cubeOBB.getPosition());
-                            box.size(cubeOBB.getDimensions());
+                        //This is null when this is relevant to little tiles
+                        if(iterator != null) {
+                            while (iterator.hasNext()) {
+                                final BoundingBox3dc box = iterator.next();
+                                box.center(center);
+                                cubeOBB.getPosition().set(block.getX() + center.x,
+                                        block.getY() + center.y,
+                                        block.getZ() + center.z);
+                                subLevelPose.transformPosition(cubeOBB.getPosition());
+                                box.size(cubeOBB.getDimensions());
 
-                            OrientedBoundingBox3d.sat(entityBoundsOBB, cubeOBB, mtv);
+                                OrientedBoundingBox3d.sat(entityBoundsOBB, cubeOBB, mtv);
 
-                            if (mtv.lengthSquared() > 0.0 && mtv.x != Double.MAX_VALUE && mtv.y != Double.MAX_VALUE && mtv.z != Double.MAX_VALUE) {
-                                final double lengthMtv = mtv.lengthSquared();
-                                if (lengthMtv > maxMTVLength) {
-                                    maxMTVLength = lengthMtv;
-                                    maxMTV.set(mtv);
+                                if (mtv.lengthSquared() > 0.0 && mtv.x != Double.MAX_VALUE && mtv.y != Double.MAX_VALUE && mtv.z != Double.MAX_VALUE) {
+                                    final double lengthMtv = mtv.lengthSquared();
+                                    if (lengthMtv > maxMTVLength) {
+                                        maxMTVLength = lengthMtv;
+                                        maxMTV.set(mtv);
 
-                                    box.move(block.getX(), block.getY(), block.getZ(), maxAABB);
-                                    maxBlockPos.set(block);
-                                    maxBlockState = state;
+                                        box.move(block.getX(), block.getY(), block.getZ(), maxAABB);
+                                        maxBlockPos.set(block);
+                                        maxBlockState = state;
+                                    }
                                 }
                             }
                         }
@@ -325,35 +328,38 @@ public class SubLevelEntityCollision {
 
                         boolean discard = false;
                         final Iterator<BoundingBox3dc> iterator = ((FastVoxelShapeIterable) offsetShape).sable$allBoxes();
-                        while (iterator.hasNext()) {
-                            final BoundingBox3dc box = iterator.next();
-                            box.move(newPos.getX(), newPos.getY(), newPos.getZ(), offsetAABB).expand(0.001);
-                            if (!maxAABB.intersects(offsetAABB)) {
-                                continue;
-                            }
+                        //This is null when this is relevant to little tiles
+                        if(iterator != null) {
+                            while (iterator.hasNext()) {
+                                final BoundingBox3dc box = iterator.next();
+                                box.move(newPos.getX(), newPos.getY(), newPos.getZ(), offsetAABB).expand(0.001);
+                                if (!maxAABB.intersects(offsetAABB)) {
+                                    continue;
+                                }
 
-                            compressedMinAABB.set(
-                                    maxAABB.minX * (1.0 - direction.getStepX()),
-                                    maxAABB.minY * (1.0 - direction.getStepY()),
-                                    maxAABB.minZ * (1.0 - direction.getStepZ()),
-                                    maxAABB.maxX * (1.0 - direction.getStepX()) + direction.getStepX(),
-                                    maxAABB.maxY * (1.0 - direction.getStepY()) + direction.getStepY(),
-                                    maxAABB.maxZ * (1.0 - direction.getStepZ()) + direction.getStepZ()
-                            );
+                                compressedMinAABB.set(
+                                        maxAABB.minX * (1.0 - direction.getStepX()),
+                                        maxAABB.minY * (1.0 - direction.getStepY()),
+                                        maxAABB.minZ * (1.0 - direction.getStepZ()),
+                                        maxAABB.maxX * (1.0 - direction.getStepX()) + direction.getStepX(),
+                                        maxAABB.maxY * (1.0 - direction.getStepY()) + direction.getStepY(),
+                                        maxAABB.maxZ * (1.0 - direction.getStepZ()) + direction.getStepZ()
+                                );
 
-                            compressedOffsetAABB.set(
-                                    offsetAABB.minX * (1.0 - direction.getStepX()),
-                                    offsetAABB.minY * (1.0 - direction.getStepY()),
-                                    offsetAABB.minZ * (1.0 - direction.getStepZ()),
-                                    offsetAABB.maxX * (1.0 - direction.getStepX()) + direction.getStepX(),
-                                    offsetAABB.maxY * (1.0 - direction.getStepY()) + direction.getStepY(),
-                                    offsetAABB.maxZ * (1.0 - direction.getStepZ()) + direction.getStepZ()
-                            );
+                                compressedOffsetAABB.set(
+                                        offsetAABB.minX * (1.0 - direction.getStepX()),
+                                        offsetAABB.minY * (1.0 - direction.getStepY()),
+                                        offsetAABB.minZ * (1.0 - direction.getStepZ()),
+                                        offsetAABB.maxX * (1.0 - direction.getStepX()) + direction.getStepX(),
+                                        offsetAABB.maxY * (1.0 - direction.getStepY()) + direction.getStepY(),
+                                        offsetAABB.maxZ * (1.0 - direction.getStepZ()) + direction.getStepZ()
+                                );
 
-                            compressedMinAABB.intersect(compressedOffsetAABB, intersection);
-                            if (Math.abs(intersection.volume() - compressedMinAABB.volume()) < 0.01) {
-                                discard = true;
-                                break;
+                                compressedMinAABB.intersect(compressedOffsetAABB, intersection);
+                                if (Math.abs(intersection.volume() - compressedMinAABB.volume()) < 0.01) {
+                                    discard = true;
+                                    break;
+                                }
                             }
                         }
 
@@ -570,6 +576,8 @@ public class SubLevelEntityCollision {
             }
 
             final Iterator<BoundingBox3dc> iterator = ((FastVoxelShapeIterable) voxelShape).sable$allBoxes();
+            //This is null when this is relevant to little tiles
+            if(iterator == null) return false;
             final Vector3d center = sink.center;
             final Vector3d mtv = sink.mtv;
 
