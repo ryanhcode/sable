@@ -1,3 +1,8 @@
- - Allow for the entire UDP pipeline to be disabled
- - Adjust compatibility with Create's Mechanical Harvester
- - Tweak assembly handling
+ - Add more compatability for various modded block masses
+ - Change how we distriute and load Sable Rapier binaries
+ - Update the Rapier fork to latest and tweak some physics settings
+ - Fix Vista compatibility causing Televisions to weirdly cull
+ - Fix issues with Lectern Linked Controllers
+ - Fix a few visual issues with Iris
+ - Adjust entity lighting mixins
+ - Update Sable Companion
