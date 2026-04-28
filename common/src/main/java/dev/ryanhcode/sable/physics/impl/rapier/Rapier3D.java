@@ -648,6 +648,7 @@ public class Rapier3D {
     @ApiStatus.Internal
     public static native void configMinIslandSize(int islandSize);
 
+    @ApiStatus.Internal
     public static native void dispose();
 
     @ApiStatus.Internal
