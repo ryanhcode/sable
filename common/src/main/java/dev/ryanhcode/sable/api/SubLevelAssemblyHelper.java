@@ -390,24 +390,36 @@ public class SubLevelAssemblyHelper {
             i++;
         }
 
-        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
-        // destroy all the old blocks
-        for (final BlockPos block : blocks) {
-            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
+        final BlockState subLevelState = Blocks.AIR.defaultBlockState();
 
+        SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
+        // Replace all old blocks as barriers temporarily to prevent any brittle blocks from breaking.
+        for (final BlockPos block : blocks) {
+
+            try {
+                final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
+                        SectionPos.blockToSectionCoord(block.getZ()));
+
+                chunk.setBlockState(block, Blocks.BARRIER.defaultBlockState(), true);
+            } catch (final Exception e) {
+                Sable.LOGGER.error("Failed to replace old block into a temporary barrier during assembly {}", block, e);
+            }
+        }
+
+        // Destroy all temporary barriers.
+        for (final BlockPos block : blocks) {
             try {
                 final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
                         SectionPos.blockToSectionCoord(block.getZ()));
 
                 chunk.setBlockState(block, subLevelState, true);
             } catch (final Exception e) {
-                Sable.LOGGER.error("Failed to destroy old block during assembly {}", block, e);
+                Sable.LOGGER.error("Failed to destroy temporary barrier during assembly {}", block, e);
             }
         }
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, false);
 
         for (final BlockPos block : blocks) {
-            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
             resultingLevel.sendBlockUpdated(block, Blocks.STONE.defaultBlockState(), subLevelState, 3);
         }
     }
