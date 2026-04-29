@@ -27,8 +27,6 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.Clearable;
-import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
@@ -346,13 +344,8 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("x", newPos.getX());
                     tag.putInt("y", newPos.getY());
                     tag.putInt("z", newPos.getZ());
-                }
 
-                if (blockEntity instanceof final RandomizableContainer container) {
-                    container.setLootTable(null);
-                }
-                if (blockEntity instanceof final Clearable clearable) {
-                    clearable.clearContent();
+                    level.removeBlockEntity(block);
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));
@@ -391,17 +384,27 @@ public class SubLevelAssemblyHelper {
         }
 
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
-        // destroy all the old blocks
+        // Replace all old blocks as barriers temporarily to prevent any brittle blocks from breaking.
         for (final BlockPos block : blocks) {
-            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
-
             try {
                 final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
                         SectionPos.blockToSectionCoord(block.getZ()));
 
-                chunk.setBlockState(block, subLevelState, true);
+                chunk.setBlockState(block, Blocks.BARRIER.defaultBlockState(), true);
             } catch (final Exception e) {
-                Sable.LOGGER.error("Failed to destroy old block during assembly {}", block, e);
+                Sable.LOGGER.error("Failed to replace old block into a temporary barrier during assembly {}", block, e);
+            }
+        }
+
+        // Destroy all temporary barriers with flags to suppress drops.
+        for (final BlockPos block : blocks) {
+            final BlockState subLevelState = Blocks.AIR.defaultBlockState();
+
+            try {
+                level.setBlock(block, subLevelState,
+                        Block.UPDATE_MOVE_BY_PISTON | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS);
+            } catch (final Exception e) {
+                Sable.LOGGER.error("Failed to destroy temporary barrier during assembly {}", block, e);
             }
         }
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, false);
