@@ -11,6 +11,8 @@ import dev.ryanhcode.sable.sublevel.plot.PlotChunkHolder;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelOccupancySavedData;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import dev.ryanhcode.sable.util.iterator.ListBackedFilterIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -60,6 +62,16 @@ public abstract class SubLevelContainer {
      * All observers/listeners for the plotgrid
      */
     private final List<SubLevelObserver> observers = new ObjectArrayList<>();
+
+    /**
+     * A per-tick cache of every chunk position that is occupied by at least one sub-level.
+     * Rebuilt from scratch each tick in {@link #tick()} so that moving sub-levels
+     * are tracked correctly. Used by {@link #isChunkOccupied(int, int)} for O(1) lookups.
+     *
+     * @see #rebuildOccupiedChunksCache()
+     * @see #isChunkOccupied(int, int)
+     */
+    private final LongSet occupiedChunks = new LongOpenHashSet();
 
     /**
      * The level of the plotgrid
@@ -143,6 +155,10 @@ public abstract class SubLevelContainer {
         this.processSubLevelRemovals();
 
         this.observers.forEach(observer -> observer.tick(this));
+
+        // Rebuild the occupied-chunk cache so that entity-getter fast-paths
+        // always see up-to-date positions (sub-levels can move every tick).
+        this.rebuildOccupiedChunksCache();
     }
 
     /**
@@ -527,5 +543,43 @@ public abstract class SubLevelContainer {
     @ApiStatus.Internal
     public BitSet getOccupancy() {
         return this.occupancy;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  Occupied-chunk cache (fast entity-getter path)
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * Rebuilds the occupied-chunk cache from scratch.
+     * Called every tick so that moving/rotating sub-levels are tracked correctly.
+     *
+     * <p>The cache is a simple {@link LongSet} of chunk-position-encoded longs
+     * ({@link ChunkPos#asLong(int, int)}).  It is consumed by
+     * {@link #isChunkOccupied(int, int)} which runs in O(1) time.</p>
+     */
+    private void rebuildOccupiedChunksCache() {
+        this.occupiedChunks.clear();
+        for (final SubLevel sub : this.allSubLevels) {
+            final LevelPlot plot = sub.getPlot();
+            final ChunkPos min = plot.getChunkMin();
+            final ChunkPos max = plot.getChunkMax();
+            for (int cx = min.x; cx <= max.x; cx++) {
+                for (int cz = min.z; cz <= max.z; cz++) {
+                    this.occupiedChunks.add(ChunkPos.asLong(cx, cz));
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks whether any loaded sub-level occupies the given chunk position.
+     * <p>This is backed by the per-tick cache and completes in O(1) time.</p>
+     *
+     * @param chunkX the global chunk X coordinate
+     * @param chunkZ the global chunk Z coordinate
+     * @return {@code true} if at least one sub-level occupies this chunk
+     */
+    public boolean isChunkOccupied(final int chunkX, final int chunkZ) {
+        return this.occupiedChunks.contains(ChunkPos.asLong(chunkX, chunkZ));
     }
 }
