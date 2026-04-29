@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.util;
 
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.util.AbortableIterationConsumer;
@@ -37,6 +38,43 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
         Sable.LOGGER.error("Aborting entity get for abnormally large AABB: {}", aabb, new Throwable("Stack Trace"));
     }
 
+    /**
+     * Quick test: does any sub-level exist within (or overlap) this AABB?
+     *
+     * <p>Uses a two-level short-circuit:</p>
+     * <ol>
+     *   <li><b>Dimension-level</b> — if this world has zero loaded sub-levels, skip entirely.</li>
+     *   <li><b>Chunk-level</b> — consult the per-tick occupied-chunk cache
+     *       ({@link SubLevelContainer#isChunkOccupied(int, int)}) for every chunk the AABB
+     *       touches.  The cache is rebuilt once per tick and provides O(1) lookups.</li>
+     * </ol>
+     *
+     * @return {@code true} if at least one sub-level intersects the given AABB
+     */
+    private boolean hasSubLevelInAABB(final AABB aabb) {
+        final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
+        // ① No sub-levels in this dimension at all → fast skip
+        if (container == null || container.getLoadedCount() == 0) {
+            return false;
+        }
+
+        // ② Convert the AABB to chunk-range and probe the cache
+        final int minCX = (int) Math.floor(aabb.minX) >> 4;
+        final int maxCX = (int) Math.floor(aabb.maxX) >> 4;
+        final int minCZ = (int) Math.floor(aabb.minZ) >> 4;
+        final int maxCZ = (int) Math.floor(aabb.maxZ) >> 4;
+
+        for (int cx = minCX; cx <= maxCX; cx++) {
+            for (int cz = minCZ; cz <= maxCZ; cz++) {
+                if (container.isChunkOccupied(cx, cz)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public @Nullable T get(final int i) {
         return this.delegate.get(i);
@@ -64,6 +102,13 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
             return;
         }
 
+        // ── fast path: no sub-level in this region → vanilla behaviour ──
+        if (!this.hasSubLevelInAABB(aABB)) {
+            this.delegate.get(aABB, consumer);
+            return;
+        }
+
+        // ── slow path: sub-level-aware traversal ──
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level, aABB.getCenter());
 
         this.delegate.get(aABB, consumer);
@@ -96,6 +141,13 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
             return;
         }
 
+        // ── fast path: no sub-level in this region → vanilla behaviour ──
+        if (!this.hasSubLevelInAABB(aABB)) {
+            this.delegate.get(entityTypeTest, aABB, abortableIterationConsumer);
+            return;
+        }
+
+        // ── slow path: sub-level-aware traversal ──
         final SubLevel subLevel = Sable.HELPER.getContaining(this.level, aABB.getCenter());
         this.delegate.get(entityTypeTest, aABB, abortableIterationConsumer);
 
@@ -113,7 +165,7 @@ public class SubLevelInclusiveLevelEntityGetter<T extends EntityAccess> implemen
                 continue;
             }
 
-            final AABB localBounds = bb.set(aABB).transformInverse(otherSubLevel.logicalPose(), bb).toMojang();
+            final AABB localBounds = bb.set(aABB).transformInverse(otherSubLevel.logicalPose(), bakedMatrix, bb).toMojang();
 
             this.delegate.get(entityTypeTest, localBounds, abortableIterationConsumer);
         }
