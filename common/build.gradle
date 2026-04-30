@@ -19,7 +19,8 @@ def mac(arch) {
 }
 
 def linux(arch) {
-    [triple: "${arch}-unknown-linux-gnu", suffix: ".2.17", arch: arch, os: "linux", ext: "so", lib: true]
+    def glibcVersion = (arch in ["loongarch64", "riscv64gc"]) ? ".2.36" : ".2.17"
+    [triple: "${arch}-unknown-linux-gnu", suffix: glibcVersion, arch: arch, os: "linux", ext: "so", lib: true]
 }
 
 def freebsd(arch) {
@@ -35,6 +36,8 @@ def supportedTargets = [
         mac("aarch64"),
         linux("x86_64"),
         linux("aarch64"),
+        linux("loongarch64"),
+        linux("riscv64gc"),
         windows("x86_64"),
         windows("aarch64"),
 //        freebsd("x86_64"),

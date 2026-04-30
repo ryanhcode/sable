@@ -42,8 +42,13 @@ public class Rapier3D {
 
     private static String getNativeName() {
         final String arch;
-        if (System.getProperty("os.arch").equals("arm") || System.getProperty("os.arch").startsWith("aarch64")) {
+        String osArch = System.getProperty("os.arch");
+        if (osArch.equals("arm") || osArch.startsWith("aarch64")) {
             arch = "aarch64";
+        } else if (osArch.startsWith("loongarch64") || osArch.equals("loong64")) {
+            arch = "loongarch64";
+        } else if (osArch.startsWith("riscv64") || osArch.equals("riscv64gc")) {
+            arch = "riscv64";
         } else {
             arch = "x86_64";
         }
