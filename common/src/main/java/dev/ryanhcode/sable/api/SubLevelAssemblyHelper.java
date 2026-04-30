@@ -384,19 +384,7 @@ public class SubLevelAssemblyHelper {
         }
 
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, true);
-        // Replace all old blocks as barriers temporarily to prevent any brittle blocks from breaking.
-        for (final BlockPos block : blocks) {
-            try {
-                final LevelChunk chunk = accelerator.getChunk(SectionPos.blockToSectionCoord(block.getX()),
-                        SectionPos.blockToSectionCoord(block.getZ()));
-
-                chunk.setBlockState(block, Blocks.BARRIER.defaultBlockState(), true);
-            } catch (final Exception e) {
-                Sable.LOGGER.error("Failed to replace old block into a temporary barrier during assembly {}", block, e);
-            }
-        }
-
-        // Destroy all temporary barriers with flags to suppress drops.
+        // destroy all the old blocks
         for (final BlockPos block : blocks) {
             final BlockState subLevelState = Blocks.AIR.defaultBlockState();
 
@@ -404,7 +392,7 @@ public class SubLevelAssemblyHelper {
                 level.setBlock(block, subLevelState,
                         Block.UPDATE_MOVE_BY_PISTON | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS);
             } catch (final Exception e) {
-                Sable.LOGGER.error("Failed to destroy temporary barrier during assembly {}", block, e);
+                Sable.LOGGER.error("Failed to destroy old block during assembly {}", block, e);
             }
         }
         SableAssemblyPlatform.INSTANCE.setIgnoreOnPlace(resultingLevel, false);
