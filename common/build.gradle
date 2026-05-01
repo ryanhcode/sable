@@ -30,6 +30,10 @@ def windows(arch) {
     [triple: "${arch}-pc-windows-msvc", suffix: "", arch: arch, os: "windows", ext: "dll", lib: false]
 }
 
+def android(arch) {
+    [triple: "${arch}-linux-android", suffix: "", arch: arch, os: "android", ext: "so", lib: true]
+}
+
 def supportedTargets = [
         mac("x86_64"),
         mac("aarch64"),
@@ -37,6 +41,8 @@ def supportedTargets = [
         linux("aarch64"),
         windows("x86_64"),
         windows("aarch64"),
+        android("aarch64"),
+        android("x86_64"),
 //        freebsd("x86_64"),
         // freebsd("aarch64"),
 ]
@@ -48,6 +54,7 @@ def cargoCacheDir = project.layout.buildDirectory.file("cargo").get().asFile
 def docker = Os.isFamily(Os.FAMILY_MAC) ? "/usr/local/bin/docker" : "docker"
 def xWinImage = 'sable-build-xwin'
 def zigbuildImage = 'sable-build-zigbuild'
+def androidImage = 'sable-build-android'
 
 def baseDockerCommand = [
         docker,
@@ -64,6 +71,7 @@ def baseDockerCommand = [
 ]
 project.ext.zigbuildCargo = [baseDockerCommand, zigbuildImage, 'cargo'].flatten()
 project.ext.xWinCargo = [baseDockerCommand, xWinImage, 'cargo'].flatten()
+project.ext.androidCargo = [baseDockerCommand, androidImage, 'cargo'].flatten()
 
 tasks.register('createContainersDirectory') {
     doLast {
@@ -86,10 +94,16 @@ tasks.register('buildXWinImage', Exec) {
     commandLine docker, 'build', '-t', xWinImage, 'container/xwin', '--build-arg', "RUST_VERSION=${pinnedRustVersion}"
     dependsOn createContainersDirectory
 }
+tasks.register('buildAndroidImage', Exec) {
+    group = 'rust'
+    workingDir rustRootDir
+    commandLine docker, 'build', '-t', androidImage, 'container/android', '--build-arg', "RUST_VERSION=${pinnedRustVersion}"
+    dependsOn createContainersDirectory
+}
 
 tasks.register('buildImages') {
     group = 'rust'
-    dependsOn buildZigbuildImage, buildXWinImage
+    dependsOn buildZigbuildImage, buildXWinImage, buildAndroidImage
 }
 
 tasks.register('cleanRust', Exec) {
@@ -111,6 +125,8 @@ def commandLineForTarget(target) {
         // support meme platforms, this does nothing by default because the target is disabled
     } else if (target.triple == 'aarch64-unknown-freebsd') {
         [project.ext.zigbuildCargo, 'zigbuild', '-Z', 'build-std', '--target', target.triple + target.suffix].flatten()
+    } else if (target.triple.contains('android')) {
+        [project.ext.androidCargo, 'build', '--target', target.triple + target.suffix].flatten()
     } else {
         [project.ext.zigbuildCargo, 'zigbuild', '--target', target.triple + target.suffix].flatten()
     }

@@ -4,3 +4,9 @@ rustflags = ["-C", "link-arg=-Wl,-Brepro"]
 [target.x86_64-apple-darwin]
 # Required to avoid a rustc hang when building for this target.
 rustflags = ["-C", "codegen-units=2"]
+
+[target.aarch64-linux-android]
+linker = "/opt/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+
+[target.x86_64-linux-android]
+linker = "/opt/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang"
