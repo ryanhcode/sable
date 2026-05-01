@@ -40,12 +40,22 @@ public class Rapier3D {
         loadLibrary();
     }
 
+    private static boolean isAndroid() {
+        return System.getProperty("java.vendor", "").toLowerCase().contains("android")
+                || System.getProperty("java.vm.vendor", "").toLowerCase().contains("android")
+                || System.getProperty("java.runtime.name", "").toLowerCase().contains("android");
+    }
+
     private static String getNativeName() {
         final String arch;
         if (System.getProperty("os.arch").equals("arm") || System.getProperty("os.arch").startsWith("aarch64")) {
             arch = "aarch64";
         } else {
             arch = "x86_64";
+        }
+
+        if (isAndroid()) {
+            return LIB_NAME + "_" + arch + "_android.so";
         }
 
         final OS os = Util.getPlatform();
@@ -67,7 +77,9 @@ public class Rapier3D {
                 throw new FileNotFoundException("sable_rapier_binaries.zip.l4z");
             }
 
-            final Path dir = Paths.get(NATIVE_DIR);
+            final Path dir = isAndroid()
+                    ? Paths.get(System.getProperty("java.io.tmpdir"), ".sable")
+                    : Paths.get(NATIVE_DIR);
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
