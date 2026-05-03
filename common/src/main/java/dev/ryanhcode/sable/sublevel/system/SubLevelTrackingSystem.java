@@ -73,6 +73,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
     @Override
     public void onSubLevelRemoved(final SubLevel subLevel, final SubLevelRemovalReason reason) {
         this.additionQueue.remove(subLevel);
+
         final ServerSubLevel serverSubLevel = (ServerSubLevel) subLevel;
         this.sendRemoval(this.serverWidePlayerSink(serverSubLevel), serverSubLevel);
     }
@@ -97,7 +98,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
         }
     }
 
-    private void sendFullSync(final ServerPlayer player, final ServerSubLevel subLevel, @Nullable final CustomPacketPayload extraPacket) {
+    public void sendFullSync(final ServerPlayer player, final ServerSubLevel subLevel, @Nullable final CustomPacketPayload extraPacket) {
         final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
         assert container != null;
 

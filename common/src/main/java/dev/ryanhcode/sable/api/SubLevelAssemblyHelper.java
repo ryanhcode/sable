@@ -108,6 +108,15 @@ public class SubLevelAssemblyHelper {
 
         if (containingSubLevel != null) {
             kickFromContainingSubLevel(level, physicsSystem, pipeline, subLevel, containingSubLevel);
+
+            if (containingSubLevel instanceof ServerSubLevel parentSubLevel) {
+                // If the parent already has a root, pass it down. Otherwise, the parent IS the root.
+                UUID rootId = parentSubLevel.sable$getRootParentId();
+                if (rootId == null) {
+                    rootId = parentSubLevel.getUniqueId();
+                }
+                subLevel.sable$setRootParentId(rootId);
+            }
         }
 
         pipeline.teleport(subLevel, subLevel.logicalPose().position(), subLevel.logicalPose().orientation());

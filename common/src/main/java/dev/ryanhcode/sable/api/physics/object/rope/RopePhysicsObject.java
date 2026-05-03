@@ -53,7 +53,12 @@ public class RopePhysicsObject implements ArbitraryPhysicsObject {
     public double getCollisionRadius() {
         return this.collisionRadius;
     }
-
+    /**
+     * @return A view of ServerSubLevel points
+     */
+    public ServerSubLevel getStartAttachmentSubLevel() {
+        return this.startAttachmentSubLevel;
+    }
     /**
      * @return A view of all points
      */

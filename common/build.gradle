@@ -6,6 +6,7 @@ import java.nio.file.Files
 buildscript {
     dependencies {
         classpath 'at.yawk.lz4:lz4-java:1.11.0'
+
     }
 }
 

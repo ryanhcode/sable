@@ -19,6 +19,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.commands.arguments.coordinates.RotationArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import dev.ryanhcode.sable.sublevel.teleport.SubLevelDimensionTeleport;
+import net.minecraft.commands.arguments.DimensionArgument;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +41,7 @@ public class SableSubLevelCommands {
      *     <li>{@code /sable name set <targets> <name>}</li>
      *     <li>{@code /sable name clear <targets>}</li>
      *     <li>{@code /sable name get <target>}</li>
-     *     <li>{@code /sable teleport <targets> <destination>}</li>
+     *     <li>{@code /sable teleport <targets> <destination><angle><dimension>}</li>
      *     <li>{@code /sable remove <targets>}</li>
      * </ul>
      */
@@ -58,11 +62,17 @@ public class SableSubLevelCommands {
                 .then(Commands.literal("teleport")
                         .then(Commands.argument("targets", SubLevelArgumentType.subLevels())
                                 .then(Commands.argument("destination", Vec3Argument.vec3(false))
-                                        .executes((ctx) -> SableSubLevelCommands.executeTeleportSubLevelCommand(ctx, null))
+                                        .executes((ctx) -> SableSubLevelCommands.executeTeleportSubLevelCommand(ctx, null, null))
                                         .then(Commands.argument("angle", RotationArgument.rotation())
                                                 .executes((ctx) -> SableSubLevelCommands.executeTeleportSubLevelCommand(
-                                                        ctx, RotationArgument.getRotation(ctx, "angle"))
-                                                ))
+                                                        ctx, RotationArgument.getRotation(ctx, "angle"), null))
+                                                .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                                        .executes((ctx) -> SableSubLevelCommands.executeTeleportSubLevelCommand(
+                                                                ctx,
+                                                                RotationArgument.getRotation(ctx, "angle"),
+                                                                DimensionArgument.getDimension(ctx, "dimension")))
+                                                )
+                                        )
                                 )))
 
                 .then(Commands.literal("remove")
@@ -134,10 +144,11 @@ public class SableSubLevelCommands {
             return 1;
         }
     }
-
-    private static int executeTeleportSubLevelCommand(final CommandContext<CommandSourceStack> ctx, final @Nullable Coordinates angle) throws CommandSyntaxException {
-        final PhysicsPipeline pipeline = SableCommandHelper.requireSubLevelPhysicsPipeline(ctx);
-
+    private static int executeTeleportSubLevelCommand(
+            final CommandContext<CommandSourceStack> ctx,
+            final @Nullable Coordinates angle,
+            final @Nullable ServerLevel destinationLevel
+    ) throws CommandSyntaxException {
         final Collection<ServerSubLevel> targets = SubLevelArgumentType.getSubLevels(ctx, "targets");
 
         if (targets.isEmpty()) {
@@ -147,13 +158,42 @@ public class SableSubLevelCommands {
         final Vector3d destination = JOMLConversion.toJOML(Vec3Argument.getVec3(ctx, "destination"));
 
         final Quaterniond orientation = new Quaterniond();
-
         final Vec2 rotation = angle != null ? angle.getRotation(ctx.getSource()) : null;
         if (angle != null) {
             orientation.rotateY(-Math.toRadians(rotation.y));
             orientation.rotateX(Math.toRadians(rotation.x));
         }
 
+        // Cross-dimensional path: route every target through SubLevelDimensionTeleport.
+        if (destinationLevel != null) {
+            int successes = 0;
+            int failures = 0;
+            for (final ServerSubLevel target : targets) {
+                final ServerSubLevel result = SubLevelDimensionTeleport.teleport(
+                        target,
+                        destinationLevel,
+                        destination,
+                        angle != null ? orientation : null
+                );
+                if (result != null) successes++;
+                else failures++;
+            }
+
+            if (successes == 0) {
+                throw new SimpleCommandExceptionType(Component.literal("All sub-level teleports failed; check log.")).create();
+            }
+
+            final int finalSuccesses = successes;
+            final int finalFailures = failures;
+            ctx.getSource().sendSuccess(
+                    () -> Component.literal("Teleported " + finalSuccesses + " sub-level(s) to "
+                            + destinationLevel.dimension().location()
+                            + (finalFailures > 0 ? " (" + finalFailures + " failed)" : "")),
+                    true);
+            return successes;
+        }
+
+        final PhysicsPipeline pipeline = SableCommandHelper.requireSubLevelPhysicsPipeline(ctx);
         for (final ServerSubLevel target : targets) {
             pipeline.resetVelocity(target);
             pipeline.teleport(target, destination, angle != null ? orientation : target.logicalPose().orientation());

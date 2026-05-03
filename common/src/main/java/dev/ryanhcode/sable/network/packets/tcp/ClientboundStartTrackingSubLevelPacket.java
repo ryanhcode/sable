@@ -66,7 +66,17 @@ public record ClientboundStartTrackingSubLevelPacket(long plotCoordinate, UUID s
             return;
         }
 
-        final ClientSubLevel subLevel = (ClientSubLevel) clientContainer.allocateSubLevel(this.subLevelID, ChunkPos.getX(this.plotCoordinate), ChunkPos.getZ(this.plotCoordinate), new Pose3d(this.lastPose));
+        final ClientSubLevel subLevel;
+        try {
+            subLevel = (ClientSubLevel) clientContainer.allocateSubLevel(
+                    this.subLevelID,
+                    ChunkPos.getX(this.plotCoordinate),
+                    ChunkPos.getZ(this.plotCoordinate),
+                    new Pose3d(this.lastPose)
+            );
+        } catch (IllegalArgumentException e) {
+            return;   //Prevents Network Crash
+        }
 
         final SubLevelSnapshotInterpolator interpolator = subLevel.getInterpolator();
 

@@ -167,6 +167,19 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
     }
 
     /**
+     * Cached reference to the root hull's UUID to avoid heavy scanning.
+     */
+    @Nullable
+    private UUID cachedRootParentId = null;
+
+    public void sable$setRootParentId(@Nullable UUID rootId) {
+        this.cachedRootParentId = rootId;
+    }
+
+    public @Nullable UUID sable$getRootParentId() {
+        return this.cachedRootParentId;
+    }
+    /**
      * @return the last pose sent out to players
      */
     public Pose3d lastNetworkedPose() {
@@ -547,16 +560,28 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
      * @return the user-data compound tag if any exists, which is saved and serialized with this sub-level
      */
     public @Nullable CompoundTag getUserDataTag() {
-        return this.userDataTag;
+        CompoundTag tag = this.userDataTag;
+        if (tag == null) tag = new CompoundTag();
+
+        if (this.cachedRootParentId != null) {
+            tag.putUUID("CachedRootParent", this.cachedRootParentId);
+        }
+        return tag;
     }
+
+
 
     /**
      * Sets the user-data compound tag, which is saved and serialized with this sub-level
      *
      * @param userDataTag the user-data compound tag
      */
+    // When the sub-level loads from disk
     public void setUserDataTag(final CompoundTag userDataTag) {
         this.userDataTag = userDataTag;
+        if (userDataTag != null && userDataTag.hasUUID("CachedRootParent")) {
+            this.cachedRootParentId = userDataTag.getUUID("CachedRootParent");
+        }
     }
 
     @Override

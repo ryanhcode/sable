@@ -164,7 +164,42 @@ public abstract class SubLevelContainer {
             }
         }
     }
+    /**
+     * Allocates a new sublevel at the plot closest.
+     *
+     */
+    public SubLevel allocateNewSubLevelNear(final Pose3d pose, final org.joml.Vector3dc desiredWorldPosition) {
+        final int sideLength = 1 << this.logSideLength;
+        final int plotWorldSize = 1 << (this.logPlotSize);
 
+        Vector2i bestPlot = null;
+        double bestDistSq = Double.MAX_VALUE;
+
+        for (int x = 0; x < sideLength; x++) {
+            for (int z = 0; z < sideLength; z++) {
+                if (this.occupancy.get(this.getIndex(x, z))) continue; // occupied
+
+                // Calculate world center of this plot
+                final double plotCenterX = (x + this.originX) * plotWorldSize + (plotWorldSize / 2.0);
+                final double plotCenterZ = (z + this.originZ) * plotWorldSize + (plotWorldSize / 2.0);
+
+                final double dx = plotCenterX - desiredWorldPosition.x();
+                final double dz = plotCenterZ - desiredWorldPosition.z();
+                final double distSq = dx * dx + dz * dz;
+
+                if (distSq < bestDistSq) {
+                    bestDistSq = distSq;
+                    bestPlot = new Vector2i(x, z);
+                }
+            }
+        }
+
+        if (bestPlot == null) {
+            throw new IllegalStateException("No empty plots left in the plotgrid");
+        }
+
+        return this.allocateSubLevel(UUID.randomUUID(), bestPlot.x, bestPlot.y, pose);
+    }
     /**
      * Adds an observer to the plotgrid.
      */
