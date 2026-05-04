@@ -31,6 +31,15 @@ public interface PhysicsConstraintHandle {
     void setMotor(ConstraintJointAxis axis, double target, double stiffness, double damping, boolean hasMaxForce, double maxForce);
 
     /**
+     * Sets limits on this joint
+     *
+     * @param axis The axis on which the limits are set
+     * @param minPosition The minimum position along that axis [m | rad]
+     * @param maxPosition The maximum position along that axis [m | rad]
+     */
+    void setLimits(ConstraintJointAxis axis, double minPosition, double maxPosition);
+
+    /**
      * Removes the constraint from the active physics engine
      */
     void remove();

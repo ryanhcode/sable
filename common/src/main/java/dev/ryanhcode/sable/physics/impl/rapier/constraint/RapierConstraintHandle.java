@@ -67,6 +67,18 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
     }
 
     /**
+     * Sets limits on this joint
+     *
+     * @param axis The axis on which the limits are set
+     * @param minPosition The minimum position along that axis [m | rad]
+     * @param maxPosition The maximum position along that axis [m | rad]
+     */
+    @Override
+    public void setLimits(ConstraintJointAxis axis, double minPosition, double maxPosition) {
+        Rapier3D.setConstraintLimits(this.sceneID, this.handle, axis.ordinal(), minPosition, maxPosition);
+    }
+
+    /**
      * Removes the constraint from the active physics engine
      */
     @Override

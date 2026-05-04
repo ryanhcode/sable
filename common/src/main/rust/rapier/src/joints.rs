@@ -156,6 +156,37 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setConstraintLimits<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    scene_id: jint,
+    joint_id: jlong,
+    axis: jint,
+    min: jdouble,
+    max: jdouble,
+) {
+    let scene = get_scene_mut_ref(scene_id);
+    let Some(joint) = scene.joint_set.joints.get(&joint_id) else {
+        return;
+    };
+
+    let data = &mut scene
+        .impulse_joint_set
+        .get_mut(joint.handle, false)
+        .unwrap()
+        .data;
+    data.set_limits(
+        AXES[axis as usize],
+        [
+            min as Real,
+            max as Real,
+        ],
+    );
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_isConstraintValid<
     'local,
 >(

@@ -495,6 +495,15 @@ public class Rapier3D {
     public static native void setConstraintMotor(final int dimensionID, long handle, int axis, double desiredPosition, double stiffness, double damping, boolean hasForceLimit, double maxForce);
 
     /**
+     * Sets constraint limits along a specified axis.
+     *
+     * @param dimensionID the ID of the dimension
+     * @param handle      the handle of the constraint
+     */
+    @ApiStatus.Internal
+    public static native void setConstraintLimits(final int dimensionID, long handle, int axis, double minPosition, double maxPosition);
+
+    /**
      * Adds linear and angular velocities
      *
      * @param bodyId   the ID of an already created rigid-body
