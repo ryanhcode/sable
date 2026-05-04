@@ -70,16 +70,11 @@ pub fn tick(scene_id: jint) {
             ));
         }
         let local_anchor_1 = joint.pos_a
-            - if let Some(id_a) = joint.id_a {
-                if let Some(rb_a) = scene.level_colliders.get(&id_a) {
-                    rb_a.center_of_mass.unwrap()
-                }
-                else {
-                    Vector3::new(0.0, 0.0, 0.0)
-                }
-            } else {
-                Vector3::new(0.0, 0.0, 0.0)
-            };
+            - joint
+                .id_a
+                .and_then(|id| scene.level_colliders.get(&id))
+                .and_then(|rb| rb.center_of_mass)
+                .unwrap_or_default();
         impulse_joint.data.set_local_anchor1(Vector::new(
             local_anchor_1.x as Real,
             local_anchor_1.y as Real,
@@ -93,16 +88,11 @@ pub fn tick(scene_id: jint) {
             ));
         }
         let local_anchor_2 = joint.pos_b
-            - if let Some(id_b) = joint.id_b {
-                if let Some(rb_b) = scene.level_colliders.get(&id_b) {
-                    rb_b.center_of_mass.unwrap()
-                }
-                else {
-                    Vector3::new(0.0, 0.0, 0.0)
-                }
-            } else {
-                Vector3::new(0.0, 0.0, 0.0)
-            };
+            - joint
+                .id_b
+                .and_then(|id| scene.level_colliders.get(&id))
+                .and_then(|rb| rb.center_of_mass)
+                .unwrap_or_default();
         impulse_joint.data.set_local_anchor2(Vector::new(
             local_anchor_2.x as Real,
             local_anchor_2.y as Real,
