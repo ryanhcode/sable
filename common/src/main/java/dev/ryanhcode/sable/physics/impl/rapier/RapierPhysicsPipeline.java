@@ -620,37 +620,37 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     /**
      * Adds a constraint to the engine, returning its handle
      *
-     * @param sublevelA     the first sub-level to constrain, or null to constrain the second sub-level to the world
-     * @param sublevelB     the second sub-level to constrain, or null to constrain the first sub-level to the world
+     * @param rigidbodyA    the first body to constrain, or null to constrain the second body to the world
+     * @param rigidbodyB    the second body to constrain, or null to constrain the first body to the world
      * @param configuration the configuration of the constraint
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends PhysicsConstraintHandle> T addConstraint(@Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB, final PhysicsConstraintConfiguration<T> configuration) {
-        if (sublevelA == null && sublevelB == null) {
+    public <T extends PhysicsConstraintHandle> T addConstraint(@Nullable final PhysicsPipelineBody rigidbodyA, @Nullable final PhysicsPipelineBody rigidbodyB, final PhysicsConstraintConfiguration<T> configuration) {
+        if (rigidbodyA == null && rigidbodyB == null) {
             Sable.LOGGER.error("Cannot add a constraint between the static world and static world", new Throwable("Stack Trace"));
             return null;
         }
 
-        if (sublevelA == sublevelB) {
+        if (rigidbodyA == rigidbodyB) {
             Sable.LOGGER.error("Cannot add a constraint between a sub-level and itself", new Throwable("Stack Trace"));
             return null;
         }
 
         if (configuration instanceof final RotaryConstraintConfiguration config) {
-            return (T) RapierRotaryConstraintHandle.create(this.level, sublevelA, sublevelB, config);
+            return (T) RapierRotaryConstraintHandle.create(this.level, rigidbodyA, rigidbodyB, config);
         }
 
         if (configuration instanceof final FixedConstraintConfiguration config) {
-            return (T) RapierFixedConstraintHandle.create(this.level, sublevelA, sublevelB, config);
+            return (T) RapierFixedConstraintHandle.create(this.level, rigidbodyA, rigidbodyB, config);
         }
 
         if (configuration instanceof final FreeConstraintConfiguration config) {
-            return (T) RapierFreeConstraintHandle.create(this.level, sublevelA, sublevelB, config);
+            return (T) RapierFreeConstraintHandle.create(this.level, rigidbodyA, rigidbodyB, config);
         }
 
         if (configuration instanceof final GenericConstraintConfiguration config) {
-            return (T) RapierGenericConstraintHandle.create(this.level, sublevelA, sublevelB, config);
+            return (T) RapierGenericConstraintHandle.create(this.level, rigidbodyA, rigidbodyB, config);
         }
 
         Sable.LOGGER.error("Unknown constraint configuration type: {}", configuration.getClass().getName());

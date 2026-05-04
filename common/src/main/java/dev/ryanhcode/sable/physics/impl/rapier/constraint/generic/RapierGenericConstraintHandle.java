@@ -1,11 +1,11 @@
 package dev.ryanhcode.sable.physics.impl.rapier.constraint.generic;
 
+import dev.ryanhcode.sable.api.physics.PhysicsPipelineBody;
 import dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis;
 import dev.ryanhcode.sable.api.physics.constraint.generic.GenericConstraintConfiguration;
 import dev.ryanhcode.sable.api.physics.constraint.generic.GenericConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
 import dev.ryanhcode.sable.physics.impl.rapier.constraint.RapierConstraintHandle;
-import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +21,7 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
     /**
      * Creates a rapier constraint handle
      */
-    public static RapierGenericConstraintHandle create(final ServerLevel serverLevel, @Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB, final GenericConstraintConfiguration config) {
+    public static RapierGenericConstraintHandle create(final ServerLevel serverLevel, @Nullable final PhysicsPipelineBody rigidbodyA, @Nullable final PhysicsPipelineBody rigidbodyB, final GenericConstraintConfiguration config) {
         final int sceneID = Rapier3D.getID(serverLevel);
 
         int lockedAxesMask = 0;
@@ -31,8 +31,8 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
 
         final long handle = Rapier3D.addGenericConstraint(
                 sceneID,
-                sublevelA == null ? -1 : Rapier3D.getID(sublevelA),
-                sublevelB == null ? -1 : Rapier3D.getID(sublevelB),
+                rigidbodyA == null ? -1 : Rapier3D.getID(rigidbodyA),
+                rigidbodyB == null ? -1 : Rapier3D.getID(rigidbodyB),
                 config.pos1().x(),
                 config.pos1().y(),
                 config.pos1().z(),

@@ -71,8 +71,12 @@ pub fn tick(scene_id: jint) {
         }
         let local_anchor_1 = joint.pos_a
             - if let Some(id_a) = joint.id_a {
-                let rb_a = &scene.level_colliders[&id_a];
-                rb_a.center_of_mass.unwrap()
+                if let Some(rb_a) = scene.level_colliders.get(&id_a) {
+                    rb_a.center_of_mass.unwrap()
+                }
+                else {
+                    Vector3::new(0.0, 0.0, 0.0)
+                }
             } else {
                 Vector3::new(0.0, 0.0, 0.0)
             };
@@ -90,8 +94,12 @@ pub fn tick(scene_id: jint) {
         }
         let local_anchor_2 = joint.pos_b
             - if let Some(id_b) = joint.id_b {
-                let rb_b = &scene.level_colliders[&id_b];
-                rb_b.center_of_mass.unwrap()
+                if let Some(rb_b) = scene.level_colliders.get(&id_b) {
+                    rb_b.center_of_mass.unwrap()
+                }
+                else {
+                    Vector3::new(0.0, 0.0, 0.0)
+                }
             } else {
                 Vector3::new(0.0, 0.0, 0.0)
             };
