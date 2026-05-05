@@ -1,0 +1,7 @@
+{
+  "selector": "#sable:low_buoyancy_fluid",
+
+  "properties": {
+    "sable:buoyancy": 1.0
+  }
+}

@@ -54,6 +54,14 @@ public class PhysicsBlockPropertyTypes {
      * The scale / multiplier of the effects caused by the floating material for this block
      */
     public static final RegistryObject<PhysicsBlockPropertyType<Double>> FLOATING_SCALE = register(Sable.sablePath("floating_scale"), Codec.DOUBLE, 1.0);
+    /**
+     * The buoyancy of a fluid
+     */
+    public static final RegistryObject<PhysicsBlockPropertyType<Double>> BUOYANCY = register(Sable.sablePath("buoyancy"), Codec.DOUBLE, 0.0);
+    /**
+     * The viscosity of a fluid
+     */
+    public static final RegistryObject<PhysicsBlockPropertyType<Double>> VISCOSITY = register(Sable.sablePath("viscosity"), Codec.DOUBLE, 0.0);
 
     public static void register() {
         // no-op

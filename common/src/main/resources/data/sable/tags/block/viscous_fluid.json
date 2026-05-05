@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:lava",
+    { "id": "create:chocolate", "required": false },
+    { "id": "create:honey", "required": false }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "selector": "#sable:viscous_fluid",
+
+  "properties": {
+    "sable:viscosity": 4.0
+  }
+}

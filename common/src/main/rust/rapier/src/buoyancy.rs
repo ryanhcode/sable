@@ -47,7 +47,33 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
         let vels: RigidBodyVelocity<Real> = *body.vels();
 
         let complex = (local_bounds_max - local_bounds_min).sum() < 10;
+        let scene = state.scenes.get_mut(&scene.scene_id).unwrap();
         for (static_pos, dynamic_pos) in pairs.iter() {
+            let fluid_chunk = scene.get_chunk(static_pos.x >> 4, static_pos.y >> 4, static_pos.z >> 4);
+
+            if fluid_chunk.is_none() {
+                continue;
+            }
+
+            let (fluid_block_id, _) = fluid_chunk.unwrap().get_block(
+                static_pos.x & 15,
+                static_pos.y & 15,
+                static_pos.z & 15,
+            );
+
+            if fluid_block_id == 0 {
+                continue;
+            }
+
+            let fluid_voxel_data = &state.voxel_collider_map.get(
+                (fluid_block_id - 1) as usize,
+                Vector3::new(static_pos.x, static_pos.y, static_pos.z),
+            );
+
+            let Some(fluid_data) = fluid_voxel_data else {
+                continue;
+            };
+
             let local_pos = Vector3::<f64>::new(
                 dynamic_pos.x as f64 + 0.5,
                 dynamic_pos.y as f64 + 0.5,
@@ -68,13 +94,13 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                         local_pos.y + y as Real * 0.25,
                         local_pos.z + z as Real * 0.25,
                     );
-                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0);
+                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0, fluid_data.viscosity);
                 }
             } else {
-                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0);
+                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0, fluid_data.viscosity);
             }
         }
-        let scene = state.scenes.get_mut(&scene.scene_id).unwrap();
+
         for (static_pos, dynamic_pos) in pairs.iter() {
             let chunk = scene.get_chunk(dynamic_pos.x >> 4, dynamic_pos.y >> 4, dynamic_pos.z >> 4);
 
@@ -99,6 +125,31 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
             );
 
             let Some(voxel_collider_data) = &voxel_collider_data else {
+                continue;
+            };
+
+            let fluid_chunk = scene.get_chunk(static_pos.x >> 4, static_pos.y >> 4, static_pos.z >> 4);
+
+            if fluid_chunk.is_none() {
+                continue;
+            }
+
+            let (fluid_block_id, _) = fluid_chunk.unwrap().get_block(
+                static_pos.x & 15,
+                static_pos.y & 15,
+                static_pos.z & 15,
+            );
+
+            if fluid_block_id == 0 {
+                continue;
+            }
+
+            let fluid_voxel_data = &state.voxel_collider_map.get(
+                (fluid_block_id - 1) as usize,
+                Vector3::new(static_pos.x, static_pos.y, static_pos.z),
+            );
+
+            let Some(fluid_data) = fluid_voxel_data else {
                 continue;
             };
 
@@ -129,6 +180,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                         &local_pos,
                         0.25,
                         voxel_collider_data.volume,
+                        fluid_data.buoyancy
                     );
                 }
             } else {
@@ -138,6 +190,7 @@ pub fn compute_buoyancy(scene: &mut PhysicsScene) {
                     &local_pos,
                     0.5,
                     voxel_collider_data.volume,
+                    fluid_data.buoyancy
                 );
             }
         }
@@ -151,6 +204,7 @@ fn do_drag(
     point: &Vector,
     size: Real,
     strength: Real,
+    viscosity: Real
 ) {
     let point = body.position().transform_point(*point);
 
@@ -176,7 +230,7 @@ fn do_drag(
     let volume = overlap.unwrap().volume();
     let velo = vels.velocity_at_point(point, body.mass_properties().world_com);
 
-    body.add_force_at_point(-velo * 1.7 * volume * strength, point, false);
+    body.add_force_at_point(-velo * 1.7 * volume * strength * viscosity, point, false);
 }
 
 fn do_float(
@@ -185,6 +239,7 @@ fn do_float(
     point: &Vector,
     size: Real,
     strength: Real,
+    buoyancy: Real
 ) {
     let point = body.position().transform_point(*point);
 
@@ -210,7 +265,7 @@ fn do_float(
     let volume = overlap.unwrap().volume();
 
     body.add_force_at_point(
-        Vector::new(0.0, 10.5 * volume * strength, 0.0),
+        Vector::new(0.0, 10.5 * volume * strength * buoyancy, 0.0),
         point,
         false,
     );

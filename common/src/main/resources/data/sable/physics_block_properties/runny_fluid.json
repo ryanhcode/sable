@@ -1,0 +1,7 @@
+{
+  "selector": "#sable:runny_fluid",
+
+  "properties": {
+    "sable:viscosity": 1.0
+  }
+}

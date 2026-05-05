@@ -303,7 +303,7 @@ impl SableDispatcher {
                         unreachable!()
                     };
 
-                    if voxel_collider_data.is_fluid {
+                    if voxel_collider_data.viscosity > 0.0 {
                         continue;
                     }
 
@@ -857,7 +857,7 @@ fn is_inside_voxel_collider(
         return false;
     };
 
-    if voxel_data.is_fluid {
+    if voxel_data.viscosity > 0.0 {
         return false;
     }
 
