@@ -62,6 +62,10 @@ public class PhysicsBlockPropertyTypes {
      * The viscosity of a fluid
      */
     public static final RegistryObject<PhysicsBlockPropertyType<Double>> VISCOSITY = register(Sable.sablePath("viscosity"), Codec.DOUBLE, 0.0);
+    /**
+     * The viscosity of a fluid
+     */
+    public static final RegistryObject<PhysicsBlockPropertyType<Double>> VISCOSITY_NETHER = register(Sable.sablePath("viscosity_nether"), Codec.DOUBLE, 0.0);
 
     public static void register() {
         // no-op

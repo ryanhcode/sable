@@ -6,6 +6,7 @@ import dev.ryanhcode.sable.physics.config.FloatingBlockMaterialDataHandler;
 import dev.ryanhcode.sable.physics.floating_block.FloatingBlockMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.BubbleColumnBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -127,12 +128,14 @@ public class PhysicsBlockPropertyHelper {
      * @param state The state of the block
      * @return The viscosity of the fluid
      */
-    public static double getFluidViscosity(final BlockState state) {
+    public static Tuple<Double, Double> getFluidViscosity(final BlockState state) {
         if (state.getBlock() instanceof BubbleColumnBlock) {
-            return 1.0;
+            return new Tuple<>(1.0, 1.0);
         }
-        
-        return ((BlockStateExtension) state).sable$getProperty(PhysicsBlockPropertyTypes.VISCOSITY.get());
+        final double viscosity = ((BlockStateExtension) state).sable$getProperty(PhysicsBlockPropertyTypes.VISCOSITY.get());
+        final double netherViscosity = ((BlockStateExtension) state).sable$getProperty(PhysicsBlockPropertyTypes.VISCOSITY_NETHER.get());
+
+        return new Tuple<>(viscosity, netherViscosity);
     }
 
 }

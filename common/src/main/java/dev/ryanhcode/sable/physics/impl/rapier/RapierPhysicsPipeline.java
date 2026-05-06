@@ -90,7 +90,7 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     public RapierPhysicsPipeline(final ServerLevel level) {
         this.level = level;
         this.accelerator = new LevelAccelerator(level);
-        this.colliderBakery = new RapierVoxelColliderBakery(this.accelerator);
+        this.colliderBakery = new RapierVoxelColliderBakery(level);
         this.recentCollisions.defaultReturnValue(-1);
         this.sceneId = Rapier3D.getID(this.level);
         this.cache = new double[7];

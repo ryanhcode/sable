@@ -1,0 +1,8 @@
+{
+  "selector": "#sable:molten_fluid",
+
+  "properties": {
+    "sable:viscosity": 4.0,
+    "sable:viscosity_nether": 1.0
+  }
+}

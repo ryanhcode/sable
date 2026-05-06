@@ -7,8 +7,10 @@ import dev.ryanhcode.sable.api.physics.collider.SableCollisionContext;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
+import dev.ryanhcode.sable.util.LevelAccelerator;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -25,15 +27,17 @@ import java.util.function.Function;
  */
 public class RapierVoxelColliderBakery {
     private final @NotNull BlockGetter level;
+    private final ServerLevel serverLevel;
     private final Function<BlockState, RapierVoxelColliderData> blockPhysicsDataBuilder = Util.memoize(this::buildPhysicsDataForBlock);
 
     /**
      * Creates a new level collider for the given level
      *
-     * @param blockGetter the level to collide with
+     * @param level the level to collide with
      */
-    public RapierVoxelColliderBakery(@NotNull final BlockGetter blockGetter) {
-        this.level = blockGetter;
+    public RapierVoxelColliderBakery(@NotNull final ServerLevel level) {
+        this.level = new LevelAccelerator(level);
+        this.serverLevel = level;
     }
 
     /**
@@ -55,8 +59,11 @@ public class RapierVoxelColliderBakery {
         final double volume = PhysicsBlockPropertyHelper.getVolume(childState);
         final double restitution = PhysicsBlockPropertyHelper.getRestitution(childState);
         final double buoyancy = PhysicsBlockPropertyHelper.getFluidBuoyancy(childState);
-        final double viscosity = PhysicsBlockPropertyHelper.getFluidViscosity(childState);
+        double viscosity = PhysicsBlockPropertyHelper.getFluidViscosity(childState).getA();
+        final double viscosity_nether = PhysicsBlockPropertyHelper.getFluidViscosity(childState).getB();
         final BlockSubLevelCollisionCallback callback = BlockWithSubLevelCollisionCallback.sable$getCallback(childState);
+
+        viscosity = this.serverLevel.dimension() == ServerLevel.NETHER ? viscosity_nether : viscosity;
         final RapierVoxelColliderData entry = Rapier3D.createVoxelColliderEntry(friction, volume, restitution, buoyancy, viscosity, callback);
 
 

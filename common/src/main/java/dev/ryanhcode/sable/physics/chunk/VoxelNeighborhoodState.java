@@ -74,7 +74,7 @@ public enum VoxelNeighborhoodState {
         final ChunkPos initialPos = new ChunkPos(pos);
         final BlockState state = chunk != null ? level.getBlockState(chunk, pos) : level.getBlockState(pos);
 
-        if (PhysicsBlockPropertyHelper.getFluidViscosity(state) > 0 || BlockWithSubLevelCollisionCallback.hasCallback(state))
+        if (PhysicsBlockPropertyHelper.getFluidViscosity(state).getA() > 0 || BlockWithSubLevelCollisionCallback.hasCallback(state))
             return CORNER;
 
         if (!isSolid(level, pos, state)) {
