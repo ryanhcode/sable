@@ -69,6 +69,10 @@ public abstract class CameraMixin {
 
     @WrapMethod(method = "setPosition(Lnet/minecraft/world/phys/Vec3;)V")
     private void sable$setPosition(final Vec3 arg, final Operation<Void> original) {
+        if (this.entity == null) {
+            original.call(arg);
+            return;
+        }
         final Level level = this.entity.level();
 
         final ClientSubLevel subLevel = (ClientSubLevel) Sable.HELPER.getContaining(level, arg);
