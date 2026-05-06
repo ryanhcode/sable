@@ -12,13 +12,13 @@ public class RapierRotaryConstraintHandle extends RapierConstraintHandle impleme
     /**
      * Creates a rapier constraint handle
      */
-    public static RapierRotaryConstraintHandle create(final ServerLevel serverLevel, @Nullable final PhysicsPipelineBody rigidbodyA, @Nullable final PhysicsPipelineBody rigidbodyB, final RotaryConstraintConfiguration config) {
+    public static RapierRotaryConstraintHandle create(final ServerLevel serverLevel, @Nullable final PhysicsPipelineBody bodyA, @Nullable final PhysicsPipelineBody bodyB, final RotaryConstraintConfiguration config) {
         final int sceneID = Rapier3D.getID(serverLevel);
 
         final long handle = Rapier3D.addRotaryConstraint(
                 sceneID,
-                rigidbodyA == null ? -1 : Rapier3D.getID(rigidbodyA),
-                rigidbodyB == null ? -1 : Rapier3D.getID(rigidbodyB),
+                bodyA == null ? -1 : Rapier3D.getID(bodyA),
+                bodyB == null ? -1 : Rapier3D.getID(bodyB),
                 config.pos1().x(),
                 config.pos1().y(),
                 config.pos1().z(),

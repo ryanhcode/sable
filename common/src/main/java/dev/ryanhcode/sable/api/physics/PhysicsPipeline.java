@@ -221,17 +221,17 @@ public interface PhysicsPipeline {
      * @param configuration the configuration of the constraint
      */
     default <T extends PhysicsConstraintHandle> T addConstraint(@Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB, final PhysicsConstraintConfiguration<T> configuration) {
-        return this.addConstraint((PhysicsPipelineBody)sublevelA, sublevelB, configuration);
+        return this.addConstraint((PhysicsPipelineBody) sublevelA, sublevelB, configuration);
     }
 
     /**
      * Adds a constraint to the engine, returning its handle
      *
-     * @param rigidbodyA    the first rigid-body to constrain, or null to constrain the second rigid-body to the world
-     * @param rigidbodyB    the second rigid-body to constrain, or null to constrain the first rigid-body to the world
+     * @param bodyA         the first rigid-body to constrain, or null to constrain the second rigid-body to the world
+     * @param bodyB         the second rigid-body to constrain, or null to constrain the first rigid-body to the world
      * @param configuration the configuration of the constraint
      */
-    default <T extends PhysicsConstraintHandle> T addConstraint(@Nullable final PhysicsPipelineBody rigidbodyA, @Nullable final PhysicsPipelineBody rigidbodyB, final PhysicsConstraintConfiguration<T> configuration) {
+    default <T extends PhysicsConstraintHandle> T addConstraint(@Nullable final PhysicsPipelineBody bodyA, @Nullable final PhysicsPipelineBody bodyB, final PhysicsConstraintConfiguration<T> configuration) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

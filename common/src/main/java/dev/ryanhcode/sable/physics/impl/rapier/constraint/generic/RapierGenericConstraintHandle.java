@@ -21,7 +21,7 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
     /**
      * Creates a rapier constraint handle
      */
-    public static RapierGenericConstraintHandle create(final ServerLevel serverLevel, @Nullable final PhysicsPipelineBody rigidbodyA, @Nullable final PhysicsPipelineBody rigidbodyB, final GenericConstraintConfiguration config) {
+    public static RapierGenericConstraintHandle create(final ServerLevel serverLevel, @Nullable final PhysicsPipelineBody bodyA, @Nullable final PhysicsPipelineBody bodyB, final GenericConstraintConfiguration config) {
         final int sceneID = Rapier3D.getID(serverLevel);
 
         int lockedAxesMask = 0;
@@ -31,8 +31,8 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
 
         final long handle = Rapier3D.addGenericConstraint(
                 sceneID,
-                rigidbodyA == null ? -1 : Rapier3D.getID(rigidbodyA),
-                rigidbodyB == null ? -1 : Rapier3D.getID(rigidbodyB),
+                bodyA == null ? -1 : Rapier3D.getID(bodyA),
+                bodyB == null ? -1 : Rapier3D.getID(bodyB),
                 config.pos1().x(),
                 config.pos1().y(),
                 config.pos1().z(),
