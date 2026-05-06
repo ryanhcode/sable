@@ -72,8 +72,8 @@ pub fn tick(scene_id: jint) {
         let local_anchor_1 = joint.pos_a
             - joint
                 .id_a
-                .and_then(|id| scene.level_colliders.get(&id))
-                .and_then(|rb| rb.center_of_mass)
+                .and_then(|v| scene.level_colliders.get(&v))
+                .map(|v| v.center_of_mass.unwrap())
                 .unwrap_or_default();
         impulse_joint.data.set_local_anchor1(Vector::new(
             local_anchor_1.x as Real,
@@ -90,8 +90,8 @@ pub fn tick(scene_id: jint) {
         let local_anchor_2 = joint.pos_b
             - joint
                 .id_b
-                .and_then(|id| scene.level_colliders.get(&id))
-                .and_then(|rb| rb.center_of_mass)
+                .and_then(|v| scene.level_colliders.get(&v))
+                .map(|v| v.center_of_mass.unwrap())
                 .unwrap_or_default();
         impulse_joint.data.set_local_anchor2(Vector::new(
             local_anchor_2.x as Real,
