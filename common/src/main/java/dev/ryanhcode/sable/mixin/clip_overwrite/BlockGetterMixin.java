@@ -35,7 +35,7 @@ public interface BlockGetterMixin {
     BlockState getBlockState(BlockPos blockPos);
 
     // order to make sure this is the innermost wrap
-    @WrapMethod(method = "clip", order = Integer.MIN_VALUE)
+    @WrapMethod(method = "clip")
     default BlockHitResult sable$wrapClip(ClipContext clipContext, final Operation<BlockHitResult> original) {
         if (!(this instanceof final Level level) || (clipContext instanceof final ClipContextExtension extension && extension.sable$doNotProject())) {
             // If the level cannot have sublevels, use the original method
