@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.plot.lighting;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
 import net.minecraft.server.level.ServerLevel;
@@ -21,8 +22,8 @@ public class LevelChunkMixin {
     /**
      * Return the plot light engine if we're in a plot
      */
-    @Redirect(method ="setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkSource;getLightEngine()Lnet/minecraft/world/level/lighting/LevelLightEngine;"))
-    public LevelLightEngine sable$getLightEngine(final ChunkSource instance) {
+    @ModifyExpressionValue(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkSource;getLightEngine()Lnet/minecraft/world/level/lighting/LevelLightEngine;"))
+    public LevelLightEngine sable$getLightEngine(final LevelLightEngine original) {
         final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
 
         if (container != null && this.level instanceof ServerLevel) {
@@ -34,7 +35,7 @@ public class LevelChunkMixin {
             }
         }
 
-        return instance.getLightEngine();
+        return original;
     }
 
 }
