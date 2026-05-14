@@ -37,9 +37,9 @@ public abstract class EntityMixin  {
 
         if (orientation != null) {
             return JOMLConversion.toMojang(orientation.transform(JOMLConversion.toJOML(viewVector)));
+        } else {
+            return viewVector;
         }
-
-        return viewVector;
     }
 
 }
