@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.camera.camera_rotation;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinhelpers.camera.camera_rotation.EntitySubLevelRotationHelper;
@@ -22,8 +23,8 @@ public abstract class EntityMixin  {
 
     @Shadow private Level level;
 
-    @Inject(method = "calculateViewVector", at = @At("RETURN"), cancellable = true)
-    public void sable$calculateViewVector(final float f, final float g, final CallbackInfoReturnable<Vec3> cir) {
+    @ModifyReturnValue(method = "calculateViewVector", at = @At("RETURN"))
+    public Vec3 sable$calculateViewVector(final Vec3 viewVector, final float f, final float g) {
         final Function<SubLevel, Pose3dc> provider;
 
         if (this.level instanceof final LevelPoseProviderExtension levelPoseProvider) {
@@ -35,9 +36,10 @@ public abstract class EntityMixin  {
         final Quaterniond orientation = EntitySubLevelRotationHelper.getEntityOrientation((Entity) (Object) this, provider, 0.0f, EntitySubLevelRotationHelper.Type.CAMERA);
 
         if (orientation != null) {
-            final Vec3 viewVector = cir.getReturnValue();
-            cir.setReturnValue(JOMLConversion.toMojang(orientation.transform(JOMLConversion.toJOML(viewVector))));
+            return JOMLConversion.toMojang(orientation.transform(JOMLConversion.toJOML(viewVector)));
         }
+
+        return viewVector;
     }
 
 }
