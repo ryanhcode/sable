@@ -34,7 +34,7 @@ public interface BlockGetterMixin {
     @Shadow
     BlockState getBlockState(BlockPos blockPos);
 
-    @WrapMethod(method = "clip", order = Integer.MIN_VALUE)
+    @WrapMethod(method = "clip")
     default BlockHitResult clip(ClipContext clipContext, final Operation<BlockHitResult> original) {
         if (!(this instanceof final Level level) || (clipContext instanceof final ClipContextExtension extension && extension.sable$doNotProject())) {
             // If the level cannot have sublevels, use the original method
