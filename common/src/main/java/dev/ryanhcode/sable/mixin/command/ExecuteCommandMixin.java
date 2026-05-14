@@ -1,17 +1,15 @@
 package dev.ryanhcode.sable.mixin.command;
 
 import com.google.common.collect.Lists;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ryanhcode.sable.api.command.SableCommandHelper;
 import dev.ryanhcode.sable.api.command.SubLevelArgumentType;
-import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
 import net.minecraft.commands.CommandSourceStack;
@@ -34,9 +32,9 @@ public class ExecuteCommandMixin {
      * TODO: Better injection target here would be nice. And to split these out of the mixins.
      */
     @SuppressWarnings("unchecked")
-    @WrapOperation(method = "register", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/builder/LiteralArgumentBuilder;then(Lcom/mojang/brigadier/builder/ArgumentBuilder;)Lcom/mojang/brigadier/builder/ArgumentBuilder;", ordinal = 31, remap = false))
-    private static ArgumentBuilder sable$then(final LiteralArgumentBuilder instance, final ArgumentBuilder argumentBuilder, final Operation<ArgumentBuilder> original, @Local final LiteralCommandNode<CommandSourceStack> literalCommandNode) {
-        return instance.then(argumentBuilder)
+    @ModifyExpressionValue(method = "register", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/builder/LiteralArgumentBuilder;then(Lcom/mojang/brigadier/builder/ArgumentBuilder;)Lcom/mojang/brigadier/builder/ArgumentBuilder;", ordinal = 31, remap = false))
+    private static ArgumentBuilder sable$then(final ArgumentBuilder original, @Local final LiteralCommandNode<CommandSourceStack> literalCommandNode) {
+        return original
                 .then(
                         Commands.literal("in_sub_level")
                                 .then(

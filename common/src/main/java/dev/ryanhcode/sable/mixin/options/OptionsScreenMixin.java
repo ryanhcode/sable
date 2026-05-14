@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.options;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.config.SubLevelSettingsScreen;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.Button;
@@ -12,8 +13,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Adds a button to access the sable menu on integrated servers to the {@link OptionsScreen}
@@ -27,10 +26,10 @@ public abstract class OptionsScreenMixin extends Screen {
         super(component);
     }
 
-    @Inject(method = "createOnlineButton", at = @At("RETURN"), cancellable = true)
-    public void sable$createSableButton(final CallbackInfoReturnable<LayoutElement> cir) {
+    @ModifyReturnValue(method = "createOnlineButton", at = @At("RETURN"))
+    public LayoutElement sable$createSableButton(final LayoutElement original) {
         if (this.minecraft.level == null || !this.minecraft.hasSingleplayerServer()) {
-            return;
+            return original;
         }
 
         final LinearLayout layout = LinearLayout.vertical();
@@ -39,10 +38,10 @@ public abstract class OptionsScreenMixin extends Screen {
             this.minecraft.setScreen(new SubLevelSettingsScreen(this, this.options, SubLevelSettingsScreen.TITLE));
         }).pos(0, 30).size(150, 20).build();
 
-        layout.addChild(cir.getReturnValue());
+        layout.addChild(original);
         layout.spacing(5);
         layout.addChild(sableButton);
-        cir.setReturnValue(layout);
+        return original;
     }
 
 
