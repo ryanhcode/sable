@@ -117,9 +117,9 @@ public class ExplosionMixin {
 
             final Vec3 localExplosionPosition = pose.transformPositionInverse(new Vec3(this.x, this.y, this.z));
 
-            for (int x = blockBounds.minX(); x <= blockBounds.maxX(); x++) {
-                for (int z = blockBounds.minZ(); z <= blockBounds.maxZ(); z++) {
-                    for (int y = blockBounds.minY(); y <= blockBounds.maxY(); y++) {
+            for (int x = blockBounds.minX(); x < blockBounds.maxX(); x++) {
+                for (int z = blockBounds.minZ(); z < blockBounds.maxZ(); z++) {
+                    for (int y = blockBounds.minY(); y < blockBounds.maxY(); y++) {
                         blockpos = new BlockPos(x, y, z);
                         blockstate = this.level.getBlockState(blockpos);
                         fluidstate = this.level.getFluidState(blockpos);
