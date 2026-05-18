@@ -59,6 +59,12 @@ versionRange = "(${sable_companion_version},)"
 reason = "Sable is out of date"
 
 [[dependencies.sable]]
+modId = "sodium"
+type = "incompatible"
+versionRange = "(,${sodium_version})"
+reason = "${mod_name} supports Sodium ${sodium_version} and above"
+
+[[dependencies.sable]]
 modId = "scalablelux"
 type = "incompatible"
 

@@ -180,6 +180,7 @@ processResources {
             'credits'                      : credits,
             'java_version'                 : java_version,
             'veil_version'                 : veil_version,
+            'sodium_version'               : sodium_version,
             'sable_companion_version'      : sable_companion_version
     ]
 
