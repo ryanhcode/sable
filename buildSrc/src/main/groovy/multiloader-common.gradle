@@ -88,11 +88,22 @@ repositories {
     maven {
         url = "https://maven.ryanhcode.dev/releases"
     }
+
+    exclusiveContent { // Sodium
+        forRepository {
+            maven {
+                name "CaffeineMC"
+                url "https://maven.caffeinemc.net/releases" // or /snapshots
+            }
+        }
+        filter {
+            includeGroup("net.caffeinemc")
+        }
+    }
 }
 
 dependencies {
-    compileOnly "maven.modrinth:lithium:mc1.21.1-0.15.3-neoforge"
-    compileOnly "maven.modrinth:sodium:$sodium_version"
+    compileOnly "net.caffeinemc:sodium-neoforge-mod:$sodium_version"
     compileOnly "maven.modrinth:iris:$iris_version"
     compileOnly "maven.modrinth:distanthorizons:$distant_horizons_version"
     compileOnly("cc.tweaked:cc-tweaked-$minecraft_version-forge:$cc_tweaked_version")

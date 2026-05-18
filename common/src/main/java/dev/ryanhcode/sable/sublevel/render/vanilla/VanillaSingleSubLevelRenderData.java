@@ -179,6 +179,11 @@ public class VanillaSingleSubLevelRenderData implements SubLevelRenderData {
     }
 
     @Override
+    public int getVisibleSectionCount() {
+        return 1;
+    }
+
+    @Override
     public ClientSubLevel getSubLevel() {
         return this.subLevel;
     }

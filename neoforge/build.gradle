@@ -86,7 +86,7 @@ dependencies {
     compileOnly("maven.modrinth:jade:${project.jade_version}+neoforge") { transitive = false }
     compileOnly("maven.modrinth:jade-addons-forge:${project.jade_addons_version}+neoforge") { transitive = false }
 
-    compileOnly "maven.modrinth:sodium:$sodium_version"
+    compileOnly "net.caffeinemc:sodium-neoforge-mod:${sodium_version}"
     compileOnly("maven.modrinth:iris:$iris_version") { transitive = false }
     compileOnly("maven.modrinth:sodium-extras:neoforge-${minecraft_version}-$sodiumextras_version") { transitive = false }
 
