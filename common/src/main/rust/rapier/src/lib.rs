@@ -1140,8 +1140,8 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     id: jint,
 ) {
     let scene = get_scene_mut_ref(scene_id);
-    let rb = &mut scene.rigid_body_set[scene.rigid_bodies[&(id as LevelColliderID)]];
-    rb.wake_up(true);
+    let handle = scene.rigid_bodies[&(id as LevelColliderID)];
+    scene.island_manager.wake_up(&mut scene.rigid_body_set, handle, true);
 }
 
 #[unsafe(no_mangle)]
