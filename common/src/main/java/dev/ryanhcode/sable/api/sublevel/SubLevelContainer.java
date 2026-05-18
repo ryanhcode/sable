@@ -39,7 +39,7 @@ public abstract class SubLevelContainer {
      * The origin of the plotyard in plots.
      * We want the plotyard to be over 30 million blocks out.
      */
-    public static final int DEFAULT_ORIGIN = 10000;//Mth.ceil(30_000_000.0 / (1 << DEFAULT_LOG_PLOT_SIZE));
+    public static final int DEFAULT_ORIGIN = Mth.ceil(30_000_000.0 / (1 << DEFAULT_LOG_PLOT_SIZE)); // Places the plotyard 480,000,000 blocks out if DEFAULT_LOG_PLOT_SIZE = 7
     /**
      * The plotgrid storage for all loaded sub-levels
      */
