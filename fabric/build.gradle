@@ -41,6 +41,7 @@ dependencies {
     modCompileOnly "net.caffeinemc:sodium-fabric:${rootProject.sodium_version}"
     modCompileOnly "maven.modrinth:distanthorizons:${rootProject.distant_horizons_version}"
     modCompileOnly "maven.modrinth:sodium-extras:fabric-${minecraft_version}-$sodiumextras_version"
+    modCompileOnly "maven.modrinth:shoulder-surfing-reloaded:${minecraft_version}-${project.shouldersurfing_version}+fabric"
 
     include(modApi("foundry.veil:veil-fabric-${project.minecraft_version}:${project.veil_version}"))
     modCompileOnly("foundry.imguimc:imguimc-fabric-${project.minecraft_version}:${project.imguimc_version}")

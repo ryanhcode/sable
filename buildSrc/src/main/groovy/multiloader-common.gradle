@@ -120,6 +120,7 @@ dependencies {
     compileOnly("maven.modrinth:jade-addons-forge:${project.jade_addons_version}+neoforge") { transitive = false }
     compileOnly("maven.modrinth:moonlight:${project.moonlight_version}-neoforge")
     compileOnly("curse.maven:vista-1368607:$vista_version")
+    compileOnly("maven.modrinth:shoulder-surfing-reloaded:${minecraft_version}-${project.shouldersurfing_version}+neoforge") { transitive = false }
 }
 
 sourcesJar {
