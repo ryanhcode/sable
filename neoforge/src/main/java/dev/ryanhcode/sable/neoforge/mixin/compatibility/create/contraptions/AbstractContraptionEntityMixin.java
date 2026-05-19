@@ -99,7 +99,9 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
         if (!this.sable$added && this.level() instanceof final ServerLevel serverLevel) {
             this.sable$buildProperties();
             this.sable$addToPlot();
-            this.sable$addToPipeline(serverLevel);
+            if (this.sable$massTracker.getCenterOfMass() != null) {
+                this.sable$addToPipeline(serverLevel);
+            }
             this.sable$added = true;
         }
     }
@@ -164,9 +166,12 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
 
         assert this.sable$localBounds != null;
         this.sable$massTracker = MassTracker.build(this.sable$blockGetter(), this.sable$localBounds);
-        final Vector3d temp = this.sable$massTracker.getCenterOfMass().negate(new Vector3d()).add(0.5, 0.5, 0.5);
-        for (final FloatingBlockCluster cluster : this.sable$floatingClusterContainer.clusters) {
-            cluster.getBlockData().translateOrigin(temp);
+        final Vector3dc centerOfMass = this.sable$massTracker.getCenterOfMass();
+        if (centerOfMass != null) {
+            final Vector3d temp = centerOfMass.negate(new Vector3d()).add(0.5, 0.5, 0.5);
+            for (final FloatingBlockCluster cluster : this.sable$floatingClusterContainer.clusters) {
+                cluster.getBlockData().translateOrigin(temp);
+            }
         }
     }
 
