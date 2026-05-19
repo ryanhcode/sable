@@ -98,8 +98,8 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
     private void sable$contraptionInitialize(final CallbackInfo ci) {
         if (!this.sable$added && this.level() instanceof final ServerLevel serverLevel) {
             this.sable$buildProperties();
-            this.sable$addToPlot();
             if (this.sable$massTracker.getCenterOfMass() != null) {
+                this.sable$addToPlot();
                 this.sable$addToPipeline(serverLevel);
             }
             this.sable$added = true;
