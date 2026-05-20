@@ -353,6 +353,8 @@ public class SubLevelAssemblyHelper {
                 }
                 if (blockEntity instanceof final Clearable clearable) {
                     clearable.clearContent();
+                } else if (tag != null) {
+                    blockEntity.loadWithComponents(new CompoundTag(), level.registryAccess());
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));
