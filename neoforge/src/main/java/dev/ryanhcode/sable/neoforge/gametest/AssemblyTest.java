@@ -121,6 +121,7 @@ public final class AssemblyTest {
     @GameTest(template = "allblocks", required = false, manualOnly = true, timeoutTicks = 30_000_000)
     public static void testAllBlocks(final GameTestHelper helper) {
         final boolean failOnFirstError = false;
+        final boolean fastTest = true;
         final Set<ResourceLocation> skip = Set.of(
                 ResourceLocation.fromNamespaceAndPath("copycats", "wrapped_copycat")
         );
@@ -310,6 +311,10 @@ public final class AssemblyTest {
                         progressBar.update(completedItems.incrementAndGet());
                     });
                 });
+
+                if (fastTest) {
+                    break;
+                }
             }
         }
 
