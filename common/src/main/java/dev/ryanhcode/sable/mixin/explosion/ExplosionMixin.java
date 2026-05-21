@@ -120,7 +120,7 @@ public class ExplosionMixin {
                 set.add(blockpos);
             }
 
-            final boolean wind = this.source instanceof AbstractWindCharge && !blockstate.isAir();
+            final boolean wind = (this.source instanceof AbstractWindCharge || this.damageCalculator == AbstractWindCharge.EXPLOSION_DAMAGE_CALCULATOR) && !blockstate.isAir();
             if (canExplodeBefore && (f < 0.0f || wind) && explodedSet.get().add(blockpos)) {
                 explodedSet.get().add(blockpos);
 
