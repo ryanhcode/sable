@@ -10,6 +10,7 @@ import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.index.SableTags;
 import dev.ryanhcode.sable.mixinterface.plot.serialization.LevelChunkTicksExtension;
+import dev.ryanhcode.sable.platform.SableChunkEventPlatform;
 import dev.ryanhcode.sable.platform.SablePlotPlatform;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -324,7 +325,7 @@ public class ServerLevelPlot extends LevelPlot {
         }
 
         final LevelChunk chunk = new LevelChunk(level, pos, UpgradeData.EMPTY, new LevelChunkTicks<>(), new LevelChunkTicks<>(), 0L, sections, null, null);
-        this.newChunk(pos, chunk, false);
+        this.newChunk(pos, chunk, false, false);
     }
 
     /**
@@ -648,6 +649,16 @@ public class ServerLevelPlot extends LevelPlot {
         subLevel.updateMergedMassData(1.0f);
         physicsSystem.getPipeline().onStatsChanged(subLevel);
 
+        for (final String key : chunks.getAllKeys()) {
+            final long chunkPos = Long.parseLong(key);
+
+            final int x = ChunkPos.getX(chunkPos);
+            final int z = ChunkPos.getZ(chunkPos);
+            final ChunkPos local = new ChunkPos(x, z);
+            final LevelChunk chunk = this.getChunk(local);
+
+            SableChunkEventPlatform.INSTANCE.onServerChunkLoad(chunk);
+        }
     }
 
     /**
