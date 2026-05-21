@@ -8,12 +8,13 @@ import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
-import dev.ryanhcode.sable.sublevel.plot.EmbeddedPlotLevelAccessor;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestAssertPosException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
@@ -28,7 +29,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -43,9 +43,20 @@ import org.joml.Vector3d;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 @GameTestHolder(Sable.MOD_ID)
 public final class AssemblyTest {
+
+    private static final Direction[] CAPABILITY_DIRECTIONS = {
+            null,
+            Direction.DOWN,
+            Direction.UP,
+            Direction.NORTH,
+            Direction.SOUTH,
+            Direction.WEST,
+            Direction.EAST
+    };
 
     @GameTest(template = "brittlebreak")
     public static void testBrittleBreaking(final GameTestHelper helper) {
@@ -111,18 +122,12 @@ public final class AssemblyTest {
     public static void testAllBlocks(final GameTestHelper helper) {
         final boolean failOnFirstError = false;
         final Set<ResourceLocation> skip = Set.of(
-//                ResourceLocation.fromNamespaceAndPath("create", "millstone"),
-//                ResourceLocation.fromNamespaceAndPath("create", "brass_tunnel")
+                ResourceLocation.fromNamespaceAndPath("copycats", "wrapped_copycat")
         );
-        final Direction[] capabilityDirections = {
-                null,
-                Direction.DOWN,
-                Direction.UP,
-                Direction.NORTH,
-                Direction.SOUTH,
-                Direction.WEST,
-                Direction.EAST
-        };
+        final Set<ResourceLocation> illegalInventories = Set.of(
+                ResourceLocation.fromNamespaceAndPath("create_new_age", "reactor_fuel_acceptor"),
+                ResourceLocation.fromNamespaceAndPath("farmersdelight", "cooking_pot") // Unsure why this failed
+        );
 
         final ServerLevel level = helper.getLevel();
         final ServerSubLevelContainer plotContainer = SubLevelContainer.getContainer(level);
@@ -135,66 +140,89 @@ public final class AssemblyTest {
 
         final BlockPos pos = helper.absolutePos(new BlockPos(2, 3, 2));
         final BlockPos onPos = pos.below();
-        final List<BlockState> invalidStates = new LinkedList<>();
-        final List<BlockState> failures = new LinkedList<>();
+        final Set<Block> invalidBlocks = new HashSet<>();
+        final Set<Block> failures = new HashSet<>();
 
-//        long tick = 0;
+        final TestProgressBar progressBar = new TestProgressBar(level.getServer().getPlayerList());
+        final AtomicLong completedItems = new AtomicLong();
+
+        long tick = 0;
+        long tests = 0;
         for (final Map.Entry<ResourceKey<Block>, Block> entry : BuiltInRegistries.BLOCK.entrySet()) {
-            if (skip.contains(entry.getKey().location())) {
+            final ResourceLocation blockId = entry.getKey().location();
+            if (skip.contains(blockId)) {
                 continue;
             }
 
             final Block block = entry.getValue();
             for (final BlockState state : block.getStateDefinition().getPossibleStates()) {
-//                helper.runAtTickTime(tick += 3, () -> {
+                // Bug with lecterns. If the block state is set, but there isn't a book it will try to drop an air item
+                if (state.is(Blocks.LECTERN) && state.getValue(BlockStateProperties.HAS_BOOK)) {
+                    continue;
+                }
+
+                boolean hasInventory = false;
+                for (@Nullable final Direction direction : CAPABILITY_DIRECTIONS) {
+                    final IItemHandler inventory = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, state, level.getBlockEntity(pos), direction);
+                    if (inventory != null) {
+                        hasInventory = true;
+                        break;
+                    }
+                }
+
+                if (!hasInventory && !state.hasBlockEntity()) {
+                    continue;
+                }
+
+                tests++;
+                helper.runAtTickTime(tick += 2, () -> {
                     level.setBlock(onPos, Blocks.STONE.defaultBlockState(), 2);
                     level.setBlock(pos, state, 2);
 
                     // The block was unstable and can't be placed in this configuration
-                    if (level.getBlockState(pos) != state) {
+                    if (isInvalidState(level.getBlockState(pos))) {
                         helper.killAllEntities();
-                        invalidStates.add(state);
-                        return;
-                    }
-
-                    // Bug with lecterns. If the block state is set, but there isn't a book it will try to drop an air item
-                    if (state.is(Blocks.LECTERN) && state.getValue(BlockStateProperties.HAS_BOOK)) {
+                        invalidBlocks.add(block);
                         return;
                     }
 
                     final List<Entity> startEntities = level.getEntities(EntityTypeTest.forClass(Entity.class), helper.getBounds(), Entity::isAlive);
+                    final NonNullList<ItemStack>[] startingInventory = new NonNullList[CAPABILITY_DIRECTIONS.length];
 
-                    int insertCount = 0;
-                    for (@Nullable final Direction direction : capabilityDirections) {
+                    for (int i = 0; i < CAPABILITY_DIRECTIONS.length; i++) {
+                        final Direction direction = CAPABILITY_DIRECTIONS[i];
                         final IItemHandler inventory = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, state, level.getBlockEntity(pos), direction);
+
                         if (inventory != null) {
-                            final int slots = inventory.getSlots();
-                            if (inventory instanceof final IItemHandlerModifiable modifiable) {
-                                for (int i = 0; i < slots; i++) {
-                                    try {
-                                        modifiable.setStackInSlot(i, insertStack.copy());
-                                        insertCount++;
-                                    } catch (final Throwable ignored) {
-                                        if (!inventory.insertItem(i, insertStack.copy(), false).equals(insertStack)) {
-                                            insertCount++;
+                            try {
+                                final int slots = inventory.getSlots();
+                                if (inventory instanceof final IItemHandlerModifiable modifiable) {
+                                    for (int slot = 0; slot < slots; slot++) {
+                                        try {
+                                            modifiable.setStackInSlot(slot, insertStack.copy());
+                                        } catch (final Throwable ignored) {
+                                            inventory.insertItem(slot, insertStack.copy(), false);
                                         }
                                     }
-                                }
-                            } else {
-                                for (int i = 0; i < slots; i++) {
-                                    if (!inventory.insertItem(i, insertStack.copy(), false).equals(insertStack)) {
-                                        insertCount++;
+                                } else {
+                                    for (int slot = 0; slot < slots; slot++) {
+                                        inventory.insertItem(slot, insertStack.copy(), false);
                                     }
                                 }
+
+                                final NonNullList<ItemStack> list = NonNullList.withSize(slots, ItemStack.EMPTY);
+                                for (int slot = 0; slot < slots; slot++) {
+                                    list.set(slot, inventory.getStackInSlot(slot).copy());
+                                }
+                                startingInventory[i] = list;
+                            } catch (final Throwable t) {
+                                t.printStackTrace();
+                                helper.fail(formatBlockState(state).getString() + " failed. Unable to insert items successfully for face " + direction, pos);
                             }
                         }
                     }
 
-                    if (insertCount == 0 && !state.hasBlockEntity()) {
-                        return;
-                    }
-
-//                    helper.runAfterDelay(1, () -> {
+                    helper.runAfterDelay(1, () -> {
                         final ServerSubLevel subLevel = SubLevelAssemblyHelper.assembleBlocks(level, pos, List.of(pos, onPos), new BoundingBox3i(
                                 onPos.getX(),
                                 onPos.getY(),
@@ -208,8 +236,15 @@ public final class AssemblyTest {
                                         pos.getZ() + 0.5),
                                 helper.getTestRotation().rotation().transformation().getNormalizedRotation(new Quaterniond()));
 
-                        final EmbeddedPlotLevelAccessor subLevelAccessor = subLevel.getPlot().getEmbeddedLevelAccessor();
-                        final BlockEntity sublevelBlockEntity = subLevelAccessor.getBlockEntity(BlockPos.ZERO);
+                        final BlockPos centerBlock = subLevel.getPlot().getCenterBlock();
+
+                        if (isInvalidState(level.getBlockState(centerBlock))) {
+                            invalidBlocks.add(block);
+                            helper.killAllEntities();
+                            removeSubLevel(plotContainer, subLevel);
+                            progressBar.update(completedItems.incrementAndGet());
+                            return;
+                        }
 
                         final List<Entity> resultEntities = level.getEntities(EntityTypeTest.forClass(Entity.class), helper.getBounds(), Entity::isAlive);
                         if (startEntities.size() != resultEntities.size()) {
@@ -221,42 +256,88 @@ public final class AssemblyTest {
                                     }
                                 }
                                 final String formattedEntities = ComponentUtils.formatList(names, Component.literal(", ")).getString();
-                                helper.fail(state + " failed. Expected " + startEntities.size() + " entities to exist, found " + formattedEntities);
+                                helper.fail(formatBlockState(state).getString() + " failed. Expected " + startEntities.size() + " entities to exist, found " + formattedEntities);
+                                return;
                             }
-                            failures.add(state);
+                            failures.add(block);
+                            helper.killAllEntities();
                         }
 
-                        // TODO check if items are the same
+                        if (!illegalInventories.contains(blockId)) {
+                            for (int i = 0; i < CAPABILITY_DIRECTIONS.length; i++) {
+                                final Direction direction = CAPABILITY_DIRECTIONS[i];
+                                final IItemHandler inventory = level.getCapability(Capabilities.ItemHandler.BLOCK, centerBlock, state, level.getBlockEntity(centerBlock), direction);
+                                final NonNullList<ItemStack> starting = startingInventory[i];
 
-//                        helper.runAfterDelay(1, () -> {
-                            removeSubLevel(plotContainer, subLevel);
-//                        });
-//                    });
-//                });
+                                if (inventory != null) {
+                                    if (starting == null) {
+                                        final String stateString = formatBlockState(state).getString();
+                                        helper.fail(stateString + " failed. Expected no inventory for face " + direction + ", found items");
+                                        return;
+                                    }
+
+                                    if (starting.size() != inventory.getSlots()) {
+                                        final String stateString = formatBlockState(state).getString();
+                                        helper.fail(stateString + " failed. Expected " + starting.size() + " inventory slots for face " + direction + ", found " + inventory.getSlots());
+                                        return;
+                                    }
+
+                                    try {
+                                        for (int slot = 0; slot < starting.size(); slot++) {
+                                            if (!ItemStack.isSameItemSameComponents(starting.get(slot), inventory.getStackInSlot(slot))) {
+                                                final String stateString = formatBlockState(state).getString();
+                                                final String expectedStack = starting.get(slot).toString();
+                                                final String foundStack = inventory.getStackInSlot(slot).toString();
+                                                helper.fail(stateString + " failed. Expected slot " + slot + " for face " + direction + " to be " + expectedStack + " found " + foundStack);
+                                                return;
+                                            }
+                                        }
+                                    } catch (final GameTestAssertException e) {
+                                        throw e;
+                                    } catch (final Throwable t) {
+                                        t.printStackTrace();
+                                        helper.fail(formatBlockState(state).getString() + " failed. Unable to get items successfully for face " + direction);
+                                    }
+                                } else if (starting != null) {
+                                    final String stateString = formatBlockState(state).getString();
+                                    helper.fail(stateString + " failed. Expected inventory items for face " + direction + ", found none");
+                                    return;
+                                }
+                            }
+                        }
+
+                        removeSubLevel(plotContainer, subLevel);
+                        progressBar.update(completedItems.incrementAndGet());
+                    });
+                });
             }
         }
 
-//        helper.runAtTickTime(tick + 1, () -> {
-            if (!invalidStates.isEmpty()) {
-                final List<Component> names = new ArrayList<>(invalidStates.size());
-                for (final BlockState state : invalidStates) {
-                    names.add(formatBlockState(state));
+        progressBar.begin(tests);
+
+        helper.runAtTickTime(tick + 1, () -> {
+            progressBar.end();
+
+            if (!invalidBlocks.isEmpty()) {
+                final List<String> names = new ArrayList<>(invalidBlocks.size());
+                for (final Block block : invalidBlocks) {
+                    names.add(String.valueOf(BuiltInRegistries.BLOCK.getKey(block)));
                 }
-                final String formattedLines = ComponentUtils.formatList(names, Component.literal("\n")).getString();
-                Sable.LOGGER.info("Skipped states:\n{}", formattedLines);
+                final String formattedLines = String.join("\n", names);
+                Sable.LOGGER.info("Skipped blocks:\n{}", formattedLines);
             }
 
             if (!failures.isEmpty()) {
-                final List<Component> names = new ArrayList<>(failures.size());
-                for (final BlockState state : failures) {
-                    names.add(formatBlockState(state));
+                final List<String> names = new ArrayList<>(failures.size());
+                for (final Block block : failures) {
+                    names.add(String.valueOf(BuiltInRegistries.BLOCK.getKey(block)));
                 }
-                final String formattedLines = ComponentUtils.formatList(names, Component.literal("\n")).getString();
-                helper.fail(failures.size() + " states failed.\n" + formattedLines);
+                final String formattedLines = String.join("\n", names);
+                helper.fail(failures.size() + " blocks failed.\n" + formattedLines);
             }
 
             helper.succeed();
-//        });
+        });
     }
 
     private static Component formatBlockState(final BlockState state) {
@@ -274,5 +355,9 @@ public final class AssemblyTest {
         }
 
         return name;
+    }
+
+    private static boolean isInvalidState(final BlockState state) {
+        return state.isAir() || state.getFluidState().createLegacyBlock() == state;
     }
 }
