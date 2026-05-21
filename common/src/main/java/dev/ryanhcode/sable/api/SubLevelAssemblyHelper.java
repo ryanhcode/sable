@@ -349,15 +349,19 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("z", newPos.getZ());
                 }
 
-                if (state.is(SableTags.REMOVE_ON_ASSEMBLY)) {
+                if (state.is(SableTags.SILENT_ASSEMBLY_REMOVAL)) {
+                    level.removeBlockEntity(block);
+                } else {
+                    // This is the "correct" way to remove a block from the world, but many mods do not implement
+                    // Clearable correctly. The above tag exists to allow this issue to be "fixed" on a case-by-case
+                    // basis without updating a mod's code
+                    //
+                    // A real solution is to implement Clearable on all block entities that can be cleared in the
+                    // same way as Vanilla MC. See SetBlockCommand
                     if (blockEntity instanceof final RandomizableContainer container) {
                         container.setLootTable(null);
                     }
-                    if (blockEntity instanceof final Clearable clearable) {
-                        clearable.clearContent();
-                    }
-                } else {
-                    level.removeBlockEntity(block);
+                    Clearable.tryClear(blockEntity);
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));
