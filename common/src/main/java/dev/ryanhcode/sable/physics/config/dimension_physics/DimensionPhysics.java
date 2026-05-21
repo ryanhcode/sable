@@ -12,7 +12,8 @@ import java.util.Optional;
 
 public record DimensionPhysics(ResourceLocation dimension, int priority, Optional<Float> universalDrag,
                                Optional<Vector3f> baseGravity, Optional<Double> basePressure,
-                               Optional<BezierResourceFunction> pressureFunction, Optional<Vector3f> magneticNorth) {
+                               Optional<BezierResourceFunction> pressureFunction, Optional<Vector3f> magneticNorth,
+                               boolean ignoreChunks) {
     public static final Vector3f DEFAULT_GRAVITY = new Vector3f(0.0f, -11.0f, 0.0f);
     public static final Vector3f DEFAULT_MAGNETIC_NORTH = new Vector3f(0, 0, 0);
     public static final double DEFAULT_PRESSURE = 1.0;
@@ -25,7 +26,8 @@ public record DimensionPhysics(ResourceLocation dimension, int priority, Optiona
             Codec.optionalField("base_gravity", ExtraCodecs.VECTOR3F, false).forGetter(DimensionPhysics::baseGravity),
             Codec.optionalField("base_pressure", Codec.DOUBLE, false).forGetter(DimensionPhysics::basePressure),
             Codec.optionalField("pressure_function", BezierResourceFunction.CODEC, false).forGetter(DimensionPhysics::pressureFunction),
-            Codec.optionalField("magnetic_north", ExtraCodecs.VECTOR3F, false).forGetter(DimensionPhysics::magneticNorth)
+            Codec.optionalField("magnetic_north", ExtraCodecs.VECTOR3F, false).forGetter(DimensionPhysics::magneticNorth),
+            Codec.BOOL.optionalFieldOf("ignore_chunks", false).forGetter(DimensionPhysics::ignoreChunks)
     ).apply(Applicative.unbox(instance), DimensionPhysics::new));
 
     public static DimensionPhysics createDefault(final Level level) {
@@ -75,6 +77,7 @@ public record DimensionPhysics(ResourceLocation dimension, int priority, Optiona
                 Optional.of(DEFAULT_GRAVITY),
                 Optional.of(DEFAULT_PRESSURE),
                 Optional.of(pressureFunction),
-                Optional.of(north));
+                Optional.of(north),
+                false);
     }
 }

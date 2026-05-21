@@ -3,5 +3,11 @@
 
   "properties": {
     "sable:mass": 2.0
+  },
+
+  "overrides": {
+    "type=double": {
+      "sable:mass": 4.0
+    }
   }
 }

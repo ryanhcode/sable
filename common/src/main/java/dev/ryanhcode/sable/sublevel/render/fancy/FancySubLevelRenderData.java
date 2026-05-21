@@ -184,6 +184,11 @@ public class FancySubLevelRenderData implements SubLevelRenderData {
     }
 
     @Override
+    public int getVisibleSectionCount() {
+        return this.allRenderSections.size();
+    }
+
+    @Override
     public ClientSubLevel getSubLevel() {
         return this.subLevel;
     }

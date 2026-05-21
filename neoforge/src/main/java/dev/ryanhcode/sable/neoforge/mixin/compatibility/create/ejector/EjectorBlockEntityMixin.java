@@ -1,5 +1,7 @@
 package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.ejector;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.logistics.depot.EjectorBlockEntity;
 import com.simibubi.create.content.logistics.depot.EntityLauncher;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -7,6 +9,7 @@ import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
 import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.ejector.SubLevelScanResult;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
@@ -16,6 +19,7 @@ import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,6 +28,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,13 +45,11 @@ public abstract class EjectorBlockEntityMixin extends SmartBlockEntity {
     @Unique
     private static final int SUB_LEVEL_SCAN_TIME = 2;
     @Shadow
-    private boolean launch;
+    EjectorBlockEntity.State state;
     @Shadow
-    private EjectorBlockEntity.State state;
+    boolean powered;
     @Shadow
-    private boolean powered;
-    @Shadow
-    private EntityLauncher launcher;
+    EntityLauncher launcher;
     @Unique
     private int sable$scanTimer = SUB_LEVEL_SCAN_TIME;
     @Unique
@@ -79,8 +82,7 @@ public abstract class EjectorBlockEntityMixin extends SmartBlockEntity {
         final double px = this.launcher.getHorizontalDistance();
         final double py = this.launcher.getVerticalDistance();
 
-        // TODO: Make this use gravity at the ejector position
-        final double g = -DimensionPhysicsData.getGravity(this.level).y;
+        final double g = -DimensionPhysicsData.getGravity(this.level, JOMLConversion.atCenterOf(blockPos)).y;
 
         double vx = c;
         if (py > 0) {
@@ -107,6 +109,13 @@ public abstract class EjectorBlockEntityMixin extends SmartBlockEntity {
         }
     }
 
+    @WrapOperation(method = "activateDeferred", at= @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setPos(DDD)V"))
+    public void setPos(final Entity instance, final double x, final double y, final double z, final Operation<Void> original) {
+        final Vector3d projected = Sable.HELPER.projectOutOfSubLevel(instance.level(), new Vector3d(x, y, z));
+        original.call(instance, projected.x, projected.y, projected.z);
+    }
+
+    @Unique
     private @Nullable SubLevelScanResult sable$lookForLaunchableSubLevels() {
         final ActiveSableCompanion helper = Sable.HELPER;
         final SubLevel containingSubLevel = helper.getContaining(this);

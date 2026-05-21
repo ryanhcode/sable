@@ -15,17 +15,17 @@ import java.util.function.Predicate;
 
 public class SableRaycastHelper {
 
-    public static RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final BiPredicate<@Nullable SubLevel, BlockPos> predicate) {
+    public static @Nullable RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final BiPredicate<@Nullable SubLevel, BlockPos> predicate) {
         return rayCastUntilWithSublevels(level, start, end, (pos) -> predicate.test(null, pos), predicate);
     }
 
-    public static RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final Predicate<BlockPos> predicate) {
+    public static @Nullable RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final Predicate<BlockPos> predicate) {
         return rayCastUntilWithSublevels(level, start, end, predicate, (sublevel, pos) -> predicate.test(pos));
     }
 
-    public static RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final Predicate<BlockPos> predicate, final BiPredicate<SubLevel, BlockPos> subLevelPredicate) {
+    public static @Nullable RaycastHelper.PredicateTraceResult rayCastUntilWithSublevels(final Level level, final Vec3 start, final Vec3 end, final Predicate<BlockPos> predicate, final BiPredicate<SubLevel, BlockPos> subLevelPredicate) {
         RaycastHelper.PredicateTraceResult closestRay = RaycastHelper.rayTraceUntil(start, end, predicate);
-        double closestDistance = closestRay.getPos() != null ? Vec3.atCenterOf(closestRay.getPos()).distanceToSqr(start) : Double.MAX_VALUE;
+        double closestDistance = closestRay != null && !closestRay.missed() ? Vec3.atCenterOf(closestRay.getPos()).distanceToSqr(start) : Double.MAX_VALUE;
 
         final Iterable<SubLevel> sublevels = Sable.HELPER.getAllIntersecting(level, new BoundingBox3d(start, end));
 

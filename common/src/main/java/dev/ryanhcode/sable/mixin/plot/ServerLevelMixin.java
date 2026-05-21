@@ -1,10 +1,10 @@
 package dev.ryanhcode.sable.mixin.plot;
 
-import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.platform.SablePlatform;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelOccupancySavedData;
+import dev.ryanhcode.sable.sublevel.storage.SubLevelTicketsSavedData;
 import dev.ryanhcode.sable.sublevel.storage.holding.SubLevelHoldingChunkMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
@@ -47,9 +47,10 @@ public abstract class ServerLevelMixin extends Level {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void sable$init(final CallbackInfo ci) {
-        // Load occupancy data if it isn't already
+        // Load occupancy and ticket data if it isn't already
         if (!SablePlatform.INSTANCE.isWrappedLevel((ServerLevel) (Object) this)) {
             SubLevelOccupancySavedData.getOrLoad((ServerLevel) (Object) this);
+            SubLevelTicketsSavedData.getOrLoad((ServerLevel) (Object) this);
         }
 
         final ServerSubLevelContainer container = (ServerSubLevelContainer) SubLevelContainer.getContainer(this);
@@ -58,22 +59,11 @@ public abstract class ServerLevelMixin extends Level {
         }
     }
 
-    @Inject(method = "close", at = @At("TAIL"))
-    private void sable$close(final CallbackInfo ci) {
-        final ServerSubLevelContainer container = (ServerSubLevelContainer) SubLevelContainer.getContainer(this);
-        if (container != null) {
-            container.close();
-        }
-    }
-
-
     /**
      * high up injection so we're before normal chunk saving
      */
     @Inject(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;saveLevelData()V", shift = At.Shift.BEFORE))
     public void sable$saveSubLevels(final ProgressListener progressListener, final boolean bl, final boolean bl2, final CallbackInfo ci) {
-        Sable.LOGGER.info("Saving sub-levels for level '{}'/{}", this, this.dimension().location());
-
         final ServerLevel self = (ServerLevel) (Object) this;
         if (progressListener != null) {
             progressListener.progressStartNoAbort(Component.translatable("menu.savingSubLevels"));
@@ -116,6 +106,15 @@ public abstract class ServerLevelMixin extends Level {
 
         if (plotContainer.getPlot(chunkPos) != null) {
             cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void sable$close(final CallbackInfo ci) {
+        final ServerSubLevelContainer container = (ServerSubLevelContainer) SubLevelContainer.getContainer(this);
+
+        if (container != null) {
+            container.close();
         }
     }
 }

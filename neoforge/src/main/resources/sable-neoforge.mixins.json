@@ -97,6 +97,7 @@
     "compatibility.create.display_link.DisplayLinkBlockEntityMixin",
     "compatibility.create.display_link.DisplayLinkBlockMixin",
     "compatibility.create.ejector.EjectorBlockEntityMixin",
+    "compatibility.create.ejector.EjectorBlockMixin",
     "compatibility.create.elevator_controls.ElevatorControlsHandlerMixin",
     "compatibility.create.entity_falls_on_block.BasinBlockMixin",
     "compatibility.create.entity_falls_on_block.BeltMillstoneBlocksMixin",

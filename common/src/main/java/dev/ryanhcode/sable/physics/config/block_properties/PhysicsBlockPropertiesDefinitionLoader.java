@@ -81,7 +81,7 @@ public class PhysicsBlockPropertiesDefinitionLoader extends SimpleJsonResourceRe
             final TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, selector.id());
             final Optional<HolderSet.Named<Block>> tagBlocks = BuiltInRegistries.BLOCK.getTag(tagKey);
 
-            if(tagBlocks.isPresent()) {
+            if (tagBlocks.isPresent()) {
                 final HolderSet.Named<Block> blockHolders = tagBlocks.get();
 
                 for (final Holder<Block> blockHolder : blockHolders) {
@@ -90,13 +90,16 @@ public class PhysicsBlockPropertiesDefinitionLoader extends SimpleJsonResourceRe
                     blocks.add(block);
                 }
             } else {
-                throw new IllegalStateException("Unknown tag: %s".formatted(selector.id()));
+                Sable.LOGGER.error("Failed to apply tag physics properties. Unknown tag: {}", selector.id());
             }
         } else {
-            // The selector is not a tag, let's just get the block
-            final Block block = BuiltInRegistries.BLOCK.get(selector.id());
-
-            blocks.add(block);
+            if (BuiltInRegistries.BLOCK.containsKey(selector.id())) {
+                // The selector is not a tag, let's just get the block
+                final Block block = BuiltInRegistries.BLOCK.get(selector.id());
+                blocks.add(block);
+            } else {
+                Sable.LOGGER.error("Failed to apply tag physics properties. Unknown block: {}", selector.id());
+            }
         }
 
         for (final Block block : blocks) {

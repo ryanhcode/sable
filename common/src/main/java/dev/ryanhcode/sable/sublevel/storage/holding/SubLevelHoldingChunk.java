@@ -11,15 +11,22 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+/**
+ * A chunk-sized container of unloaded sub-level data in memory
+ */
+@ApiStatus.Internal
 public class SubLevelHoldingChunk {
     private final ObjectList<HoldingSubLevel> alsoLoad = new ObjectArrayList<>();
     private final ObjectList<SavedSubLevelPointer> pointers = new ObjectArrayList<>();
     private final Object2ObjectMap<UUID, HoldingSubLevel> loadedHoldingSubLevels = new Object2ObjectOpenHashMap<>();
     private final ChunkPos pos;
     final ObjectOpenHashSet<UUID> visitedSet = new ObjectOpenHashSet<>();
+    private boolean keepLoaded = false;
 
     public SubLevelHoldingChunk(final ChunkPos pos) {
         this.pos = pos;
@@ -31,6 +38,36 @@ public class SubLevelHoldingChunk {
 
     public Iterable<HoldingSubLevel> getLoadedHoldingSubLevels() {
         return this.loadedHoldingSubLevels.values();
+    }
+
+    /**
+     * Snatches a sub-level by ID, alongside all of its loading dependencies
+     */
+    @Nullable
+    protected Collection<HoldingSubLevel> snatch(final UUID subLevelId) {
+        final HoldingSubLevel holdingSubLevel = this.loadedHoldingSubLevels.remove(subLevelId);
+
+        if (holdingSubLevel == null) {
+            return null;
+        }
+
+        final SubLevelData data = holdingSubLevel.data();
+        final List<UUID> relations = data.dependencies();
+
+        final ObjectList<HoldingSubLevel> snatchedSubLevels = new ObjectArrayList<>();
+        snatchedSubLevels.add(holdingSubLevel);
+
+        for (final UUID uuid : relations) {
+            final HoldingSubLevel dependencySubLevel = this.loadedHoldingSubLevels.remove(uuid);
+
+            if (dependencySubLevel == null) {
+                Sable.LOGGER.error("Sub-level dependency does not exist in chunk when loading force-loaded holding sub-level. Something has gone terribly wrong.");
+            } else {
+                snatchedSubLevels.add(dependencySubLevel);
+            }
+        }
+
+        return snatchedSubLevels;
     }
 
     /**
@@ -141,5 +178,22 @@ public class SubLevelHoldingChunk {
 
     public List<SavedSubLevelPointer> getSubLevelPointers() {
         return this.pointers;
+    }
+
+    public void markKeepLoaded() {
+        this.keepLoaded = true;
+    }
+
+    public boolean shouldKeepLoaded() {
+        return this.keepLoaded;
+    }
+
+    @Override
+    public String toString() {
+        return "SubLevelHoldingChunk{" +
+                "pos=" + this.pos +
+                ", keepLoaded=" + this.keepLoaded +
+                ", pointers=" + this.pointers +
+                '}';
     }
 }

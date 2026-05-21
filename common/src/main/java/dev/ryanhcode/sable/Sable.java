@@ -5,6 +5,7 @@ import dev.ryanhcode.sable.api.physics.PhysicsPipeline;
 import dev.ryanhcode.sable.api.physics.force.ForceGroups;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.api.sublevel.SubLevelTicketLoadingSystem;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.index.SableTags;
 import dev.ryanhcode.sable.network.tcp.SableTCPPackets;
@@ -83,6 +84,7 @@ public final class Sable {
             serverContainer.addObserver(physicsSystem);
             serverContainer.addObserver(trackingSystem);
             serverContainer.addObserver(new SubLevelTrackingPointObserver(serverLevel));
+            serverContainer.addObserver(new SubLevelTicketLoadingSystem(serverContainer));
 
             PhysicsBlockPropertiesDefinitionLoader.INSTANCE.applyAll();
         }

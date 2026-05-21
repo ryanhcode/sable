@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "create:pulley_magnet", "required": false },
+    { "id": "create:rope", "required": false }
+  ]
+}

@@ -104,7 +104,7 @@ public abstract class LevelPlot {
      * @param logSize       the log_2 of the side length of a plot
      * @param subLevel      the sub-level using this plot
      */
-    public LevelPlot(final SubLevelContainer container, final int x, final int z, final int logSize, final SubLevel subLevel) {
+    public LevelPlot(final SubLevelContainer container, final int x, final int z, final int logSize, final @NotNull SubLevel subLevel) {
         this.container = container;
         this.plotPos = new ChunkPos(x, z);
         this.logSize = logSize;
