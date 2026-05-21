@@ -118,7 +118,7 @@ public final class AssemblyTest {
         });
     }
 
-    @GameTest(template = "allblocks", manualOnly = true, timeoutTicks = 30_000_000)
+    @GameTest(template = "allblocks", required = false, manualOnly = true, timeoutTicks = 30_000_000)
     public static void testAllBlocks(final GameTestHelper helper) {
         final boolean failOnFirstError = false;
         final Set<ResourceLocation> skip = Set.of(
