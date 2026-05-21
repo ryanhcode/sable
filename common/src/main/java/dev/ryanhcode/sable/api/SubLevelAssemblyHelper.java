@@ -10,6 +10,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
+import dev.ryanhcode.sable.index.SableTags;
 import dev.ryanhcode.sable.platform.SableAssemblyPlatform;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -348,11 +349,15 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("z", newPos.getZ());
                 }
 
-                if (blockEntity instanceof final RandomizableContainer container) {
-                    container.setLootTable(null);
-                }
-                if (blockEntity instanceof final Clearable clearable) {
-                    clearable.clearContent();
+                if (state.is(SableTags.REMOVE_ON_ASSEMBLY)) {
+                    if (blockEntity instanceof final RandomizableContainer container) {
+                        container.setLootTable(null);
+                    }
+                    if (blockEntity instanceof final Clearable clearable) {
+                        clearable.clearContent();
+                    }
+                } else {
+                    level.removeBlockEntity(block);
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));

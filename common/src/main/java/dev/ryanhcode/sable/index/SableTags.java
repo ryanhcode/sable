@@ -36,6 +36,11 @@ public class SableTags {
             Sable.sablePath("paddles")
     );
 
+    public static final TagKey<Block> REMOVE_ON_ASSEMBLY = TagKey.create(
+            Registries.BLOCK,
+            Sable.sablePath("remove_on_assembly")
+    );
+
     public static void register() {
         // no-op
     }
