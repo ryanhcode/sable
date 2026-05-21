@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.api.command.SableCommandHelper;
 import dev.ryanhcode.sable.api.command.SubLevelArgumentType;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
+import dev.ryanhcode.sable.api.sublevel.ticket.SubLevelLoadingTicketType;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.network.packets.tcp.ClientboundEnterGizmoPacket;
 import dev.ryanhcode.sable.network.packets.udp.SableUDPEchoPacket;
@@ -24,6 +25,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Unit;
 import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
@@ -71,6 +73,40 @@ public class SableCommand {
                         .then(Commands.argument("paused", BoolArgumentType.bool())
                                 .executes(SableCommand::executeSetPhysicsPausedCommand)))
 
+                .then(Commands.literal("forceload")
+                        .then(Commands.literal("add").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
+                            final CommandSourceStack source = ctx.getSource();
+                            final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+                            final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+                            int count = 0;
+                            for (final ServerSubLevel subLevel : subLevels) {
+                                if (container.addForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
+                                    count++;
+                                }
+                            }
+
+                            final int finalCount = count;
+                            source.sendSuccess(() -> Component.translatable("commands.sable.forceload.add.count", finalCount), true);
+                            return count;
+                        })))
+                        .then(Commands.literal("remove").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
+                            final CommandSourceStack source = ctx.getSource();
+                            final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+                            final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+                            int count = 0;
+                            for (final ServerSubLevel subLevel : subLevels) {
+                                if (container.removeForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
+                                    count++;
+                                }
+                            }
+
+                            final int finalCount = count;
+                            source.sendSuccess(() -> Component.translatable("commands.sable.forceload.remove.count", finalCount), true);
+                            return count;
+                        })))
+                )
                 .then(Commands.literal("info").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
                     final CommandSourceStack source = ctx.getSource();
                     final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);

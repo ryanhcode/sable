@@ -17,6 +17,8 @@ public final class SableConfig {
     public static final ModConfigSpec.IntValue SUB_LEVEL_PUNCH_COOLDOWN_TICKS;
     public static final ModConfigSpec.BooleanValue DISABLE_UDP_PIPELINE;
     public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
+    public static final ModConfigSpec.BooleanValue VERBOSE_SERIALIZATION_LOGGING;
+    public static final ModConfigSpec.BooleanValue SUB_LEVEL_SAVING_LOG_MESSAGE;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -54,8 +56,14 @@ public final class SableConfig {
                 .comment("If the entire Sable UDP Networking pipeline should be disabled. This can improve compatibility with certain mods like Replay mod and certain networking setups, but will have worse performance and latency for networking sub-levels.")
                 .define("disable_udp_pipeline", false);
         ATTEMPT_UDP_NETWORKING = builder
-                .comment("If Sable should attempt to authenticate with clients and send them sub-level data over UDP")
+                .comment("If Sable should attempt to authenticate with clients and send them sub-level movement data over UDP")
                 .define("attempt_udp_networking", true);
+        SUB_LEVEL_SAVING_LOG_MESSAGE = builder
+                .comment("If Sable should log when saving sub-levels for a dimension.")
+                .define("sub_level_saving_log_message", true);
+        VERBOSE_SERIALIZATION_LOGGING = builder
+                .comment("If Sable should use verbose logging for its serialization system and the holding chunk-map. Not recommended- for debugging purposes only.")
+                .define("verbose_serialization_logging", false);
 
         SPEC = builder.build();
     }

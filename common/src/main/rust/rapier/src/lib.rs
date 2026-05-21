@@ -420,6 +420,19 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
     info!("Rapier initialized scene {}", scene_id);
 }
 
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_dispose<'local>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    scene_id: jint,
+) {
+    unsafe {
+        if let Some(state) = &mut PHYSICS_STATE {
+            state.scenes.remove(&scene_id);
+        }
+    }
+}
+
 /// Computes buoyancy
 /// Extracts a message from a caught panic payload
 fn panic_message(payload: &Box<dyn std::any::Any + Send>) -> String {
@@ -447,18 +460,16 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tic
     scene_id: jint,
     _time_step: jdouble,
 ) {
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        unsafe {
-            if let Some(state) = &mut PHYSICS_STATE {
-                rope::tick(scene_id);
-                joints::tick(scene_id);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe {
+        if let Some(state) = &mut PHYSICS_STATE {
+            rope::tick(scene_id);
+            joints::tick(scene_id);
 
-                let Some(scene) = state.scenes.get_mut(&scene_id) else {
-                    panic!("No scene with given ID!");
-                };
-            
-                compute_buoyancy(scene);
-            }
+            let Some(scene) = state.scenes.get_mut(&scene_id) else {
+                panic!("No scene with given ID!");
+            };
+
+            compute_buoyancy(scene);
         }
     }));
     throw_on_panic(&mut env, result);

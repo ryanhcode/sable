@@ -24,6 +24,8 @@ view [Sable Companion](https://github.com/ryanhcode/sable-companion).
 
 View the [Sable Developer Wiki](https://github.com/ryanhcode/sable/wiki) for documentation and guides.
 
+Join sable zone for development discussion: https://discord.gg/pnkzu2dtVA
+
 # Building Rust Natives
 
 1. Install Docker from https://www.docker.com/get-started/ or from your relevant package manager

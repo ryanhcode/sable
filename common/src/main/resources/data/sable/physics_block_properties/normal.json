@@ -1,0 +1,13 @@
+{
+  "selector": "#sable:normal",
+
+  "properties": {
+    "sable:mass": 1.0
+  },
+
+  "overrides": {
+    "type=double": {
+      "sable:mass": 2.0
+    }
+  }
+}

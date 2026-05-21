@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.sublevel.system.ticket;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import java.util.Objects;
 /**
  * A ticket for a chunk tracked by a {@link PhysicsChunkTicketManager}
  */
+@ApiStatus.Internal
 public final class PhysicsChunkTicket {
     private final SectionPos pos;
     private final Collection<SubLevel> residentSubLevels;

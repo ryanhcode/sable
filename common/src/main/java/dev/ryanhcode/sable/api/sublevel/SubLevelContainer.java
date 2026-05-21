@@ -13,11 +13,13 @@ import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import dev.ryanhcode.sable.util.iterator.ListBackedFilterIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectLists;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -411,24 +413,23 @@ public abstract class SubLevelContainer {
             return List.of();
         }
 
-        final SubLevel subLevel = plot.getSubLevel();
-
-        if (subLevel instanceof final ServerSubLevel serverSubLevel) {
-            final Collection<UUID> trackingPlayers = serverSubLevel.getTrackingPlayers();
-            final ObjectList<ServerPlayer> players = new ObjectArrayList<>(trackingPlayers.size());
-
-            for (final UUID uuid : serverSubLevel.getTrackingPlayers()) {
-                final ServerPlayer player = this.level.getServer().getPlayerList().getPlayer(uuid);
-
-                if (player != null) {
-                    players.add(player);
-                }
-            }
-
-            return players;
+        if (!(plot.getSubLevel() instanceof final ServerSubLevel serverSubLevel)) {
+            return List.of();
         }
 
-        return List.of();
+        final Collection<UUID> trackingPlayers = serverSubLevel.getTrackingPlayers();
+        final ObjectList<ServerPlayer> players = new ObjectArrayList<>(trackingPlayers.size());
+        final PlayerList playerList = this.level.getServer().getPlayerList();
+
+        for (final UUID uuid : serverSubLevel.getTrackingPlayers()) {
+            final ServerPlayer player = playerList.getPlayer(uuid);
+
+            if (player != null) {
+                players.add(player);
+            }
+        }
+
+        return ObjectLists.unmodifiable(players);
     }
 
     /**

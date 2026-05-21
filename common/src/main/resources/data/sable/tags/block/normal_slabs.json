@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:stone_slab",
+    "minecraft:cobblestone_slab",
+    "minecraft:granite_slab",
+    "minecraft:diorite_slab",
+    "minecraft:andesite_slab",
+    "minecraft:cobbled_deepslate_slab",
+    "minecraft:tuff_slab",
+    "minecraft:blackstone_slab"
+  ]
+}

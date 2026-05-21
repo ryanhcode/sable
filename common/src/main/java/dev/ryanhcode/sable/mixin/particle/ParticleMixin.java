@@ -66,6 +66,12 @@ public abstract class ParticleMixin implements ParticleExtension {
     @Shadow
     protected double yd;
     @Shadow
+    protected double xo;
+    @Shadow
+    protected double zo;
+    @Shadow
+    protected double yo;
+    @Shadow
     @Final
     protected ClientLevel level;
     @Shadow
@@ -134,13 +140,19 @@ public abstract class ParticleMixin implements ParticleExtension {
             if (subLevel != null) {
                 // Kick the particle out!
                 final Pose3d pose = subLevel.logicalPose();
+                final Vec3 particlePositionOld = new Vec3(this.xo, this.yo, this.zo);
 
                 final Vec3 globalPosition = pose.transformPosition(particlePosition);
+                final Vec3 globalPositionOld = pose.transformPosition(particlePositionOld);
                 final Vec3 globalVelocity = pose.transformNormal(new Vec3(this.xd, this.yd, this.zd));
 
                 this.x = globalPosition.x;
                 this.y = globalPosition.y;
                 this.z = globalPosition.z;
+
+                this.xo = globalPositionOld.x;
+                this.yo = globalPositionOld.y;
+                this.zo = globalPositionOld.z;
 
                 this.xd = globalVelocity.x;
                 this.yd = globalVelocity.y;

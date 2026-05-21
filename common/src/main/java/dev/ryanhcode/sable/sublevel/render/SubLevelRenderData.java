@@ -48,6 +48,8 @@ public interface SubLevelRenderData extends Closeable {
      */
     void compileSections(PrioritizeChunkUpdates chunkUpdates, final RenderRegionCache renderRegionCache, Camera camera);
 
+    int getVisibleSectionCount();
+
     default Matrix4f getTransformation(final double camX, final double camY, final double camZ) {
         return this.getTransformation(camX, camY, camZ, new Matrix4f());
     }

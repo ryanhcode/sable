@@ -40,33 +40,34 @@
     { "id": "create:hand_crank", "required": false },
     { "id": "#create:valve_handles", "required": false },
     { "id": "#create:seats", "required": false },
-    
+
     { "id": "farmersdelight:skillet", "required": false },
     { "id": "farmersdelight:cooking_pot", "required": false },
-    
+
     { "id": "decorative_blocks:chain", "required": false },
     { "id": "#decorative_blocks:beams", "required": false },
-    
+
     { "id": "#woodworks:wooden_boards", "required": false },
-    
+
     { "id": "#quark:vertical_slabs", "required": false },
     { "id": "#quark:hollow_logs", "required": false },
-    
+
     { "id": "supplementaries:blackboard", "required": false },
     { "id": "supplementaries:crystal_display", "required": false },
     { "id": "#supplementaries:presents", "required": false },
     { "id": "#supplementaries:trapped_presents", "required": false },
-    
+
     { "id": "#architects_palette:boards", "required": false },
-    
+
     { "id": "#storagedrawers:full_drawers", "required": false },
     { "id": "#storagedrawers:trim", "required": false },
-    
+
     { "id": "#another_furniture:drawers", "required": false }
   ],
   "remove": [
     "#minecraft:wooden_slabs",
     "#minecraft:wooden_stairs",
-    "#quark:wooden_vertical_slabs"
+    "#quark:wooden_vertical_slabs",
+    "#sable:normal_slabs"
   ]
 }

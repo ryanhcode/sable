@@ -52,7 +52,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityMo
     public void sable$beforeAnimation(final Vec3 vec3, final CallbackInfo ci) {
         final SubLevelEntityCollision.CollisionInfo info = ((EntityMovementExtension) this).sable$getCollisionInfo();
 
-        if (info != null && info.inheritedMotion != null) {
+        if (info != null && info.inheritedMotion != null && !this.isSpectator()) {
             this.setPos(this.position().add(((EntityExtension) this).sable$vanillaCollide(info.inheritedMotion)));
             this.sable$inheritedVelocity.set(info.inheritedMotion.x, info.inheritedMotion.y, info.inheritedMotion.z);
         }

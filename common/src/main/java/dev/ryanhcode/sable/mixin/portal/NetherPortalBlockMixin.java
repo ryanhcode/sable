@@ -28,7 +28,7 @@ public class NetherPortalBlockMixin {
 
         return instance.clampToBounds(
                 globalPos.x * multiplier,
-                globalPos.y * multiplier,
+                globalPos.y,
                 globalPos.z * multiplier
         );
     }

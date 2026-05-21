@@ -1,0 +1,7 @@
+{
+  "selector": "#sable:weightless",
+
+  "properties": {
+    "sable:mass": 0.0
+  }
+}

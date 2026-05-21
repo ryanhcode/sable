@@ -7,39 +7,50 @@ import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
+import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
 import dev.ryanhcode.sable.sublevel.storage.holding.SubLevelHoldingChunkMap;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.core.SectionPos;
-import net.minecraft.server.level.DistanceManager;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3d;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 public class PhysicsChunkTicketManager {
 
     public static final double MAX_PREDICTION_DISTANCE = 20.0;
 
+    public static final TicketType<UUID> SUB_LEVEL_LOADED_TICKET_TYPE = TicketType.create(
+            "sable_sub_level_loaded",
+            UUID::compareTo
+    );
+
     /**
      * The physics chunks that are currently loaded.
      */
     private final Map<SectionPos, PhysicsChunkTicket> physicsChunks = new Object2ObjectOpenHashMap<>();
+
+    /**
+     * Chunks that are force-loaded by force-loaded sub-levels inhabiting them
+     */
+    private final Long2ObjectMap<ObjectArraySet<InhabitedChunkTicket>> forcedInhabitedChunks = new Long2ObjectOpenHashMap<>();
 
     /**
      * Updates the state of the ticket manager.
@@ -59,27 +70,17 @@ public class PhysicsChunkTicketManager {
     public void update(final ServerLevel level, final ServerSubLevelContainer container, final SubLevelPhysicsSystem system, final PhysicsPipeline pipeline, final double timeStep) {
         final SubLevelHoldingChunkMap holdingChunkMap = container.getHoldingChunkMap();
         final long gameTime = level.getGameTime();
-        final Iterator<Map.Entry<SectionPos, PhysicsChunkTicket>> chunkIter = this.physicsChunks.entrySet().iterator();
 
-        while (chunkIter.hasNext()) {
-            final Map.Entry<SectionPos, PhysicsChunkTicket> entry = chunkIter.next();
-            final SectionPos sectionPos = entry.getKey();
-            final PhysicsChunkTicket ticket = entry.getValue();
+        final Collection<ServerSubLevel> forceLoaded = container.collectForceLoadedSubLevels();
 
-            final LevelPlot plot = SubLevelContainer.getContainer(level).getPlot(sectionPos.chunk());
+        this.expirePhysicsChunkTickets(level, pipeline, gameTime);
 
-            final boolean outdated = ticket.lastInhabitedTick() < gameTime - 20 && plot == null;
-            final boolean noLongerExistent = !isChunkLoadedEnough(level, sectionPos.x(), sectionPos.z());
-            if (outdated || noLongerExistent) {
-                pipeline.handleChunkSectionRemoval(sectionPos.x(), sectionPos.y(), sectionPos.z());
-                chunkIter.remove();
-            } else {
-                if (SubLevelPhysicsSystem.USE_TICKETS_FOR_QUERIES && ticket.residentSubLevels() != null) {
-                    if (!ticket.residentSubLevels().isEmpty())
-                        ticket.residentSubLevels().clear();
-                }
-            }
+        if (DimensionPhysicsData.of(level).ignoreChunks()) {
+            return;
         }
+
+        final DistanceManager distanceManager = level.getChunkSource().chunkMap.getDistanceManager();
+        this.expireForcedInhabitedChunks(gameTime, distanceManager);
 
         final LongOpenHashSet unloadedChunks = new LongOpenHashSet();
 
@@ -135,6 +136,7 @@ public class PhysicsChunkTicketManager {
         for (int i = 0; i < container.getAllSubLevels().size(); i++) {
             final ServerSubLevel subLevel = container.getAllSubLevels().get(i);
             if (subLevel.isRemoved()) continue;
+            final UUID uuid = subLevel.getUniqueId();
 
             b.set(subLevel.boundingBox());
             b2.set(b);
@@ -147,23 +149,56 @@ public class PhysicsChunkTicketManager {
             }
 
             b.expand(1.0, b);
-
             final BoundingBox3i chunkBounds = b.chunkBoundsFrom();
 
             for (int x = chunkBounds.minX(); x <= chunkBounds.maxX(); x++) {
                 for (int z = chunkBounds.minZ(); z <= chunkBounds.maxZ(); z++) {
                     final long l = ChunkPos.asLong(x, z);
 
-                    if (!isChunkLoadedEnough(level, x, z) || unloadedChunks.contains(l)) {
-                        // The sub-level has now entered an unloaded chunk.
-                        unloadedChunks.add(l);
+                    final boolean chunkLoadedEnough = isChunkLoadedEnough(level, x, z);
 
-                        holdingChunkMap.moveToUnloaded(subLevel, new ChunkPos(x, z));
+                    if (forceLoaded.contains(subLevel)) {
+                        ObjectArraySet<InhabitedChunkTicket> set = this.forcedInhabitedChunks.get(l);
 
-                        // Because we just removed this sub-level, we need to decrement the index to avoid skipping the next sub-level
-                        i--;
+                        if (set == null) {
+                            this.forcedInhabitedChunks.put(l, set = new ObjectArraySet<>(1));
+                        }
 
-                        continue subLevelLoop;
+                        final Ticket<UUID> newChunkTicket = new Ticket<>(PhysicsChunkTicketManager.SUB_LEVEL_LOADED_TICKET_TYPE, ChunkLevel.byStatus(FullChunkStatus.ENTITY_TICKING), uuid);
+                        final InhabitedChunkTicket newSableTicket = new InhabitedChunkTicket(uuid, gameTime, newChunkTicket);
+
+                        if (set.add(newSableTicket)) {
+                            distanceManager.addTicket(l, newChunkTicket);
+                            distanceManager.tickingTicketsTracker.addTicket(l, newChunkTicket);
+
+                            level.getChunk(x, z, ChunkStatus.FULL, true);
+                        } else {
+                            boolean any = false;
+
+                            for (final InhabitedChunkTicket ticket : set) {
+                               if (ticket.equals(newSableTicket)) {
+                                   ticket.setLastInhabitedTick(gameTime);
+                                   any = true;
+                                   break;
+                               }
+                            }
+
+                            if (!any) {
+                                throw new RuntimeException("Chunk ticket state management has gone horribly wrong.");
+                            }
+                        }
+                    } else {
+                        if (!chunkLoadedEnough || unloadedChunks.contains(l)) {
+                            // The sub-level has now entered an unloaded chunk.
+                            unloadedChunks.add(l);
+
+                            holdingChunkMap.moveToUnloaded(subLevel, new ChunkPos(x, z));
+
+                            // Because we just removed this sub-level, we need to decrement the index to avoid skipping the next sub-level
+                            i--;
+
+                            continue subLevelLoop;
+                        }
                     }
                 }
             }
@@ -184,6 +219,60 @@ public class PhysicsChunkTicketManager {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void expirePhysicsChunkTickets(final ServerLevel level, final PhysicsPipeline pipeline, final long gameTime) {
+        final Iterator<Map.Entry<SectionPos, PhysicsChunkTicket>> chunkTicketIter = this.physicsChunks.entrySet().iterator();
+
+        while (chunkTicketIter.hasNext()) {
+            final Map.Entry<SectionPos, PhysicsChunkTicket> entry = chunkTicketIter.next();
+            final SectionPos sectionPos = entry.getKey();
+            final PhysicsChunkTicket ticket = entry.getValue();
+
+            final LevelPlot plot = SubLevelContainer.getContainer(level).getPlot(sectionPos.chunk());
+
+            final boolean outdated = ticket.lastInhabitedTick() < gameTime - 20 && plot == null;
+            final boolean noLongerExistent = !isChunkLoadedEnough(level, sectionPos.x(), sectionPos.z());
+            if (outdated || noLongerExistent) {
+                pipeline.handleChunkSectionRemoval(sectionPos.x(), sectionPos.y(), sectionPos.z());
+                chunkTicketIter.remove();
+            } else {
+                if (SubLevelPhysicsSystem.USE_TICKETS_FOR_QUERIES && ticket.residentSubLevels() != null) {
+                    if (!ticket.residentSubLevels().isEmpty())
+                        ticket.residentSubLevels().clear();
+                }
+            }
+        }
+    }
+
+    private void expireForcedInhabitedChunks(final long gameTime, final DistanceManager distanceManager) {
+        final ObjectIterator<Long2ObjectMap.Entry<ObjectArraySet<InhabitedChunkTicket>>> forcedChunkIter = this.forcedInhabitedChunks.long2ObjectEntrySet().iterator();
+
+        while (forcedChunkIter.hasNext()) {
+            final Long2ObjectMap.Entry<ObjectArraySet<InhabitedChunkTicket>> entry = forcedChunkIter.next();
+
+            final long chunkLong = entry.getLongKey();
+            final ObjectArraySet<InhabitedChunkTicket> set = entry.getValue();
+            final Iterator<InhabitedChunkTicket> setIter = set.iterator();
+
+            while (setIter.hasNext()) {
+                final InhabitedChunkTicket ticket = setIter.next();
+
+                final boolean outdated = ticket.lastInhabitedTick() < gameTime - 20;
+
+                if (outdated) {
+                    final Ticket<UUID> chunkTicket = ticket.getTicket();
+
+                    distanceManager.removeTicket(chunkLong, chunkTicket);
+                    distanceManager.tickingTicketsTracker.removeTicket(chunkLong, chunkTicket);
+                    setIter.remove();
+                }
+            }
+
+            if (set.isEmpty()) {
+                forcedChunkIter.remove();
             }
         }
     }

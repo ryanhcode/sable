@@ -7,6 +7,9 @@ import dev.ryanhcode.sable.api.physics.mass.MassData;
 import dev.ryanhcode.sable.mixinterface.physics.ServerLevelSceneExtension;
 import dev.ryanhcode.sable.physics.impl.rapier.collider.RapierVoxelColliderData;
 import net.jpountz.lz4.LZ4FrameInputStream;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.Util.OS;
 import net.minecraft.server.level.ServerLevel;
@@ -31,7 +34,8 @@ public class Rapier3D {
 
     private static final String NATIVE_DIR = ".sable/natives";
     private static final String LIB_NAME = "sable_rapier";
-    public static boolean ENABLED = false;
+
+    public static final String NATIVE_NAME = getNativeName();
 
     private static int countingSceneID = 0;
     private static int countingObjectID = 0;
@@ -54,14 +58,14 @@ public class Rapier3D {
         } else if (os == OS.OSX) {
             return LIB_NAME + "_" + arch + "_macos.dylib";
         } else {
-            if (os != OS.LINUX)
+            if (os != OS.LINUX) {
                 Sable.LOGGER.error("Unknown platform '{}' detected, sable will attempt to use linux natives, this may or may not work.", System.getProperty("os.name"));
+            }
             return LIB_NAME + "_" + arch + "_linux.so";
         }
     }
 
     private static void loadLibrary() {
-        final String nativeName = getNativeName();
         try (final InputStream is = Rapier3D.class.getResourceAsStream("/natives/" + LIB_NAME + "/sable_rapier_binaries.zip.l4z")) {
             if (is == null) {
                 throw new FileNotFoundException("sable_rapier_binaries.zip.l4z");
@@ -77,23 +81,28 @@ public class Rapier3D {
 
                 ZipEntry entry;
                 while ((entry = ti.getNextEntry()) != null) {
-                    if (entry.getName().equals(nativeName)) {
-                        final Path tempFile = dir.resolve(nativeName);
+                    if (entry.getName().equals(NATIVE_NAME)) {
+                        final Path tempFile = dir.resolve(NATIVE_NAME);
+                        if (!Files.exists(tempFile)) {
+                            Files.createFile(tempFile);
+                        }
                         Files.copy(ti, tempFile, StandardCopyOption.REPLACE_EXISTING);
                         System.load(tempFile.toAbsolutePath().toString());
-                        ENABLED = true;
                         return;
                     }
                 }
 
-                throw new FileNotFoundException(nativeName);
+                throw new FileNotFoundException(NATIVE_NAME);
             }
         } catch (final Throwable t) {
-            ENABLED = false;
-
             Sable.LOGGER.error(
-                    "Sable has failed to load the natives needed for its Rapier pipeline. Native library name {}. Please report with system details and logs to {}",
-                    nativeName, Sable.ISSUE_TRACKER_URL, t);
+                    "Sable has failed to load the natives needed for its Rapier pipeline. Please report with system details and logs to {}",
+                    Sable.ISSUE_TRACKER_URL,
+                    t);
+            final CrashReport crashReport = CrashReport.forThrowable(t instanceof UnsatisfiedLinkError ? t.getCause() : t, "Sable linking with Rapier natives");
+            final CrashReportCategory category = crashReport.addCategory("Natives");
+            category.setDetail("Name", Rapier3D.NATIVE_NAME);
+            throw new ReportedException(crashReport);
         }
     }
 
@@ -649,7 +658,7 @@ public class Rapier3D {
     public static native void configMinIslandSize(int islandSize);
 
     @ApiStatus.Internal
-    public static native void dispose();
+    public static native void dispose(int sceneId);
 
     @ApiStatus.Internal
     public static void setMassPropertiesFrom(final int dimensionID, final int id, final MassData massTracker) {

@@ -46,6 +46,7 @@
     }
   },
   "breaks": {
+    "sodium": "<${sodium_version}",
     "scalablelux": "*",
     "sablecompanion": "<${sable_companion_version}"
   }

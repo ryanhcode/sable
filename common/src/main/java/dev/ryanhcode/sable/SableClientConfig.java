@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.render.water_occlusion.WaterOcclusionRenderer;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.render.SubLevelRenderer;
+import foundry.veil.Veil;
 import foundry.veil.api.client.render.VeilRenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -21,15 +22,18 @@ public final class SableClientConfig {
 
     public static final ModConfigSpec SPEC;
 
+    public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_DYNAMIC_SHADING;
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_WATER_OCCLUSION;
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_SKYLIGHT_SHADOWS;
+    public static final ModConfigSpec.BooleanValue DEBUG_DRAW_LOADED_CHUNKS;
     public static final ModConfigSpec.DoubleValue INTERPOLATION_DELAY;
     public static final ModConfigSpec.EnumValue<SubLevelRenderer.SelectedRenderer> SELECTED_RENDERER;
     public static final ModConfigSpec.DoubleValue ZOOM_SENSITIVITY;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+
 
         SUB_LEVEL_DYNAMIC_SHADING = builder
                 .comment("Whether sub-levels should apply block shading dynamically")
@@ -40,6 +44,9 @@ public final class SableClientConfig {
         SUB_LEVEL_SKYLIGHT_SHADOWS = builder
                 .comment("Whether sub-levels should cast a shadow on the world")
                 .define("sub_level_skylight_shadows", false);
+        DEBUG_DRAW_LOADED_CHUNKS = builder
+                .comment("Whether to draw loaded chunks on the client in the chunk debug renderer")
+                .define("debug_draw_loaded_chunks", Veil.platform().isDevelopmentEnvironment());
         INTERPOLATION_DELAY = builder
                 .comment("The distance back in game-ticks that the snapshot interpolation should operate")
                 .defineInRange("sub_level_snapshot_interpolation_delay_ticks", 1.5, 0.0, 100.0);
@@ -51,7 +58,9 @@ public final class SableClientConfig {
         ZOOM_SENSITIVITY = builder
                 .comment("The zoom sensitivity for sub-level camera types")
                 .defineInRange("sub_level_zoom_sensitivity", 0.2, 0.0, 100.0);
-
+        ATTEMPT_UDP_NETWORKING = builder
+                .comment("If Sable should attempt to establish a UDP connection with the server, to receive sub-level movement data over a UDP channel")
+                .define("attempt_udp_networking", true);
 
         SPEC = builder.build();
     }

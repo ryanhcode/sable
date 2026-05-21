@@ -116,3 +116,9 @@ extendable method net/minecraft/world/entity/Entity setRemoved (Lnet/minecraft/w
 
 #Abstract hurting projectile accel
 accessible field net/minecraft/world/entity/projectile/AbstractHurtingProjectile accelerationPower D
+
+# Physics Chunk Ticket Manager
+accessible method net/minecraft/server/level/Ticket <init> (Lnet/minecraft/server/level/TicketType;ILjava/lang/Object;)V
+accessible field net/minecraft/server/level/DistanceManager tickingTicketsTracker Lnet/minecraft/server/level/TickingTracker;
+accessible method net/minecraft/server/level/DistanceManager addTicket (JLnet/minecraft/server/level/Ticket;)V
+accessible method net/minecraft/server/level/DistanceManager removeTicket (JLnet/minecraft/server/level/Ticket;)V

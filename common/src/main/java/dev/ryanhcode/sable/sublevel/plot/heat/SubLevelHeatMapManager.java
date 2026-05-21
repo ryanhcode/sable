@@ -218,7 +218,7 @@ public class SubLevelHeatMapManager {
         int totalSplitBlocks = 0;
 
         for (final List<BlockPos> blocks : newSubLevelBlocks.values()) {
-            totalSplitBlocks +=  blocks.size();
+            totalSplitBlocks += blocks.size();
         }
 
         if (!splittingWholeSubLevel && totalSplitBlocks != 0 && totalSplitBlocks == this.solidCount) {
