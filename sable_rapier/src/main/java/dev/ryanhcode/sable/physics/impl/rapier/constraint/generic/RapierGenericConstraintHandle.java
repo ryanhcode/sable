@@ -32,6 +32,11 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
             lockedAxesMask |= 1 << axis.ordinal();
         }
 
+        int coupledAxesMask = 0;
+        for (final ConstraintJointAxis axis : config.coupledAxes()) {
+            coupledAxesMask |= 1 << axis.ordinal();
+        }
+
         final long handle = Rapier3D.addGenericConstraint(
                 sceneHandle,
                 bodyA == null ? -1 : Rapier3D.getID(bodyA),
@@ -50,7 +55,8 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
                 config.orientation2().y(),
                 config.orientation2().z(),
                 config.orientation2().w(),
-                lockedAxesMask
+                lockedAxesMask,
+                coupledAxesMask
         );
 
         return new RapierGenericConstraintHandle(sceneHandle, handle);
