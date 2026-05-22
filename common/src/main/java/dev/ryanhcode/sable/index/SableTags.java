@@ -36,6 +36,11 @@ public class SableTags {
             Sable.sablePath("paddles")
     );
 
+    public static final TagKey<Block> SILENT_ASSEMBLY_REMOVAL = TagKey.create(
+            Registries.BLOCK,
+            Sable.sablePath("silent_assembly_removal")
+    );
+
     public static void register() {
         // no-op
     }

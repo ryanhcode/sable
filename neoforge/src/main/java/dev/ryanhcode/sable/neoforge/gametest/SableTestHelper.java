@@ -1,10 +1,11 @@
 package dev.ryanhcode.sable.neoforge.gametest;
 
-import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
+import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.ChunkPos;
@@ -12,9 +13,9 @@ import net.minecraft.world.level.CommonLevelAccessor;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import org.joml.Vector2i;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
-
 import java.util.function.Consumer;
 
 public final class SableTestHelper {
@@ -77,5 +78,11 @@ public final class SableTestHelper {
     public static boolean isInBounds(final GameTestHelper helper, final Vector3dc globalPosition) {
         final AABB box = helper.getBounds();
         return box.contains(globalPosition.x(), globalPosition.y(), globalPosition.z());
+    }
+
+    public static void removeSubLevel(final SubLevelContainer container, final ServerSubLevel subLevel) {
+        final LevelPlot plot = subLevel.getPlot();
+        final Vector2i origin = container.getOrigin();
+        container.removeSubLevel(plot.plotPos.x - origin.x, plot.plotPos.z - origin.y, SubLevelRemovalReason.REMOVED);
     }
 }

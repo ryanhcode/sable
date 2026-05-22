@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "createaddition:rolling_mill", "required": false },
+    { "id": "rubberworks:compressor", "required": false },
+    { "id": "dndesires:smart_hopper", "required": false },
+    { "id": "dndesires:roll_table", "required": false },
+    { "id": "createfood:ration_box", "required": false },
+    { "id": "createfood:cloth_sack", "required": false },
+    { "id": "mechanical_botany:mechanical_insolator", "required": false },
+    { "id": "mechanical_botany:mechanical_composter", "required": false },
+    { "id": "create_connected:item_silo", "required": false },
+    { "id": "create_integrated_farming:chicken_roost", "required": false },
+    { "id": "create_new_age:reactor_fuel_acceptor", "required": false },
+    { "id": "trading_floor:trading_depot", "required": false },
+    { "id": "create_fantasizing:transporter", "required": false },
+    { "id": "createdieselgenerators:bulk_fermenter", "required": false },
+    { "id": "createrailwaysnavigator:navigator_lectern", "required": false },
+    { "id": "pipeorgans:tracker_bar", "required": false },
+    { "id": "dndecor:colored_storage_container", "required": false }
+  ]
+}

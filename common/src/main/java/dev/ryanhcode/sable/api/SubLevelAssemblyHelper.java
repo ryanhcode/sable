@@ -10,6 +10,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
+import dev.ryanhcode.sable.index.SableTags;
 import dev.ryanhcode.sable.platform.SableAssemblyPlatform;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -348,11 +349,19 @@ public class SubLevelAssemblyHelper {
                     tag.putInt("z", newPos.getZ());
                 }
 
-                if (blockEntity instanceof final RandomizableContainer container) {
-                    container.setLootTable(null);
-                }
-                if (blockEntity instanceof final Clearable clearable) {
-                    clearable.clearContent();
+                if (state.is(SableTags.SILENT_ASSEMBLY_REMOVAL)) {
+                    level.removeBlockEntity(block);
+                } else {
+                    // This is the "correct" way to remove a block from the world, but many mods do not implement
+                    // Clearable correctly. The above tag exists to allow this issue to be "fixed" on a case-by-case
+                    // basis without updating a mod's code
+                    //
+                    // A real solution is to implement Clearable on all block entities that can be cleared in the
+                    // same way as Vanilla MC. See SetBlockCommand
+                    if (blockEntity instanceof final RandomizableContainer container) {
+                        container.setLootTable(null);
+                    }
+                    Clearable.tryClear(blockEntity);
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));
