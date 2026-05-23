@@ -440,7 +440,7 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
      * @param create   whether to create a new holding chunk if it doesn't exist
      */
     @Contract("_, true -> !null")
-    private @Nullable SubLevelHoldingChunk getOrLoadHoldingChunk(final ChunkPos chunkPos, final boolean create) {
+    public @Nullable SubLevelHoldingChunk getOrLoadHoldingChunk(final ChunkPos chunkPos, final boolean create) {
         final long longKey = chunkPos.toLong();
         final SubLevelHoldingChunk holdingChunk = this.loadedHoldingChunks.get(longKey);
 

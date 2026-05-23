@@ -55,7 +55,7 @@ public abstract class LevelPlot {
     /**
      * The log_2 of the side length of a plot.
      */
-    protected final int logSize;
+    public final int logSize;
 
     /**
      * The chunk storage for this plot.

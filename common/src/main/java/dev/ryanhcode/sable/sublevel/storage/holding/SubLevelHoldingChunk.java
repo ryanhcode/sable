@@ -44,7 +44,7 @@ public class SubLevelHoldingChunk {
      * Snatches a sub-level by ID, alongside all of its loading dependencies
      */
     @Nullable
-    protected Collection<HoldingSubLevel> snatch(final UUID subLevelId) {
+    public Collection<HoldingSubLevel> snatch(final UUID subLevelId) {
         final HoldingSubLevel holdingSubLevel = this.loadedHoldingSubLevels.remove(subLevelId);
 
         if (holdingSubLevel == null) {
