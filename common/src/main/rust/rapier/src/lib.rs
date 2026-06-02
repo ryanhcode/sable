@@ -494,7 +494,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
                 panic!("No scene with given ID!");
             };
 
-          //  scene.manifold_info_map = SableManifoldInfoMap::default();
+            scene.manifold_info_map = SableManifoldInfoMap::default();
 
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 scene.pipeline.step(
@@ -517,23 +517,6 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ste
     }
 }
 
-#[inline(always)]
-pub fn try_get_rigid_body(
-    scene: &PhysicsScene,
-    id: LevelColliderID,
-) -> Option<&RigidBody> {
-    let handle = scene.rigid_bodies.get(&id)?;
-    scene.rigid_body_set.get(*handle)
-}
-
-#[inline(always)]
-pub fn try_get_rigid_body_mut(
-    scene: &mut PhysicsScene,
-    id: LevelColliderID,
-) -> Option<&mut RigidBody> {
-    let handle = *scene.rigid_bodies.get(&id)?;
-    scene.rigid_body_set.get_mut(handle)
-}
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_getPose<'local>(
@@ -548,11 +531,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
             panic!("No scene with given ID!");
         };
 
-        let Some(rb) = try_get_rigid_body(scene, id as LevelColliderID) else {
-            let arr: [jdouble; 7] = [0.0; 7];
-            env.set_double_array_region(&store, 0, &arr).unwrap();
-            return;
-        };
+        let rb: &RigidBody = &scene.rigid_body_set[scene.rigid_bodies[&(id as LevelColliderID)]];
 
         let arr: [jdouble; 7] = [
             rb.translation().x as jdouble,
