@@ -1,5 +1,5 @@
 {
-  "selector": "minecraft:end_stone_brick_slab",
+  "selector": "#sable:end_stone_slabs",
 
   "properties": {
     "sable:floating_material": "sable:end_stone",
