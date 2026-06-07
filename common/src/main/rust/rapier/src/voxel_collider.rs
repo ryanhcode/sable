@@ -71,7 +71,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_new
             env.get_method_id(
                 class,
                 String::from("onCollision"),
-                String::from("(IIIDDDD)[D"),
+                String::from("(IIIDDDIIIDDDD)[D"),
             )
             .unwrap(),
         );

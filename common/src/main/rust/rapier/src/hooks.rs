@@ -73,6 +73,8 @@ impl PhysicsHooks for SablePhysicsHooks {
                     collider_a,
                     Some(level_collider_a),
                     &contact.point,
+                    collider_b.position(),
+                    level_collider_b,
                     velocity,
                     manifold_index,
                     true,
@@ -89,6 +91,8 @@ impl PhysicsHooks for SablePhysicsHooks {
                     collider_b,
                     Some(level_collider_b),
                     &contact.point,
+                    collider_a.position(),
+                    level_collider_a,
                     velocity,
                     manifold_index,
                     false,
@@ -144,6 +148,8 @@ fn handle_block_params(
     _collider: &Collider,
     level_collider: Option<&LevelCollider>,
     global_point: &Vector,
+    other_isometry: &Pose,
+    other_level_collider: Option<&LevelCollider>,
     velocity: Real,
     manifold_index: usize,
     body_a: bool,
@@ -152,6 +158,7 @@ fn handle_block_params(
     let scene = get_scene_mut(level_collider.unwrap().scene_id);
 
     let collider_info = level_collider.and_then(|lc| lc.id.map(|id| &scene.level_colliders[&(id)]));
+    let other_collider_info = other_level_collider.and_then(|lc| lc.id.map(|id| &scene.level_colliders[&(id)]));
 
     let mut tangent_velo: Vector = Vector::ZERO;
 
@@ -175,6 +182,12 @@ fn handle_block_params(
         manifold_info.pos_b
     };
 
+    let other_block_coord = if body_a {
+        manifold_info.pos_b
+    } else {
+        manifold_info.pos_a
+    };
+
     let block_id = if body_a {
         manifold_info.col_a as u32
     } else {
@@ -185,6 +198,11 @@ fn handle_block_params(
     let local = isometry.inverse_transform_point(*global_point);
     let block_coord_d: Vector3<f64> =
         Vector3::new(local.x as f64, local.y as f64, local.z as f64) + center_of_mass;
+
+    let other_center_of_mass = other_collider_info.map_or(Vector3::zeros(), |b| b.center_of_mass.unwrap());
+    let other_local = other_isometry.inverse_transform_point(*global_point);
+    let other_block_coord_d: Vector3<f64> =
+        Vector3::new(other_local.x as f64, other_local.y as f64, other_local.z as f64) + other_center_of_mass;
 
     if block_id == 0 {
         return (tangent_velo, false, 1.0, 0.0);
@@ -228,6 +246,12 @@ fn handle_block_params(
         JValue::Double(block_coord_d.x),
         JValue::Double(block_coord_d.y),
         JValue::Double(block_coord_d.z),
+        JValue::Int(other_block_coord.x as jint),
+        JValue::Int(other_block_coord.y as jint),
+        JValue::Int(other_block_coord.z as jint),
+        JValue::Double(other_block_coord_d.x),
+        JValue::Double(other_block_coord_d.y),
+        JValue::Double(other_block_coord_d.z),
         JValue::Double(velocity as jdouble),
     ];
 
