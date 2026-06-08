@@ -66,6 +66,12 @@ public abstract class SubLevelContainer {
      */
     private final Pose3d[] lastKnownPoses;
     /**
+     * The UUID of the sub-level occupying each plot, indexed identically to {@link #subLevels}. Kept
+     * for held (unloaded) plots so callers can identify - and freeze a player to - a sub-level
+     * without loading it back in. {@code null} for unoccupied plots.
+     */
+    private final UUID[] lastKnownUuids;
+    /**
      * All observers/listeners for the plotgrid
      */
     private final List<SubLevelObserver> observers = new ObjectArrayList<>();
@@ -143,6 +149,7 @@ public abstract class SubLevelContainer {
         this.subLevels = new SubLevel[(1 << logSideLength) * (1 << logSideLength)];
         this.occupancy = new BitSet(this.subLevels.length);
         this.lastKnownPoses = new Pose3d[this.subLevels.length];
+        this.lastKnownUuids = new UUID[this.subLevels.length];
     }
 
     /**
@@ -270,6 +277,7 @@ public abstract class SubLevelContainer {
         this.subLevels[index] = subLevel;
         this.getOccupancy().set(index);
         this.lastKnownPoses[index] = new Pose3d(pose);
+        this.lastKnownUuids[index] = uuid;
         this.allSubLevels.add(subLevel);
         this.subLevelsByUUID.put(subLevel.getUniqueId(), subLevel);
         this.observers.forEach(observer -> observer.onSubLevelAdded(subLevel));
@@ -497,6 +505,7 @@ public abstract class SubLevelContainer {
         if (reason == SubLevelRemovalReason.REMOVED) {
             this.getOccupancy().clear(index);
             this.lastKnownPoses[index] = null;
+            this.lastKnownUuids[index] = null;
         } else {
             // Still held, just unloaded: remember where it was so distance/cost queries can resolve
             // its approximate world position without loading the sub-level back in.
@@ -524,6 +533,44 @@ public abstract class SubLevelContainer {
             return null;
         }
         return this.lastKnownPoses[this.getIndex(plotX, plotZ)];
+    }
+
+    /**
+     * Returns the UUID of the (possibly unloaded) sub-level whose plot contains the given global
+     * chunk position, so a held sub-level can be identified - and frozen to - without loading it.
+     *
+     * @return the sub-level UUID, or {@code null} if no plot is reserved at that position
+     */
+    public @Nullable UUID getLastKnownUuid(final int chunkX, final int chunkZ) {
+        final int plotX = (chunkX >> this.logPlotSize) - this.originX;
+        final int plotZ = (chunkZ >> this.logPlotSize) - this.originZ;
+        final int sideLength = 1 << this.logSideLength;
+        if (plotX < 0 || plotX >= sideLength || plotZ < 0 || plotZ >= sideLength) {
+            return null;
+        }
+        return this.lastKnownUuids[this.getIndex(plotX, plotZ)];
+    }
+
+    /**
+     * @return the persisted sub-level UUID for the plot at the given index, or {@code null} if none.
+     */
+    @ApiStatus.Internal
+    public @Nullable UUID getLastKnownUuid(final int index) {
+        if (index < 0 || index >= this.lastKnownUuids.length) {
+            return null;
+        }
+        return this.lastKnownUuids[index];
+    }
+
+    /**
+     * Restores a persisted sub-level UUID for the plot at the given index.
+     */
+    @ApiStatus.Internal
+    public void setLastKnownUuid(final int index, final UUID uuid) {
+        if (index < 0 || index >= this.lastKnownUuids.length) {
+            return;
+        }
+        this.lastKnownUuids[index] = uuid;
     }
 
     /**

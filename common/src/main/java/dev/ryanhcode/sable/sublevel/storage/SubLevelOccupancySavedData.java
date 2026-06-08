@@ -12,6 +12,7 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.BitSet;
+import java.util.UUID;
 
 /**
  * Stores the map for which plots are occupied
@@ -54,8 +55,12 @@ public class SubLevelOccupancySavedData extends SavedData {
             final ListTag poses = tag.getList("last_known_poses", Tag.TAG_COMPOUND);
             for (int i = 0; i < poses.size(); i++) {
                 final CompoundTag entry = poses.getCompound(i);
+                final int index = entry.getInt("index");
                 final Pose3d pose = SableNBTUtils.readPose3d(entry.getCompound("pose"));
-                container.setLastKnownPose(entry.getInt("index"), pose);
+                container.setLastKnownPose(index, pose);
+                if (entry.hasUUID("uuid")) {
+                    container.setLastKnownUuid(index, entry.getUUID("uuid"));
+                }
             }
         }
 
@@ -84,6 +89,10 @@ public class SubLevelOccupancySavedData extends SavedData {
             final CompoundTag entry = new CompoundTag();
             entry.putInt("index", index);
             entry.put("pose", SableNBTUtils.writePose3d(pose));
+            final UUID uuid = container.getLastKnownUuid(index);
+            if (uuid != null) {
+                entry.putUUID("uuid", uuid);
+            }
             poses.add(entry);
         }
         compoundTag.put("last_known_poses", poses);
