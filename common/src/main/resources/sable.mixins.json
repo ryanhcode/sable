@@ -110,6 +110,7 @@
     "compatibility.vista.LODMixin",
     "compatibility.vista.ViewFinderAccessMixin",
     "compatibility.vista.ViewFinderControllerMixin",
+    "compatibility.waystones.WaystoneTeleportManagerMixin",
     "death_message.CombatTrackerMixin",
     "death_message.EntityMixin",
     "enchanting_table.EnchantingTableBlockEntityMixin",
