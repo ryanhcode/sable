@@ -217,11 +217,7 @@ public class ActiveSableCompanion implements SableCompanion {
     }
 
     /**
-     * Resolves the last-known pose of a held (unloaded) sub-level whose reserved plot contains the
-     * given world position, so distance/cost queries can project an unloaded sub-level's coordinate
-     * to its approximate world location without loading it back in. Returns {@code null} when the
-     * position is not inside any reserved plot (e.g. ordinary world positions), in which case the
-     * caller leaves the coordinate untouched.
+     * @return the last-known pose of the held sub-level whose reserved plot contains the position, or {@code null} if none
      */
     private @Nullable Pose3dc lastKnownContainingPose(final Level level, final double blockX, final double blockZ) {
         final SubLevelContainer container = SubLevelContainer.getContainer(level);

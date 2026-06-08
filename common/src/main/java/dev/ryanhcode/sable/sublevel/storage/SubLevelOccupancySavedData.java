@@ -78,8 +78,7 @@ public class SubLevelOccupancySavedData extends SavedData {
 
         compoundTag.putLongArray("sub_level_occupancy", longArray);
 
-        // persist each reserved plot's last-known pose so distance/cost queries stay accurate for
-        // sub-levels that are still unloaded after a restart
+        // persist each reserved plot's last-known pose & uuid for sub-levels still unloaded after a restart
         final ListTag poses = new ListTag();
         for (int index = occupancy.nextSetBit(0); index >= 0; index = occupancy.nextSetBit(index + 1)) {
             final Pose3d pose = container.getPersistablePose(index);

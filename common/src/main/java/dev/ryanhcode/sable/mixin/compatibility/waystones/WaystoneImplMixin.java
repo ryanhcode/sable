@@ -12,14 +12,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Keeps a waystone on an unloaded sub-level valid as a teleport target.
- *
- * <p>{@code WaystoneImpl#isValidInLevel} checks {@code level.getBlockState(pos)} at the stored
- * position, which for a waystone on an assembled sub-level is the plot-yard coordinate. While the
- * contraption is unloaded its block isn't in the world, so the check fails and Waystones refuses with
- * "currently being moved or has gone missing". If the position belongs to a reserved-but-unloaded
- * sub-level plot, treat the waystone as valid - the warp re-activates the sub-level and the player is
- * frozen onto it (see {@link WaystoneTeleportManagerMixin}).
+ * Keeps a waystone on a held (unloaded) sub-level valid. {@code isValidInLevel} checks the block at
+ * the stored plot-yard position, which is empty while the contraption is unloaded; treat a
+ * reserved-but-unloaded sub-level plot as valid so the warp ({@link WaystoneTeleportManagerMixin})
+ * can re-activate it.
  */
 @Mixin(targets = "net.blay09.mods.waystones.core.WaystoneImpl", remap = false)
 public abstract class WaystoneImplMixin {
@@ -37,8 +33,7 @@ public abstract class WaystoneImplMixin {
         final int chunkX = this.pos.getX() >> SectionPos.SECTION_BITS;
         final int chunkZ = this.pos.getZ() >> SectionPos.SECTION_BITS;
 
-        // Reserved plot with no loaded sub-level == the waystone is on a held (unloaded) contraption.
-        // When loaded, fall through to the vanilla block check.
+        // Reserved plot, no loaded sub-level = held contraption; when loaded, let the vanilla block check run.
         if (container.getLastKnownPose(chunkX, chunkZ) != null && Sable.HELPER.getContaining(level, chunkX, chunkZ) == null) {
             cir.setReturnValue(true);
         }

@@ -59,16 +59,11 @@ public abstract class SubLevelContainer {
      */
     private final BitSet occupancy;
     /**
-     * The last-known pose of each plot, indexed identically to {@link #subLevels}. Set while a
-     * sub-level is allocated and refreshed when it unloads, so that distance and cost queries can
-     * resolve a held (unloaded) sub-level's approximate world position without loading it back in.
-     * {@code null} for unoccupied plots.
+     * The last-known pose of each plot, kept while held so unloaded sub-levels can be located. {@code null} if unoccupied.
      */
     private final Pose3d[] lastKnownPoses;
     /**
-     * The UUID of the sub-level occupying each plot, indexed identically to {@link #subLevels}. Kept
-     * for held (unloaded) plots so callers can identify - and freeze a player to - a sub-level
-     * without loading it back in. {@code null} for unoccupied plots.
+     * The sub-level UUID of each plot, kept while held. {@code null} if unoccupied.
      */
     private final UUID[] lastKnownUuids;
     /**
@@ -507,8 +502,7 @@ public abstract class SubLevelContainer {
             this.lastKnownPoses[index] = null;
             this.lastKnownUuids[index] = null;
         } else {
-            // Still held, just unloaded: remember where it was so distance/cost queries can resolve
-            // its approximate world position without loading the sub-level back in.
+            // Held, not removed: remember its pose so it can be located while unloaded.
             this.lastKnownPoses[index] = new Pose3d(subLevel.logicalPose());
         }
 
@@ -518,12 +512,8 @@ public abstract class SubLevelContainer {
     }
 
     /**
-     * Returns the last-known pose of the (possibly unloaded) sub-level whose plot contains the given
-     * global chunk position. While the sub-level is loaded this is its allocation/last-unload pose,
-     * which is stale - callers that need the live pose should use {@link #getContaining} first and
-     * fall back to this only when no loaded sub-level is present.
-     *
-     * @return the last-known pose, or {@code null} if no plot is reserved at that position
+     * @return the last-known pose of the (possibly unloaded) sub-level at the given chunk, or {@code null} if none.
+     * Stale while loaded; prefer {@link #getContaining} when a live pose is required
      */
     public @Nullable Pose3d getLastKnownPose(final int chunkX, final int chunkZ) {
         final int plotX = (chunkX >> this.logPlotSize) - this.originX;
@@ -536,10 +526,7 @@ public abstract class SubLevelContainer {
     }
 
     /**
-     * Returns the UUID of the (possibly unloaded) sub-level whose plot contains the given global
-     * chunk position, so a held sub-level can be identified - and frozen to - without loading it.
-     *
-     * @return the sub-level UUID, or {@code null} if no plot is reserved at that position
+     * @return the UUID of the (possibly unloaded) sub-level at the given chunk, or {@code null} if none
      */
     public @Nullable UUID getLastKnownUuid(final int chunkX, final int chunkZ) {
         final int plotX = (chunkX >> this.logPlotSize) - this.originX;
@@ -552,7 +539,7 @@ public abstract class SubLevelContainer {
     }
 
     /**
-     * @return the persisted sub-level UUID for the plot at the given index, or {@code null} if none.
+     * @return the sub-level UUID stored for the plot index, or {@code null} if none
      */
     @ApiStatus.Internal
     public @Nullable UUID getLastKnownUuid(final int index) {
@@ -574,8 +561,7 @@ public abstract class SubLevelContainer {
     }
 
     /**
-     * @return the pose to persist for the plot at the given index: the live pose when the sub-level
-     * is currently loaded, otherwise the last-known pose captured when it was unloaded.
+     * @return the live pose if the plot's sub-level is loaded, otherwise its last-known pose
      */
     @ApiStatus.Internal
     public @Nullable Pose3d getPersistablePose(final int index) {

@@ -17,20 +17,14 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Hides the misleading distance for a waystone whose sub-level isn't loaded on this client.
- *
- * <p>A waystone on a sub-level stores the far-away plot-yard coordinate. While the contraption is
- * loaded, Sable's {@code Entity#distanceToSqr} overwrite projects it to the real location and the
- * distance is accurate. While it is unloaded here the client has no pose to project against, so the
- * distance would render as a meaningless ~20,000 km. The client can't recover the real distance
- * without the server streaming last-known poses, so instead we omit the distance entirely - the same
- * thing Waystones already does for cross-dimension waystones.
+ * Hides the distance for a waystone whose sub-level isn't loaded on this client. Its stored plot-yard
+ * coordinate can't be projected without a pose here, so the distance would show a meaningless
+ * ~20,000 km; omit it instead, as Waystones already does for cross-dimension waystones.
  */
 @Mixin(targets = "net.blay09.mods.waystones.client.gui.widget.WaystoneButton", remap = false)
 public abstract class WaystoneButtonMixin {
 
-    // `player` is statically a LocalPlayer at the call site, so the receiver parameter must be typed
-    // as LocalPlayer (MixinExtras requires the exact owner type, not a supertype).
+    // Receiver must be LocalPlayer (its static type at the call site); WrapOperation needs the exact owner.
     @WrapOperation(method = "renderWidget", at = @At(value = "INVOKE", target = "distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
     private double sable$detectUnloadedSubLevel(final LocalPlayer player, final Vec3 waystonePos, final Operation<Double> original, @Share("sableUnknownDistance") final LocalBooleanRef unknown) {
         unknown.set(sable$isOnUnloadedSubLevel(player.level(), waystonePos));
@@ -47,12 +41,11 @@ public abstract class WaystoneButtonMixin {
 
     @Unique
     private static boolean sable$isOnUnloadedSubLevel(final Level level, final Vec3 pos) {
-        // Loaded here: the projected distance is accurate, leave it alone.
+        // Loaded here: the projected distance is accurate.
         if (Sable.HELPER.getContaining(level, pos.x, pos.z) != null) {
             return false;
         }
-        // Otherwise, only treat it as unknown when the position is actually a reserved plot-yard
-        // coordinate - a genuinely far-away waystone keeps its real (large) distance.
+        // Only unknown when it's a plot-yard coordinate; a genuinely far waystone keeps its real distance.
         final SubLevelContainer container = SubLevelContainer.getContainer(level);
         return container != null && container.inBounds(BlockPos.containing(pos));
     }

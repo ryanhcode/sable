@@ -27,24 +27,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.UUID;
 
 /**
- * Lets Waystones teleport onto Sable sub-levels (e.g. an aircraft).
- *
- * <p>A waystone placed on an assembled sub-level is stored at the hidden plot-yard coordinate. Two
- * things need to happen for a warp onto it to work:
- *
- * <ul>
- *   <li>The teleport target is projected out of the sub-level to the contraption's real (or, while
- *       unloaded, last-known) world position. Waystones' same-dimension warp uses
- *       {@code connection.teleport(...)} directly, bypassing Sable's {@code ServerPlayer#teleportTo}
- *       projection, so without this the player is dropped into the plot-yard and the server freezes.
- *   <li>If the contraption is currently unloaded, the player is frozen to the sub-level after the
- *       teleport. Teleporting to the last-known position re-activates the held sub-level (its holding
- *       chunk is keyed by that world position); the freeze then places the player precisely on the
- *       deck once it is live - the same mechanism Sable uses for bed respawns.
- * </ul>
- *
- * {@link dev.ryanhcode.sable.api.SubLevelHelper#projectOutOfSubLevel} is a no-op for positions that
- * are not inside a sub-level, so ordinary warps are unaffected.
+ * Lets Waystones warp onto sub-levels. A waystone on a sub-level is stored at its plot-yard
+ * coordinate, so the target is projected out to the contraption's real (or last-known) position -
+ * Waystones' same-dimension warp uses {@code connection.teleport} directly and would otherwise drop
+ * the player into the plot-yard. If the contraption is unloaded, the player is frozen to it after the
+ * teleport so they land on the deck once it re-activates, as bed respawns do.
  */
 @Mixin(targets = "net.blay09.mods.waystones.core.WaystoneTeleportManager", remap = false)
 public class WaystoneTeleportManagerMixin {
@@ -53,8 +40,7 @@ public class WaystoneTeleportManagerMixin {
 
     @ModifyVariable(method = TELEPORT_ENTITY, at = @At("HEAD"), argsOnly = true, index = 2)
     private static Vec3 sable$projectTeleportTarget(final Vec3 targetPos3d, @Local(argsOnly = true) final ServerLevel targetWorld, @Share("sableHeldFreeze") final LocalRef<Pair<UUID, Vector3d>> freezeRef) {
-        // If the waystone is on a currently-unloaded sub-level, remember which sub-level (and the
-        // local anchor) so the player can be frozen to it after the teleport.
+        // On an unloaded sub-level, remember it (and the local anchor) to freeze the player afterwards.
         final UUID heldUuid = sable$heldSubLevelUuid(targetWorld, targetPos3d);
         if (heldUuid != null) {
             freezeRef.set(Pair.of(heldUuid, new Vector3d(targetPos3d.x, targetPos3d.y, targetPos3d.z)));
@@ -77,9 +63,7 @@ public class WaystoneTeleportManagerMixin {
     }
 
     /**
-     * @return the UUID of the held (unloaded) sub-level whose plot contains the given target, or
-     * {@code null} if the target is in open world or on an already-loaded sub-level (in which case the
-     * ordinary teleport plus entity-sticking is enough).
+     * @return the UUID of the held (unloaded) sub-level at the target, or {@code null} if it is open world or already loaded
      */
     private static @Nullable UUID sable$heldSubLevelUuid(final ServerLevel level, final Vec3 pos) {
         if (Sable.HELPER.getContaining(level, pos.x, pos.z) != null) {
