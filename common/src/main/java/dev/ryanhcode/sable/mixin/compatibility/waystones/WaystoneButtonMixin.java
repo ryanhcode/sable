@@ -8,8 +8,8 @@ import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,10 +29,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(targets = "net.blay09.mods.waystones.client.gui.widget.WaystoneButton", remap = false)
 public abstract class WaystoneButtonMixin {
 
-    // Owner is intentionally omitted: `player` is statically a LocalPlayer here, so the call's owner
-    // is not Entity. An ownerless target matches the inherited distanceToSqr regardless.
+    // `player` is statically a LocalPlayer at the call site, so the receiver parameter must be typed
+    // as LocalPlayer (MixinExtras requires the exact owner type, not a supertype).
     @WrapOperation(method = "renderWidget", at = @At(value = "INVOKE", target = "distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
-    private double sable$detectUnloadedSubLevel(final Entity player, final Vec3 waystonePos, final Operation<Double> original, @Share("sableUnknownDistance") final LocalBooleanRef unknown) {
+    private double sable$detectUnloadedSubLevel(final LocalPlayer player, final Vec3 waystonePos, final Operation<Double> original, @Share("sableUnknownDistance") final LocalBooleanRef unknown) {
         unknown.set(sable$isOnUnloadedSubLevel(player.level(), waystonePos));
         return original.call(player, waystonePos);
     }
