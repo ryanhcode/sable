@@ -475,6 +475,7 @@ public abstract class SubLevelContainer {
             throw new IllegalStateException("No sub-level at " + x + ", " + z);
         }
 
+        subLevel.markRemoved();
         this.observers.forEach(observer -> observer.onSubLevelRemoved(subLevel, reason));
         subLevel.onRemove();
 
