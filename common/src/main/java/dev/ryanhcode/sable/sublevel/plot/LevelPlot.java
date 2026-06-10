@@ -5,6 +5,7 @@ import dev.ryanhcode.sable.api.block.BlockEntitySubLevelReactionWheel;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
+import dev.ryanhcode.sable.platform.SableChunkEventPlatform;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -142,7 +143,7 @@ public abstract class LevelPlot {
      *
      * @param pos the global chunk position
      */
-    protected void newChunk(final ChunkPos pos, final LevelChunk chunk, final boolean initializeLighting) {
+    protected void newChunk(final ChunkPos pos, final LevelChunk chunk, final boolean initializeLighting, final boolean fireEvent) {
         final ChunkPos local = this.toLocal(pos);
 
         if (this.getChunkHolder(local) != null) {
@@ -151,6 +152,9 @@ public abstract class LevelPlot {
 
         final PlotChunkHolder holder = PlotChunkHolder.create(chunk.getLevel(), pos, this.getLightEngine(), chunk);
         this.addChunkHolder(local, holder, initializeLighting);
+        if (fireEvent) {
+            SableChunkEventPlatform.INSTANCE.onServerChunkLoad(chunk);
+        }
     }
 
     /**
@@ -178,7 +182,7 @@ public abstract class LevelPlot {
         }
 
         final LevelChunk chunk = new LevelChunk(level, pos, UpgradeData.EMPTY, new LevelChunkTicks<>(), new LevelChunkTicks<>(), 0L, sections, null, null);
-        this.newChunk(pos, chunk, true);
+        this.newChunk(pos, chunk, true, true);
     }
 
 

@@ -18,4 +18,9 @@ public class SableChunkEventPlatformImpl implements SableChunkEventPlatform {
     public void onOldChunkInvalid(final LevelChunk chunk) {
         // no-op
     }
+
+    @Override
+    public void onServerChunkLoad(final LevelChunk chunk) {
+        NeoForge.EVENT_BUS.post(new ChunkEvent.Load(chunk, false));
+    }
 }
