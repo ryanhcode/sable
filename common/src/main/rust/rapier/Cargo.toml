@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 marten.workspace = true
+fisher = { workspace = true }
 
 fern.workspace = true
 jni.workspace = true
@@ -20,6 +21,7 @@ rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "38e92f117590862
 
 rayon = "1.10.0"
 dashmap = "7.0.0-rc2"
+ctor = { version = "0.10.1", optional = true }
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -32,3 +34,9 @@ harness = false
 
 [dev-dependencies]
 criterion = "0.8.2"
+
+[features]
+#TODO remove
+default = ["recording"]
+
+recording = ["fisher/enabled", "dep:ctor"]
