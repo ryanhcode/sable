@@ -89,6 +89,20 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
     private final FloatingBlockController floatingBlockController = new FloatingBlockController(this);
 
     private final ReactionWheelManager reactionWheelManager = new ReactionWheelManager(this);
+
+    /**
+     * The Sublevels jointed to this sublevel
+     * This does not include the sublevel of "this" or its child sublevels.
+     */
+    private final ObjectCollection<ServerSubLevel> jointedSubLevels = new ObjectOpenHashSet<>();
+
+    /**
+     * sub-levels that interact directly
+     * This also includes the child's jointed sub-level.
+     * This includes instances of `this`.
+     */
+    private final ObjectCollection<ServerSubLevel> interactiveSubLevels = new ObjectOpenHashSet<>();
+
     /**
      * Nullable lazy map of force group -> force totals
      */
@@ -128,6 +142,8 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
      */
     private boolean trackIndividualQueuedForces = false;
 
+    private boolean updateInteractiveSubLevelsNextTick;
+
     /**
      * Creates a new sub-level with the given parent level and pose.
      *
@@ -143,6 +159,7 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
 
         assert physicsSystem != null;
         this.runtimeId = physicsSystem.getNextRuntimeID();
+        this.updateInteractiveSubLevels();
     }
 
     /**
@@ -295,6 +312,17 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
      */
     @ApiStatus.Internal
     public void prePhysicsTick(final SubLevelPhysicsSystem physicsSystem, final RigidBodyHandle handle, final double timeStep) {
+        this.jointedSubLevels.forEach(jointedSubLevels -> {
+            if (jointedSubLevels.isRemoved()) {
+                this.removeJointedSubLevels(jointedSubLevels);
+            }
+        });
+
+        if (this.updateInteractiveSubLevelsNextTick) {
+            this.updateInteractiveSubLevels();
+            this.updateInteractiveSubLevelsNextTick = false;
+        }
+
         final ServerLevelPlot plot = this.getPlot();
         for (final BlockEntitySubLevelActor actor : plot.getBlockEntityActors()) {
             actor.sable$physicsTick(this, handle, timeStep);
@@ -384,6 +412,32 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
 
             handle.applyLinearAndAngularImpulse(linearImpulse, angularImpulse, false);
         }
+    }
+
+    private void updateInteractiveSubLevels() {
+        final Deque<ServerSubLevel> queue = new ArrayDeque<>();
+        queue.add(this);
+
+        final ObjectCollection<ServerSubLevel> allSubLevels = new ObjectOpenHashSet<>();
+        while (!queue.isEmpty()) {
+            final ServerSubLevel currentSubLevel = queue.pop();
+            allSubLevels.add(currentSubLevel);
+
+            currentSubLevel.getJointedSubLevels().forEach(childSubLevel -> {
+               if (!allSubLevels.contains(childSubLevel)) {
+                   queue.add(childSubLevel);
+               }
+            });
+        }
+        allSubLevels.forEach(serverSubLevel -> {
+            serverSubLevel.interactiveSubLevels.clear();
+            serverSubLevel.interactiveSubLevels.addAll(allSubLevels);
+
+            //Display the size of allSubLevels for debugging.
+            //serverSubLevel.setName(String.valueOf(allSubLevels.size()));
+            //Display the size of jointedSubLevels for debugging.
+            //serverSubLevel.setName(String.valueOf(serverSubLevel.jointedSubLevels.size()));
+        });
     }
 
     /**
@@ -501,6 +555,24 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
      */
     public MassTracker getSelfMassTracker() {
         return this.massTracker.getSelfMassTracker();
+    }
+
+    public ObjectCollection<ServerSubLevel> getJointedSubLevels() {
+        return this.jointedSubLevels;
+    }
+
+    public ObjectCollection<ServerSubLevel> getInteractiveSubLevels() {
+        return this.interactiveSubLevels;
+    }
+
+    public void addJointedSubLevels(final ServerSubLevel subLevel) {
+        this.jointedSubLevels.add(subLevel);
+        this.updateInteractiveSubLevelsNextTick = true;
+    }
+
+    public void removeJointedSubLevels(final ServerSubLevel subLevel) {
+        this.jointedSubLevels.remove(subLevel);
+        this.updateInteractiveSubLevelsNextTick = true;
     }
 
     /**

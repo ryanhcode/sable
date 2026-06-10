@@ -50,7 +50,7 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
                 lockedAxesMask
         );
 
-        return new RapierGenericConstraintHandle(sceneID, handle);
+        return new RapierGenericConstraintHandle(sceneID, handle, sublevelA, sublevelB);
     }
 
     /**
@@ -61,6 +61,16 @@ public class RapierGenericConstraintHandle extends RapierConstraintHandle implem
      */
     public RapierGenericConstraintHandle(final int sceneID, final long handle) {
         super(sceneID, handle);
+    }
+
+    /**
+     * Creates a new constraint handle
+     *
+     * @param sceneID the scene ID that this constraint is in
+     * @param handle the handle from the physics engine
+     */
+    public RapierGenericConstraintHandle(final int sceneID, final long handle, @Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB) {
+        super(sceneID, handle, sublevelA, sublevelB);
     }
 
     @Override

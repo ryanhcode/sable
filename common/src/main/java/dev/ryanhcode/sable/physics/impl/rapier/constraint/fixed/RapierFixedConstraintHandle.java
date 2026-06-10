@@ -31,7 +31,7 @@ public class RapierFixedConstraintHandle extends RapierConstraintHandle implemen
                 config.orientation().w()
         );
 
-        return new RapierFixedConstraintHandle(sceneID, handle);
+        return new RapierFixedConstraintHandle(sceneID, handle, sublevelA, sublevelB);
     }
 
     /**
@@ -44,4 +44,13 @@ public class RapierFixedConstraintHandle extends RapierConstraintHandle implemen
         super(sceneID, handle);
     }
 
+    /**
+     * Creates a new constraint handle
+     *
+     * @param sceneID the scene ID that this constraint is in
+     * @param handle the handle from the physics engine
+     */
+    public RapierFixedConstraintHandle(final int sceneID, final long handle, @Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB) {
+        super(sceneID, handle, sublevelA, sublevelB);
+    }
 }

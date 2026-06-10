@@ -31,7 +31,7 @@ public class RapierFreeConstraintHandle extends RapierConstraintHandle implement
                 config.orientation().w()
         );
 
-        return new RapierFreeConstraintHandle(sceneID, handle);
+        return new RapierFreeConstraintHandle(sceneID, handle, sublevelA, sublevelB);
     }
 
     /**
@@ -42,6 +42,16 @@ public class RapierFreeConstraintHandle extends RapierConstraintHandle implement
      */
     public RapierFreeConstraintHandle(final int sceneID, final long handle) {
         super(sceneID, handle);
+    }
+
+    /**
+     * Creates a new constraint handle
+     *
+     * @param sceneID the scene ID that this constraint is in
+     * @param handle the handle from the physics engine
+     */
+    public RapierFreeConstraintHandle(final int sceneID, final long handle, @Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB) {
+        super(sceneID, handle, sublevelA, sublevelB);
     }
 
 }

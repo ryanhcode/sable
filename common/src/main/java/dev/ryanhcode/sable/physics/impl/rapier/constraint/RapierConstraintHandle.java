@@ -3,7 +3,9 @@ package dev.ryanhcode.sable.physics.impl.rapier.constraint;
 import dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis;
 import dev.ryanhcode.sable.api.physics.constraint.PhysicsConstraintHandle;
 import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 
 @ApiStatus.Internal
@@ -21,6 +23,11 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
 
     private final double[] impulseCache;
 
+    @Nullable
+    private final ServerSubLevel sublevelA;
+    @Nullable
+    private final ServerSubLevel sublevelB;
+
     /**
      * Creates a new constraint handle
      *
@@ -31,6 +38,29 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
         this.sceneID = sceneID;
         this.handle = handle;
         this.impulseCache = new double[6];
+
+        this.sublevelA = null;
+        this.sublevelB = null;
+    }
+
+    /**
+     * Creates a new constraint handle
+     *
+     * @param sceneID the scene ID that this constraint is in
+     * @param handle  the handle from the physics engine
+     */
+    protected RapierConstraintHandle(final int sceneID, final long handle, @Nullable final ServerSubLevel sublevelA, @Nullable final ServerSubLevel sublevelB) {
+        this.sceneID = sceneID;
+        this.handle = handle;
+        this.impulseCache = new double[6];
+
+        this.sublevelA = sublevelA;
+        this.sublevelB = sublevelB;
+
+        if (this.sublevelA != null && this.sublevelB != null) {
+            this.sublevelA.addJointedSubLevels(this.sublevelB);
+            this.sublevelB.addJointedSubLevels(this.sublevelA);
+        }
     }
 
     /**
@@ -72,6 +102,11 @@ public abstract class RapierConstraintHandle implements PhysicsConstraintHandle 
     @Override
     public void remove() {
         Rapier3D.removeConstraint(this.sceneID, this.handle);
+
+        if (this.sublevelA != null && this.sublevelB != null) {
+            this.sublevelA.removeJointedSubLevels(this.sublevelB);
+            this.sublevelB.removeJointedSubLevels(this.sublevelA);
+        }
     }
 
     /**
