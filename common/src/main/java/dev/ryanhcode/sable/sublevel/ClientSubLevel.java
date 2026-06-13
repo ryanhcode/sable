@@ -300,7 +300,6 @@ public class ClientSubLevel extends SubLevel implements ClientSubLevelAccess {
         final float pt = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
 
         if (this.lastRenderPosePartialTick == pt) {
-            this.lastRenderPosePartialTick = pt;
             return this.renderPose;
         }
 
@@ -313,9 +312,10 @@ public class ClientSubLevel extends SubLevel implements ClientSubLevelAccess {
     @Override
     public Pose3dc renderPose(final float pt) {
         if (this.lastRenderPosePartialTick == pt) {
-            this.lastRenderPosePartialTick = pt;
             return this.renderPose;
         }
+
+        this.lastRenderPosePartialTick = pt;
 
         final Pose3d renderPose = this.renderPose.set(this.lastPose());
         final Pose3d target = this.logicalPose();
