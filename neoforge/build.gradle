@@ -95,7 +95,7 @@ dependencies {
         exclude group: "me.fallenbreath"
     })
 
-    jarJar(runtimeOnly(project(path: ":sable_rapier", configuration: "runtimeElements")))
+    jarJar(runtimeOnly(project(path: ":sable_rapier", configuration: "namedElements")))
 
     compileOnly("foundry.imguimc:imguimc-neoforge-${project.minecraft_version}:${project.imguimc_version}")
 }
