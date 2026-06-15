@@ -228,7 +228,6 @@ dependencies {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
     }
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}" // for EnvType
 
     implementation "org.apache.maven:maven-artifact:3.8.5"
 
