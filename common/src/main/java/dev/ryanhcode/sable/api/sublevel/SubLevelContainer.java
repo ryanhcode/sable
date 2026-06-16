@@ -59,6 +59,14 @@ public abstract class SubLevelContainer {
      */
     private final BitSet occupancy;
     /**
+     * The last-known pose of each plot, kept while held so unloaded sub-levels can be located. {@code null} if unoccupied.
+     */
+    private final Pose3d[] lastKnownPoses;
+    /**
+     * The sub-level UUID of each plot, kept while held. {@code null} if unoccupied.
+     */
+    private final UUID[] lastKnownUuids;
+    /**
      * All observers/listeners for the plotgrid
      */
     private final List<SubLevelObserver> observers = new ReferenceArrayList<>();
@@ -135,6 +143,8 @@ public abstract class SubLevelContainer {
         this.originZ = originZ;
         this.subLevels = new SubLevel[(1 << logSideLength) * (1 << logSideLength)];
         this.occupancy = new BitSet(this.subLevels.length);
+        this.lastKnownPoses = new Pose3d[this.subLevels.length];
+        this.lastKnownUuids = new UUID[this.subLevels.length];
     }
 
     /**
@@ -261,6 +271,8 @@ public abstract class SubLevelContainer {
         final int index = this.getIndex(x, z);
         this.subLevels[index] = subLevel;
         this.getOccupancy().set(index);
+        this.lastKnownPoses[index] = new Pose3d(pose);
+        this.lastKnownUuids[index] = uuid;
         this.allSubLevels.add(subLevel);
         this.subLevelsByUUID.put(subLevel.getUniqueId(), subLevel);
         this.observers.forEach(observer -> observer.onSubLevelAdded(subLevel));
@@ -494,7 +506,91 @@ public abstract class SubLevelContainer {
 
         if (reason == SubLevelRemovalReason.REMOVED) {
             this.getOccupancy().clear(index);
+            this.lastKnownPoses[index] = null;
+            this.lastKnownUuids[index] = null;
+        } else {
+            // Held, not removed: remember its pose so it can be located while unloaded.
+            this.lastKnownPoses[index] = new Pose3d(subLevel.logicalPose());
         }
+
+        if (this.level instanceof final ServerLevel serverLevel) {
+            SubLevelOccupancySavedData.getOrLoad(serverLevel).setDirty();
+        }
+    }
+
+    /**
+     * @return the last-known pose of the (possibly unloaded) sub-level at the given chunk, or {@code null} if none.
+     * Stale while loaded; prefer {@link #getContaining} when a live pose is required
+     */
+    public @Nullable Pose3d getLastKnownPose(final int chunkX, final int chunkZ) {
+        final int plotX = (chunkX >> this.logPlotSize) - this.originX;
+        final int plotZ = (chunkZ >> this.logPlotSize) - this.originZ;
+        final int sideLength = 1 << this.logSideLength;
+        if (plotX < 0 || plotX >= sideLength || plotZ < 0 || plotZ >= sideLength) {
+            return null;
+        }
+        return this.lastKnownPoses[this.getIndex(plotX, plotZ)];
+    }
+
+    /**
+     * @return the UUID of the (possibly unloaded) sub-level at the given chunk, or {@code null} if none
+     */
+    public @Nullable UUID getLastKnownUuid(final int chunkX, final int chunkZ) {
+        final int plotX = (chunkX >> this.logPlotSize) - this.originX;
+        final int plotZ = (chunkZ >> this.logPlotSize) - this.originZ;
+        final int sideLength = 1 << this.logSideLength;
+        if (plotX < 0 || plotX >= sideLength || plotZ < 0 || plotZ >= sideLength) {
+            return null;
+        }
+        return this.lastKnownUuids[this.getIndex(plotX, plotZ)];
+    }
+
+    /**
+     * @return the sub-level UUID stored for the plot index, or {@code null} if none
+     */
+    @ApiStatus.Internal
+    public @Nullable UUID getLastKnownUuid(final int index) {
+        if (index < 0 || index >= this.lastKnownUuids.length) {
+            return null;
+        }
+        return this.lastKnownUuids[index];
+    }
+
+    /**
+     * Restores a persisted sub-level UUID for the plot at the given index.
+     */
+    @ApiStatus.Internal
+    public void setLastKnownUuid(final int index, final UUID uuid) {
+        if (index < 0 || index >= this.lastKnownUuids.length) {
+            return;
+        }
+        this.lastKnownUuids[index] = uuid;
+    }
+
+    /**
+     * @return the live pose if the plot's sub-level is loaded, otherwise its last-known pose
+     */
+    @ApiStatus.Internal
+    public @Nullable Pose3d getPersistablePose(final int index) {
+        if (index < 0 || index >= this.subLevels.length) {
+            return null;
+        }
+        final SubLevel loaded = this.subLevels[index];
+        if (loaded != null) {
+            return new Pose3d(loaded.logicalPose());
+        }
+        return this.lastKnownPoses[index];
+    }
+
+    /**
+     * Restores a persisted last-known pose for the plot at the given index.
+     */
+    @ApiStatus.Internal
+    public void setLastKnownPose(final int index, final Pose3d pose) {
+        if (index < 0 || index >= this.lastKnownPoses.length) {
+            return;
+        }
+        this.lastKnownPoses[index] = pose;
     }
 
     /**

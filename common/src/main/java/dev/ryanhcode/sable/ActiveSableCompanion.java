@@ -171,7 +171,13 @@ public class ActiveSableCompanion implements SableCompanion {
     public Vector3d projectOutOfSubLevel(final Level level, final Vector3dc pos, final Vector3d dest) {
         final SubLevel subLevel = this.getContaining(level, pos);
 
-        if (subLevel == null) return dest.set(pos);
+        if (subLevel == null) {
+            final Pose3dc lastPose = this.lastKnownContainingPose(level, pos.x(), pos.z());
+            if (lastPose != null) {
+                return lastPose.transformPosition(pos, dest);
+            }
+            return dest.set(pos);
+        }
 
         final Pose3dc pose;
         if (level instanceof final LevelPoseProviderExtension extension) {
@@ -192,7 +198,13 @@ public class ActiveSableCompanion implements SableCompanion {
     public Vec3 projectOutOfSubLevel(final Level level, final Position pos) {
         final SubLevel subLevel = this.getContaining(level, pos);
 
-        if (subLevel == null) return pos instanceof final Vec3 vec ? vec : new Vec3(pos.x(), pos.y(), pos.z());
+        if (subLevel == null) {
+            final Pose3dc lastPose = this.lastKnownContainingPose(level, pos.x(), pos.z());
+            if (lastPose != null) {
+                return JOMLConversion.toMojang(lastPose.transformPosition(JOMLConversion.toJOML(pos)));
+            }
+            return pos instanceof final Vec3 vec ? vec : new Vec3(pos.x(), pos.y(), pos.z());
+        }
 
         final Pose3dc pose;
         if (level instanceof final LevelPoseProviderExtension extension) {
@@ -202,6 +214,19 @@ public class ActiveSableCompanion implements SableCompanion {
         }
 
         return JOMLConversion.toMojang(pose.transformPosition(JOMLConversion.toJOML(pos)));
+    }
+
+    /**
+     * @return the last-known pose of the held sub-level whose reserved plot contains the position, or {@code null} if none
+     */
+    private @Nullable Pose3dc lastKnownContainingPose(final Level level, final double blockX, final double blockZ) {
+        final SubLevelContainer container = SubLevelContainer.getContainer(level);
+        if (container == null) {
+            return null;
+        }
+        final int chunkX = Mth.floor(blockX) >> SectionPos.SECTION_BITS;
+        final int chunkZ = Mth.floor(blockZ) >> SectionPos.SECTION_BITS;
+        return container.getLastKnownPose(chunkX, chunkZ);
     }
 
     @Override
