@@ -168,6 +168,7 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
         final Vector3d gravity = new Vector3d(DimensionPhysicsData.getGravity(this.level));
         final double universalDrag = DimensionPhysicsData.getUniversalDrag(this.level);
 
+        this.config.updateFromConfig();
         this.pipeline.init(gravity, universalDrag);
         this.pipeline.updateConfigFrom(this.config);
     }

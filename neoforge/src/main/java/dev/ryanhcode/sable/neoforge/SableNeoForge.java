@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.neoforge;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.SableCommonEvents;
 import dev.ryanhcode.sable.SableConfig;
+import dev.ryanhcode.sable.SableServerConfig;
 import dev.ryanhcode.sable.command.SableCommand;
 import dev.ryanhcode.sable.command.argument.SubLevelSelectorModifiers;
 import dev.ryanhcode.sable.index.SableAttributes;
@@ -42,6 +43,7 @@ public final class SableNeoForge {
         attributes.register(modBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, SableConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.SERVER, SableServerConfig.SPEC);
 
         CrashReportCallables.registerHeader(Sable::getCrashHeader);
     }
