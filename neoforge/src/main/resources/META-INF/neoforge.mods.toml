@@ -66,6 +66,12 @@ versionRange = "(,${sodium_version})"
 reason = "${mod_name} supports Sodium ${sodium_version} and above"
 
 [[dependencies.sable]]
+modId = "shouldersurfing"
+type = "incompatible"
+versionRange = "(,${shouldersurfing_version})"
+reason = "${mod_name} supports Shoulder Surfing Reloaded ${shouldersurfing_version} and above"
+
+[[dependencies.sable]]
 modId = "scalablelux"
 type = "incompatible"
 
