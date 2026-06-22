@@ -1,8 +1,7 @@
 package dev.ryanhcode.sable.mixin.compatibility.shouldersurfing;
 
-import com.github.exopandora.shouldersurfing.api.model.PickContext;
-import com.github.exopandora.shouldersurfing.client.ObjectPicker;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.github.exopandora.shouldersurfing.api.client.world.phys.PickContext;
+import com.github.exopandora.shouldersurfing.client.world.phys.ObjectPicker;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.ryanhcode.sable.Sable;
 import net.minecraft.world.entity.player.Player;

@@ -115,7 +115,7 @@
     "compatibility.shouldersurfing.EntityHelperMixin",
     "compatibility.shouldersurfing.PerspectiveMixin",
     "compatibility.shouldersurfing.ShoulderSurfingCameraMixin",
-    "compatibility.shouldersurfing.ShoulderSurfingImplMixin",
+    "compatibility.shouldersurfing.ShoulderSurfingMixin",
     "compatibility.vista.LODMixin",
     "compatibility.vista.ViewFinderAccessMixin",
     "compatibility.vista.ViewFinderControllerMixin",
