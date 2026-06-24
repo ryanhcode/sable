@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.api;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.SableConfig;
 import dev.ryanhcode.sable.api.block.BlockSubLevelAssemblyListener;
 import dev.ryanhcode.sable.api.physics.PhysicsPipeline;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
@@ -103,7 +104,14 @@ public class SubLevelAssemblyHelper {
         final LevelPlot plot = subLevel.getPlot();
         plot.newEmptyChunk(plot.getCenterChunk());
 
-        final BlockPos plotAnchor = plot.getCenterBlock();
+        Integer yPos = 128;
+        switch (SableConfig.SUB_LEVEL_START_POS.get()) {
+                case FIXED -> yPos = SableConfig.SUB_LEVEL_FIXED_START_HEIGHT.getAsInt();
+                case DYNAMIC -> yPos = anchor.getY();
+                case MIDPOINT -> yPos = (level.getMinBuildHeight() + level.getMaxBuildHeight()) >> 1;
+        }
+
+        final BlockPos plotAnchor = plot.getCenterBlock().atY(yPos);
         final SubLevelAssemblyHelper.AssemblyTransform transform = new SubLevelAssemblyHelper.AssemblyTransform(anchor, plotAnchor, 0, Rotation.NONE, level);
         SubLevelAssemblyHelper.moveOtherStuff(level, transform, blocks, bounds);
         SubLevelAssemblyHelper.moveBlocks(level, transform, blocks);

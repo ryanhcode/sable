@@ -3,6 +3,7 @@ package dev.ryanhcode.sable;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class SableConfig {
+    public enum SubLevelStartPos { FIXED, DYNAMIC, MIDPOINT }
 
     public static final ModConfigSpec SPEC;
 
@@ -20,6 +21,8 @@ public final class SableConfig {
     public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
     public static final ModConfigSpec.BooleanValue VERBOSE_SERIALIZATION_LOGGING;
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_SAVING_LOG_MESSAGE;
+    public static final ModConfigSpec.EnumValue<SubLevelStartPos> SUB_LEVEL_START_POS;
+    public static final ModConfigSpec.IntValue SUB_LEVEL_FIXED_START_HEIGHT;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -68,6 +71,12 @@ public final class SableConfig {
         VERBOSE_SERIALIZATION_LOGGING = builder
                 .comment("If Sable should use verbose logging for its serialization system and the holding chunk-map. Not recommended- for debugging purposes only.")
                 .define("verbose_serialization_logging", false);
+        SUB_LEVEL_START_POS = builder
+                .comment("When a sub-level is created, how to determine the height within the sub-level that the first block should be placed at.")
+                .defineEnum("sub_level_start_pos", SubLevelStartPos.FIXED);
+        SUB_LEVEL_FIXED_START_HEIGHT = builder
+                .comment("If 'sub_level_start_pos' is set to 'FIXED', the fixed height to use.")
+                .defineInRange("sub_level_fixed_start_height", 128, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
         SPEC = builder.build();
     }
