@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.physics.impl.rapier.collider;
 
+import com.mojang.datafixers.util.Pair;
 import dev.ryanhcode.sable.api.block.BlockSubLevelCollisionShape;
 import dev.ryanhcode.sable.api.block.BlockWithSubLevelCollisionCallback;
 import dev.ryanhcode.sable.api.physics.callback.BlockSubLevelCollisionCallback;
@@ -28,7 +29,7 @@ import java.util.function.Function;
  */
 public class RapierVoxelColliderBakery {
     private final @NotNull PhysicsColliderBlockGetter level;
-    private final Function<BlockState, RapierVoxelColliderData> blockPhysicsDataBuilder = Util.memoize(this::buildPhysicsDataForBlock);
+    private final Function<Pair<BlockState, BlockPos>, RapierVoxelColliderData> blockPhysicsDataBuilder = Util.memoize(this::buildPhysicsDataForBlock);
 
     /**
      * Creates a new level collider for the given level
@@ -49,10 +50,12 @@ public class RapierVoxelColliderBakery {
     /**
      * Builds a box or compound collision shape
      *
-     * @param childState the state to build the shape for
+     * @param childBlock the position and state to build the shape for
      * @return the physics data ID for the block at the given position, or null for empty
      */
-    private @NotNull RapierVoxelColliderData buildPhysicsDataForBlock(final BlockState childState) {
+    private @NotNull RapierVoxelColliderData buildPhysicsDataForBlock(final Pair<BlockState, BlockPos> childBlock) {
+        final BlockState childState = childBlock.getFirst();
+        final BlockPos childPos = childBlock.getSecond();
         final boolean liquid = VoxelNeighborhoodState.isLiquid(childState);
 
         final double friction = PhysicsBlockPropertyHelper.getFriction(childState);
@@ -72,7 +75,7 @@ public class RapierVoxelColliderBakery {
         if (childState.getBlock() instanceof final BlockSubLevelCollisionShape extension) {
             shape = extension.getSubLevelCollisionShape(this.level, childState);
         } else {
-            shape = childState.getCollisionShape(this.level, BlockPos.ZERO, SableCollisionContext.get());
+            shape = childState.getCollisionShape(this.level, childPos, SableCollisionContext.get());
         }
         this.level.setup(Blocks.AIR.defaultBlockState());
 
@@ -98,8 +101,8 @@ public class RapierVoxelColliderBakery {
      * @param state the state to build the shape for
      * @return the physics data ID for the block at the given position, or null for empty
      */
-    public @Nullable RapierVoxelColliderData getPhysicsDataForBlock(final BlockState state) {
-        final RapierVoxelColliderData data = this.blockPhysicsDataBuilder.apply(Objects.requireNonNull(state, "state"));
+    public @Nullable RapierVoxelColliderData getPhysicsDataForBlock(final BlockState state, final BlockPos pos) {
+        final RapierVoxelColliderData data = this.blockPhysicsDataBuilder.apply(new Pair<BlockState, BlockPos>(Objects.requireNonNull(state,"state"), Objects.requireNonNull(pos, "pos")));
         return data == RapierVoxelColliderData.EMPTY ? null : data;
     }
 }
