@@ -184,25 +184,35 @@ where
                     let sable_data = self.sable_data.read().unwrap();
                     let body_1 = g1
                         .id
-                        .map(|id| &sable_data.level_colliders[&(id as LevelColliderID)])
-                        .unwrap();
+                        .and_then(|id| sable_data.level_colliders.get(&(id as LevelColliderID)));
                     let body_2 = g2
                         .id
-                        .map(|id| &sable_data.level_colliders[&(id as LevelColliderID)])
-                        .unwrap();
+                        .and_then(|id| sable_data.level_colliders.get(&(id as LevelColliderID)));
 
-                    let extents_1 = body_1.local_bounds_max.unwrap()
-                        - body_1.local_bounds_min.unwrap()
-                        + IVec3::ONE;
-                    let extents_2 = body_2.local_bounds_max.unwrap()
-                        - body_2.local_bounds_min.unwrap()
-                        + IVec3::ONE;
+                    // A body can be unloaded mid-step, or its bounds may not be set yet.
+                    // Swapping is only a performance choice, so fall back to the unswapped
+                    // order rather than aborting the process.
+                    match (body_1, body_2) {
+                        (Some(body_1), Some(body_2)) => match (
+                            body_1.local_bounds_max,
+                            body_1.local_bounds_min,
+                            body_2.local_bounds_max,
+                            body_2.local_bounds_min,
+                        ) {
+                            (Some(max_1), Some(min_1), Some(max_2), Some(min_2)) => {
+                                let extents_1 = max_1 - min_1 + IVec3::ONE;
+                                let extents_2 = max_2 - min_2 + IVec3::ONE;
 
-                    let volume_1 = extents_1.x * extents_1.y * extents_1.z;
-                    let volume_2 = extents_2.x * extents_2.y * extents_2.z;
+                                let volume_1 = extents_1.x * extents_1.y * extents_1.z;
+                                let volume_2 = extents_2.x * extents_2.y * extents_2.z;
 
-                    // Swap the bodies so we're always doing the least amount of work possible for collision detection
-                    volume_1 < volume_2
+                                // Swap the bodies so we're always doing the least amount of work possible for collision detection
+                                volume_1 < volume_2
+                            }
+                            _ => false,
+                        },
+                        _ => false,
+                    }
                 };
 
                 if swap {
@@ -258,8 +268,10 @@ impl SableDispatcher {
 
         let collider_info = g1
             .id
-            .map(|id| &sable_data.level_colliders[&(id as LevelColliderID)]);
-        let center_of_mass_1 = collider_info.map_or(DVec3::ZERO, |b| b.center_of_mass.unwrap());
+            .and_then(|id| sable_data.level_colliders.get(&(id as LevelColliderID)));
+        let center_of_mass_1 = collider_info
+            .and_then(|b| b.center_of_mass)
+            .unwrap_or(DVec3::ZERO);
 
         let mut local_aabb = g2.compute_aabb(pos12);
 
@@ -443,10 +455,21 @@ impl SableDispatcher {
 
         let collider_info_1 = g1
             .id
-            .map(|id| &sable_data.level_colliders[&(id as LevelColliderID)]);
-        let collider_info_2 = &sable_data.level_colliders[&(g2.id.unwrap() as LevelColliderID)];
-        let center_of_mass_1 = collider_info_1.map_or(DVec3::ZERO, |b| b.center_of_mass.unwrap());
-        let center_of_mass_2 = collider_info_2.center_of_mass.unwrap();
+            .and_then(|id| sable_data.level_colliders.get(&(id as LevelColliderID)));
+        // g2 is required below; if it was unloaded mid-step, skip contact generation for
+        // this pair instead of aborting the process.
+        let Some(collider_info_2) = g2
+            .id
+            .and_then(|id| sable_data.level_colliders.get(&(id as LevelColliderID)))
+        else {
+            return;
+        };
+        let center_of_mass_1 = collider_info_1
+            .and_then(|b| b.center_of_mass)
+            .unwrap_or(DVec3::ZERO);
+        let Some(center_of_mass_2) = collider_info_2.center_of_mass else {
+            return;
+        };
 
         let chunk_access_1: &dyn ChunkAccess = if let Some(info) = collider_info_1
             && info.has_own_chunks()

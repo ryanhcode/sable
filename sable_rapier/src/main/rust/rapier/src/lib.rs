@@ -551,10 +551,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
 ) {
     with_handle(handle, |scene| {
         let mut sable_data = scene.sable_data.write().unwrap();
-        let info = sable_data
-            .level_colliders
-            .get_mut(&(id as LevelColliderID))
-            .unwrap();
+        let Some(info) = sable_data.level_colliders.get_mut(&(id as LevelColliderID)) else {
+            return;
+        };
         info.center_of_mass = Some(DVec3::new(x, y, z));
         let mut sim_data = scene.sim_data.write().unwrap();
         update_collider_aabb(&mut sim_data, info);
@@ -586,7 +585,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
             ..
         } = &mut *sable_data;
 
-        let info = level_colliders.get_mut(&(id as LevelColliderID)).unwrap();
+        let Some(info) = level_colliders.get_mut(&(id as LevelColliderID)) else {
+            return;
+        };
         info.set_local_bounds(
             IVec3::new(min_x, min_y, min_z),
             IVec3::new(max_x, max_y, max_z),
@@ -796,11 +797,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let chunk = main_level_chunks.get(&pack_section_pos(x, y, z)).unwrap();
         if global == 0 {
             if object_id != -1 {
-                let body = level_colliders
-                    .get_mut(&(object_id as LevelColliderID))
-                    .unwrap();
-
-                body.insert_chunk(chunk, x, y, z, collider_map);
+                if let Some(body) = level_colliders.get_mut(&(object_id as LevelColliderID)) {
+                    body.insert_chunk(chunk, x, y, z, collider_map);
+                }
             }
         } else {
             for bx in 0..16 {
