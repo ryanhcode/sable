@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.water_occlusion;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.mixinterface.water_occlusion.CameraWaterOcclusionExtension;
 import dev.ryanhcode.sable.sublevel.water_occlusion.WaterOcclusionContainer;
 import net.minecraft.client.Camera;
@@ -11,8 +12,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public class CameraMixin implements CameraWaterOcclusionExtension {
@@ -26,19 +25,21 @@ public class CameraMixin implements CameraWaterOcclusionExtension {
     @Unique
     private boolean sable$ignoreOcclusion = false;
 
-    @Inject(method = "getFluidInCamera", at = @At("RETURN"), cancellable = true)
-    public void sable$getFluidInCamera(final CallbackInfoReturnable<FogType> cir) {
+    @ModifyReturnValue(method = "getFluidInCamera", at = @At("RETURN"))
+    public FogType sable$getFluidInCamera(final FogType original) {
         if (this.sable$ignoreOcclusion) {
-            return;
+            return original;
         }
 
-        if (cir.getReturnValue() == FogType.WATER || cir.getReturnValue() == FogType.LAVA) {
+        if (original == FogType.WATER || original == FogType.LAVA) {
             final boolean occluded = this.sable$isOccluded();
 
             if (occluded) {
-                cir.setReturnValue(FogType.NONE);
+                return FogType.NONE;
             }
         }
+
+        return original;
     }
 
     @Override

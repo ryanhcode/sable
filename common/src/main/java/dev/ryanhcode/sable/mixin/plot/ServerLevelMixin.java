@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.plot;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.mixinterface.plot.SubLevelContainerHolder;
@@ -25,7 +26,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -90,24 +90,28 @@ public abstract class ServerLevelMixin extends Level {
         }
     }
 
-    @Inject(method = "shouldTickBlocksAt", at = @At("HEAD"), cancellable = true)
-    private void sable$shouldTickBlocksAt(final long l, final CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "shouldTickBlocksAt", at = @At("RETURN"))
+    private boolean sable$shouldTickBlocksAt(final boolean original, final long chunkPos) {
         final SubLevelContainer plotContainer = SubLevelContainer.getContainer((ServerLevel) (Object) this);
         assert plotContainer != null;
 
-        if (plotContainer.getPlot(new ChunkPos(l)) != null) {
-            cir.setReturnValue(true);
+        if (plotContainer.getPlot(new ChunkPos(chunkPos)) != null) {
+            return true;
         }
+
+        return original;
     }
 
-    @Inject(method = "isNaturalSpawningAllowed(Lnet/minecraft/world/level/ChunkPos;)Z", at = @At("HEAD"), cancellable = true)
-    private void sable$isNaturalSpawningAllowed(final ChunkPos chunkPos, final CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "isNaturalSpawningAllowed(Lnet/minecraft/world/level/ChunkPos;)Z", at = @At("RETURN"))
+    private boolean sable$isNaturalSpawningAllowed(boolean original, final ChunkPos chunkPos) {
         final SubLevelContainer plotContainer = SubLevelContainer.getContainer((ServerLevel) (Object) this);
         assert plotContainer != null;
 
         if (plotContainer.getPlot(chunkPos) != null) {
-            cir.setReturnValue(true);
+            return true;
         }
+
+        return original;
     }
 
     @Inject(method = "close", at = @At("TAIL"))

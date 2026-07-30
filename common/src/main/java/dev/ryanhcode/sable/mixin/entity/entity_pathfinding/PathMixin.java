@@ -1,7 +1,7 @@
 package dev.ryanhcode.sable.mixin.entity.entity_pathfinding;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.mixinterface.entity.pathfinding.PathExtension;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
@@ -12,8 +12,6 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Path.class)
 public class PathMixin implements PathExtension {
@@ -24,48 +22,42 @@ public class PathMixin implements PathExtension {
     @Unique
     private boolean sable$project;
 
-    @Inject(method = "getNextEntityPos", at = @At("RETURN"), cancellable = true)
-    private void sable$getNextEntityPos(final Entity entity, final CallbackInfoReturnable<Vec3> cir) {
+    @ModifyReturnValue(method = "getNextEntityPos", at = @At("RETURN"))
+    private Vec3 sable$getNextEntityPos(final Vec3 original, final Entity entity) {
         if (!this.sable$project) {
-            return;
+            return original;
         }
 
-        cir.setReturnValue(Sable.HELPER.projectOutOfSubLevel(entity.level(), cir.getReturnValue()));
+        return Sable.HELPER.projectOutOfSubLevel(entity.level(), original);
     }
 
-    @Inject(method = "getNextNodePos", at = @At("RETURN"), cancellable = true)
-    private void sable$getNextNodePos(final CallbackInfoReturnable<BlockPos> cir) {
+    @ModifyReturnValue(method = "getNextNodePos", at = @At("RETURN"))
+    private BlockPos sable$getNextNodePos(final BlockPos original) {
         if (!this.sable$project) {
-            return;
+            return original;
         }
 
-        final BlockPos blockPos = cir.getReturnValue();
-
-
-        final SubLevel subLevel = Sable.HELPER.getContaining(this.sable$level, blockPos);
+        final SubLevel subLevel = Sable.HELPER.getContaining(this.sable$level, original);
         if (subLevel == null) {
-            return;
+            return original;
         }
 
-        final BlockPos global = BlockPos.containing(subLevel.logicalPose().transformPosition(blockPos.getCenter()));
-        cir.setReturnValue(global);
+        final BlockPos global = BlockPos.containing(subLevel.logicalPose().transformPosition(original.getCenter()));
+        return global;
     }
 
-    @Inject(method = "getNodePos", at = @At("RETURN"), cancellable = true)
-    private void sable$getNodePos(final int i, final CallbackInfoReturnable<BlockPos> cir) {
+    @ModifyReturnValue(method = "getNodePos", at = @At("RETURN"))
+    private BlockPos sable$getNodePos(final BlockPos original) {
         if (!this.sable$project) {
-            return;
+            return original;
         }
 
-        final BlockPos blockPos = cir.getReturnValue();
-
-        final SubLevel subLevel = Sable.HELPER.getContaining(this.sable$level, blockPos);
+        final SubLevel subLevel = Sable.HELPER.getContaining(this.sable$level, original);
         if (subLevel == null) {
-            return;
+            return original;
         }
 
-        final BlockPos global = BlockPos.containing(subLevel.logicalPose().transformPosition(blockPos.getCenter()));
-        cir.setReturnValue(global);
+        return BlockPos.containing(subLevel.logicalPose().transformPosition(original.getCenter()));
     }
 
     @Override
