@@ -128,12 +128,15 @@ impl SablePhysicsHooks {
         level_collider_a: Option<&LevelCollider>,
     ) -> Vec3 {
         if let Some(level_collider_a) = level_collider_a
-            && level_collider_a.id.is_some()
+            && let Some(id) = level_collider_a.id
         {
             let sable_data = self.sable_data.read().unwrap();
 
-            let collider_info =
-                &sable_data.level_colliders[&(level_collider_a.id.unwrap() as LevelColliderID)];
+            // The body may have been unloaded mid-step; treat it as having no fake velocity.
+            let Some(collider_info) = sable_data.level_colliders.get(&(id as LevelColliderID))
+            else {
+                return Vec3::ZERO;
+            };
 
             if let Some(fake_velo) = collider_info.fake_velocities {
                 let transform = collider_a.position();
@@ -160,8 +163,9 @@ impl SablePhysicsHooks {
 
         let (tangent_velo, center_of_mass, skip_contact_events) = {
             let sable_data = self.sable_data.read().unwrap();
-            let collider_info =
-                level_collider.and_then(|lc| lc.id.map(|id| &sable_data.level_colliders[&(id)]));
+            let collider_info = level_collider
+                .and_then(|lc| lc.id)
+                .and_then(|id| sable_data.level_colliders.get(&(id)));
 
             let mut tangent_velo = Vec3::ZERO;
             if let Some(fake_velo) = collider_info.and_then(|info| info.fake_velocities) {
