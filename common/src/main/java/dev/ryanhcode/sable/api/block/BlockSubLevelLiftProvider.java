@@ -23,26 +23,6 @@ public interface BlockSubLevelLiftProvider {
 
     Direction[] DIRECTIONS = Direction.values();
 
-    // memory optimization
-    Vector3d LIFT_FORCE = new Vector3d();
-    Vector3d LIFT_POS = new Vector3d();
-    Vector3d LIFT_NORMAL = new Vector3d();
-
-    Vector3d LIFT_VELO = new Vector3d();
-    Vector3d DRAG = new Vector3d();
-    Vector3d TEMP = new Vector3d();
-
-    /**
-     * Resets the vectors to their identity.
-     */
-    static void resetVectors() {
-        LIFT_VELO.set(0, 0, 0);
-        LIFT_POS.set(0, 0, 0);
-        LIFT_FORCE.set(0, 0, 0);
-        LIFT_NORMAL.set(0, 0, 0);
-        DRAG.set(0, 0, 0);
-    }
-
     static List<LiftProviderGroup> groupLiftProviders(final Collection<LiftProviderContext> liftProviders) {
         final List<LiftProviderGroup> groups = new ObjectArrayList<>();
         final Set<BlockPos> positions = new ObjectOpenHashSet<>(liftProviders.size());
@@ -133,52 +113,56 @@ public interface BlockSubLevelLiftProvider {
                                              final Vector3dc linearVelocity, final Vector3dc angularVelocity,
                                              final Vector3d linearImpulse, final Vector3d angularImpulse,
                                              @Nullable final LiftProviderGroup group) {
-        resetVectors();
-        LIFT_NORMAL.set(ctx.dir.x(), ctx.dir.y(), ctx.dir.z());
-        LIFT_POS.set(ctx.pos.getX() + 0.5, ctx.pos.getY() + 0.5, ctx.pos.getZ() + 0.5);
+
+        final Vector3d liftNormal = new Vector3d(ctx.dir.x(), ctx.dir.y(), ctx.dir.z());
+        final Vector3d liftPos = new Vector3d(ctx.pos.getX() + 0.5, ctx.pos.getY() + 0.5, ctx.pos.getZ() + 0.5);
+        final Vector3d liftForce = new Vector3d();
+        final Vector3d transformedPos = new Vector3d();
+        final Vector3d drag = new Vector3d();
 
         if (localPose != null) {
-            localPose.transformNormal(LIFT_NORMAL);
-            localPose.transformPosition(LIFT_POS);
+            localPose.transformNormal(liftNormal);
+            localPose.transformPosition(liftPos);
         }
 
         final Pose3d pose = subLevel.logicalPose();
-        final double pressure = DimensionPhysicsData.getAirPressure(subLevel.getLevel(), pose.transformPosition(LIFT_POS, TEMP));
+        final double pressure = DimensionPhysicsData.getAirPressure(subLevel.getLevel(), pose.transformPosition(liftPos, transformedPos));
 
         // transform VELO to be the local velocity at the center of the block
         // TEMP = transformed POS
         // VELO = linVel + angVel cross TEMP
         // VELO = inv transformed VELO
-        pose.transformPosition(LIFT_POS, TEMP).sub(pose.position());
-        LIFT_VELO.set(linearVelocity).add(angularVelocity.cross(TEMP, TEMP));
-        pose.transformNormalInverse(LIFT_VELO);
+        pose.transformPosition(liftPos, transformedPos).sub(pose.position());
+        final Vector3d liftVelo = new Vector3d(linearVelocity).add(angularVelocity.cross(transformedPos, transformedPos));
+        pose.transformNormalInverse(liftVelo);
 
-        LIFT_FORCE.zero();
+        liftForce.zero(); // optional, zero default
 
         if (this.sable$getParallelDragScalar() > 0) {
             // DRAG = NORMAL * (NORMAL dot VELO)
             // FORCE = DRAG * scalars
-            final double dragStrength = LIFT_NORMAL.dot(LIFT_VELO) * this.sable$getParallelDragScalar() * pressure * timeStep;
-            final Vector3d parallelDrag = LIFT_NORMAL.mul(dragStrength, DRAG);
-            LIFT_FORCE.add(parallelDrag);
+            final double dragStrength = liftNormal.dot(liftVelo) * this.sable$getParallelDragScalar() * pressure * timeStep;
+            final Vector3d parallelDrag = liftNormal.mul(dragStrength, drag);
+            liftForce.add(parallelDrag);
 
             if (group != null) {
                 group.totalDrag.sub(parallelDrag);
-                group.dragCenter.fma(Math.abs(dragStrength), LIFT_POS);
+                group.dragCenter.fma(Math.abs(dragStrength), liftPos);
                 group.totalDragStrength += Math.abs(dragStrength);
             }
         }
 
         if (this.sable$getDirectionlessDragScalar() > 0) {
+            final Vector3d scaledVelo = new Vector3d();
             // TEMP = VELO * scalars
             // FORCE += TEMP
             final double dragStrength = this.sable$getDirectionlessDragScalar() * pressure * timeStep;
-            final Vector3d directionlessDrag = LIFT_VELO.mul(dragStrength, TEMP);
-            LIFT_FORCE.add(directionlessDrag);
+            final Vector3d directionlessDrag = liftVelo.mul(dragStrength, scaledVelo);
+            liftForce.add(directionlessDrag);
 
             if (group != null) {
                 group.totalDrag.sub(directionlessDrag);
-                group.dragCenter.fma(directionlessDrag.length(), LIFT_POS);
+                group.dragCenter.fma(directionlessDrag.length(), liftPos);
                 group.totalDragStrength += directionlessDrag.length();
             }
         }
@@ -187,22 +171,25 @@ public interface BlockSubLevelLiftProvider {
             // TEMP = VELO - DRAG
             // TEMP = NORMAL * |TEMP| * scalars
             // FORCE += TEMP
-            final double liftStrength = LIFT_VELO.sub(DRAG, TEMP).length() * this.sable$getLiftScalar() * pressure * timeStep;
-            final Vector3d lift = LIFT_NORMAL.mul(liftStrength, TEMP);
-            LIFT_FORCE.add(lift);
+
+            final Vector3d temp = new Vector3d();
+
+            final double liftStrength = liftVelo.sub(drag, temp).length() * this.sable$getLiftScalar() * pressure * timeStep;
+            final Vector3d lift = liftNormal.mul(liftStrength, temp);
+            liftForce.add(lift);
 
             if (group != null) {
                 group.totalLift.sub(lift);
-                group.liftCenter.fma(Math.abs(liftStrength), LIFT_POS);
+                group.liftCenter.fma(Math.abs(liftStrength), liftPos);
                 group.totalLiftStrength += liftStrength;
             }
         }
 
         // why is this all negative of what it should be?
-        linearImpulse.sub(LIFT_FORCE);
-        LIFT_POS.sub(subLevel.getMassTracker().getCenterOfMass(), TEMP);
-        angularImpulse.sub(TEMP.cross(LIFT_FORCE));
-        resetVectors();
+        linearImpulse.sub(liftForce);
+        final Vector3d liftOffset = new Vector3d();
+        liftPos.sub(subLevel.getMassTracker().getCenterOfMass(), liftOffset);
+        angularImpulse.sub(liftOffset.cross(liftForce));
     }
 
     record LiftProviderContext(BlockPos pos, BlockState state, Vec3 dir) {
