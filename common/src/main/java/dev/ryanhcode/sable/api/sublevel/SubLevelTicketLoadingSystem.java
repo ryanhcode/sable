@@ -34,7 +34,7 @@ public class SubLevelTicketLoadingSystem implements SubLevelObserver {
         if (reason == SubLevelRemovalReason.UNLOADED) {
             this.container.activeTickets.remove(serverSubLevel);
 
-            final SubLevelTicketInfo info = this.container.allTickets.get(serverSubLevel);
+            final SubLevelTicketInfo info = this.container.allTickets.get(serverSubLevel.getUniqueId());
 
             if (info != null) {
                 info.setPointer(serverSubLevel.getLastSerializationPointer());
