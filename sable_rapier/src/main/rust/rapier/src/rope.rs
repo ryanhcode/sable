@@ -54,19 +54,24 @@ pub fn tick(scene: &PhysicsScene) {
             if !sim.impulse_joint_set.contains(attachment.joint) {
                 dead_start_attachments.push(id.clone());
             } else {
-                let local_anchor = attachment.location
-                    - if let Some(id_b) = attachment.sub_level_id {
-                        let rb_b = &sable_data.level_colliders[&id_b];
-                        rb_b.center_of_mass.unwrap()
-                    } else {
-                        DVec3::ZERO
-                    };
+                // The attached sub-level may have been unloaded while the rope is still
+                // alive; in that case leave the anchor untouched instead of aborting.
+                let offset = match attachment.sub_level_id {
+                    Some(id_b) => sable_data
+                        .level_colliders
+                        .get(&id_b)
+                        .and_then(|rb_b| rb_b.center_of_mass),
+                    None => Some(DVec3::ZERO),
+                };
 
-                let impulse_joint = sim
-                    .impulse_joint_set
-                    .get_mut(attachment.joint, false)
-                    .unwrap();
-                impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
+                if let Some(offset) = offset {
+                    let local_anchor = attachment.location - offset;
+                    if let Some(impulse_joint) =
+                        sim.impulse_joint_set.get_mut(attachment.joint, false)
+                    {
+                        impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
+                    }
+                }
             }
         }
 
@@ -74,19 +79,23 @@ pub fn tick(scene: &PhysicsScene) {
             if !sim.impulse_joint_set.contains(attachment.joint) {
                 dead_end_attachments.push(id.clone());
             } else {
-                let local_anchor = attachment.location
-                    - if let Some(id_b) = attachment.sub_level_id {
-                        let rb_b = &sable_data.level_colliders[&id_b];
-                        rb_b.center_of_mass.unwrap()
-                    } else {
-                        DVec3::ZERO
-                    };
+                // Same guard as the start attachment above.
+                let offset = match attachment.sub_level_id {
+                    Some(id_b) => sable_data
+                        .level_colliders
+                        .get(&id_b)
+                        .and_then(|rb_b| rb_b.center_of_mass),
+                    None => Some(DVec3::ZERO),
+                };
 
-                let impulse_joint = sim
-                    .impulse_joint_set
-                    .get_mut(attachment.joint, false)
-                    .unwrap();
-                impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
+                if let Some(offset) = offset {
+                    let local_anchor = attachment.location - offset;
+                    if let Some(impulse_joint) =
+                        sim.impulse_joint_set.get_mut(attachment.joint, false)
+                    {
+                        impulse_joint.data.set_local_anchor1(local_anchor.as_vec3());
+                    }
+                }
             }
         }
     }

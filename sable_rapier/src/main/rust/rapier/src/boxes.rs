@@ -81,16 +81,16 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let sim_data = &mut *sim_data;
         let mut sable_data = scene.sable_data.write().unwrap();
 
-        let handle = sable_data.rigid_bodies[&(id as LevelColliderID)];
-        sim_data.rigid_body_set.remove(
-            handle,
-            &mut sim_data.island_manager,
-            &mut sim_data.collider_set,
-            &mut sim_data.impulse_joint_set,
-            &mut sim_data.multibody_joint_set,
-            true,
-        );
-
-        sable_data.rigid_bodies.remove(&(id as LevelColliderID));
+        if let Some(&handle) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) {
+            sim_data.rigid_body_set.remove(
+                handle,
+                &mut sim_data.island_manager,
+                &mut sim_data.collider_set,
+                &mut sim_data.impulse_joint_set,
+                &mut sim_data.multibody_joint_set,
+                true,
+            );
+            sable_data.rigid_bodies.remove(&(id as LevelColliderID));
+        }
     })
 }

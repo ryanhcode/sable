@@ -118,7 +118,9 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public void init(@Nullable final Vector3dc gravity, final double universalDrag) {
         try {
+            Sable.LOGGER.info("[SableDebug] Initializing Rapier physics pipeline with gravity=({}, {}, {}), drag={}", gravity.x(), gravity.y(), gravity.z(), universalDrag);
             this.scene = new RapierPhysicsScene(Rapier3D.initialize(gravity.x(), gravity.y(), gravity.z(), universalDrag));
+            Sable.LOGGER.info("[SableDebug] Rapier physics pipeline initialized successfully, scene handle={}", this.scene.handle());
         } catch (final UnsatisfiedLinkError e) {
             Sable.LOGGER.error("Sable has failed to link with the natives for its Rapier pipeline. Please report with system details to " + Sable.ISSUE_TRACKER_URL, e);
             final CrashReport crashReport = CrashReport.forThrowable(e.getCause(), "Sable linking with Rapier natives");
@@ -145,7 +147,13 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public void prePhysicsTicks() {
         final double timeStep = 1.0 / 20.0;
-        Rapier3D.tick(this.scene.handle(), timeStep);
+        try {
+            Sable.LOGGER.debug("[SableDebug] prePhysicsTicks: calling tick(handle={}, timeStep={})", this.scene.handle(), timeStep);
+            Rapier3D.tick(this.scene.handle(), timeStep);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in prePhysicsTicks tick() call", e);
+            throw e;
+        }
     }
 
     /**
@@ -156,14 +164,26 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public void physicsTick(final double timeStep) {
         this.updateContraptionPoses();
-        Rapier3D.step(this.scene.handle(), timeStep);
+        try {
+            Sable.LOGGER.debug("[SableDebug] physicsTick: calling step(handle={}, timeStep={})", this.scene.handle(), timeStep);
+            Rapier3D.step(this.scene.handle(), timeStep);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in physicsTick step() call", e);
+            throw e;
+        }
 
         for (final PhysicsPipelineBody queuedWakeUp : this.queuedWakeUps) {
             if (queuedWakeUp.isRemoved()) {
                 continue;
             }
 
-            Rapier3D.wakeUpObject(this.scene.handle(), queuedWakeUp.getRuntimeId());
+            final int wakeId = Rapier3D.getID(queuedWakeUp);
+            Sable.LOGGER.debug("[SableDebug] physicsTick: waking up body id={}", wakeId);
+            try {
+                Rapier3D.wakeUpObject(this.scene.handle(), wakeId);
+            } catch (final Exception e) {
+                Sable.LOGGER.error("[SableDebug] EXCEPTION waking up body id={}", wakeId, e);
+            }
         }
 
         this.queuedWakeUps.clear();
@@ -195,18 +215,25 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         final Quaterniondc rot = pose.orientation();
 
         final int id = Rapier3D.getID(subLevel);
-        Rapier3D.createSubLevel(this.scene.handle(), id, new double[]{pos.x(), pos.y(), pos.z(), rot.x(), rot.y(), rot.z(), rot.w()});
+        Sable.LOGGER.info("[SableDebug] add(SubLevel): id={}, pos=({}, {}, {}), rot=({}, {}, {}, {})", id, pos.x(), pos.y(), pos.z(), rot.x(), rot.y(), rot.z(), rot.w());
+        try {
+            Rapier3D.createSubLevel(this.scene.handle(), id, new double[]{pos.x(), pos.y(), pos.z(), rot.x(), rot.y(), rot.z(), rot.w()});
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in add(SubLevel) createSubLevel, id={}", id, e);
+            throw e;
+        }
 
         subLevel.updateMergedMassData(1.0f);
         final Vector3dc centerOfMass = subLevel.getMassTracker().getCenterOfMass();
 
         if (centerOfMass != null) {
             subLevel.logicalPose().rotationPoint().set(centerOfMass);
-
+            Sable.LOGGER.info("[SableDebug] add(SubLevel): id={}, centerOfMass=({}, {}, {})", id, centerOfMass.x(), centerOfMass.y(), centerOfMass.z());
             this.onStatsChanged(subLevel);
         }
 
         this.activeSubLevels.put(Rapier3D.getID(subLevel), subLevel);
+        Sable.LOGGER.info("[SableDebug] add(SubLevel): id={} added successfully, activeSubLevels.size={}", id, this.activeSubLevels.size());
     }
 
     /**
@@ -214,8 +241,16 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
      */
     @Override
     public void remove(final ServerSubLevel subLevel) {
-        Rapier3D.removeSubLevel(this.scene.handle(), Rapier3D.getID(subLevel));
-        this.activeSubLevels.remove(Rapier3D.getID(subLevel));
+        final int id = Rapier3D.getID(subLevel);
+        Sable.LOGGER.info("[SableDebug] remove(SubLevel): id={}", id);
+        try {
+            Rapier3D.removeSubLevel(this.scene.handle(), id);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in remove(SubLevel), id={}", id, e);
+            throw e;
+        }
+        this.activeSubLevels.remove(id);
+        Sable.LOGGER.info("[SableDebug] remove(SubLevel): id={} removed, activeSubLevels.size={}", id, this.activeSubLevels.size());
     }
 
     /**
@@ -301,11 +336,19 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public Pose3d readPose(final ServerSubLevel subLevel, final Pose3d dest) {
         this.assertBodyValid(subLevel);
-        Rapier3D.getPose(this.scene.handle(), Rapier3D.getID(subLevel), this.poseCache);
+        final int id = Rapier3D.getID(subLevel);
+        Sable.LOGGER.debug("[SableDebug] readPose: id={}", id);
+        try {
+            Rapier3D.getPose(this.scene.handle(), id, this.poseCache);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in readPose getPose(), id={}", id, e);
+            throw e;
+        }
 
         dest.position().set(this.poseCache[0], this.poseCache[1], this.poseCache[2]);
         dest.orientation().set(this.poseCache[3], this.poseCache[4], this.poseCache[5], this.poseCache[6]);
 
+        Sable.LOGGER.debug("[SableDebug] readPose: id={}, pos=({}, {}, {}), rot=({}, {}, {}, {})", id, this.poseCache[0], this.poseCache[1], this.poseCache[2], this.poseCache[3], this.poseCache[4], this.poseCache[5], this.poseCache[6]);
         return dest;
     }
 
@@ -331,6 +374,7 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public void handleChunkSectionAddition(final LevelChunkSection section, final int x, final int y, final int z, final boolean uploadDataIfGlobal) {
         this.accelerator.clearCache();
+        Sable.LOGGER.debug("[SableDebug] handleChunkSectionAddition: section=({}, {}, {}), uploadDataIfGlobal={}, hasOnlyAir={}", x, y, z, uploadDataIfGlobal, section.hasOnlyAir());
 
         // this means the x coordinate is the fastest changing, then z, then y
         final int[] array = new int[LevelChunkSection.SECTION_SIZE];
@@ -362,7 +406,12 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         int id = -1;
 
         if (plot != null && uploadDataIfGlobal) id = Rapier3D.getID(((ServerSubLevel) plot.getSubLevel()));
-        Rapier3D.addChunk(this.scene.handle(), x, y, z, array, global, id);
+        try {
+            Rapier3D.addChunk(this.scene.handle(), x, y, z, array, global, id);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in handleChunkSectionAddition addChunk({}, {}, {}), global={}, id={}", x, y, z, global, id, e);
+            throw e;
+        }
     }
 
     /**
@@ -370,7 +419,13 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
      */
     @Override
     public void handleChunkSectionRemoval(final int x, final int y, final int z) {
-        Rapier3D.removeChunk(this.scene.handle(), x, y, z, !SubLevelContainer.getContainer(this.level).inBounds(x, z));
+        Sable.LOGGER.debug("[SableDebug] handleChunkSectionRemoval: ({}, {}, {})", x, y, z);
+        try {
+            Rapier3D.removeChunk(this.scene.handle(), x, y, z, !SubLevelContainer.getContainer(this.level).inBounds(x, z));
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in handleChunkSectionRemoval removeChunk({}, {}, {})", x, y, z, e);
+            throw e;
+        }
     }
 
     /**
@@ -387,6 +442,8 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         y = (sectionPos.y() << 4) + y;
         z = (sectionPos.z() << 4) + z;
 
+        Sable.LOGGER.debug("[SableDebug] handleBlockChange: pos=({}, {}, {}), oldState={}, newState={}", x, y, z, oldState, newState);
+
         final BlockPos globalBlockPos = new BlockPos(x, y, z);
 
         for (final Direction dir : Direction.values()) {
@@ -395,7 +452,12 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
             final RapierVoxelColliderData colliderData = this.colliderBakery.getPhysicsDataForBlock(this.level.getBlockState(pos));
 
             final int colliderValue = colliderData == null ? 0 : colliderData.handle() + 1;
-            Rapier3D.changeBlock(this.scene.handle(), pos.getX(), pos.getY(), pos.getZ(), packBlockState(state, colliderValue));
+            try {
+                Rapier3D.changeBlock(this.scene.handle(), pos.getX(), pos.getY(), pos.getZ(), packBlockState(state, colliderValue));
+            } catch (final Exception e) {
+                Sable.LOGGER.error("[SableDebug] EXCEPTION in handleBlockChange changeBlock neighbor ({}, {}, {}), colliderValue={}", pos.getX(), pos.getY(), pos.getZ(), colliderValue, e);
+                throw e;
+            }
         }
 
         // do it for the block without offset
@@ -403,7 +465,12 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         final RapierVoxelColliderData colliderData = this.colliderBakery.getPhysicsDataForBlock(newState);
 
         final int colliderValue = colliderData == null ? 0 : colliderData.handle() + 1;
-        Rapier3D.changeBlock(this.scene.handle(), x, y, z, packBlockState(state, colliderValue));
+        try {
+            Rapier3D.changeBlock(this.scene.handle(), x, y, z, packBlockState(state, colliderValue));
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in handleBlockChange changeBlock self ({}, {}, {}), colliderValue={}", x, y, z, colliderValue, e);
+            throw e;
+        }
     }
 
     @Override
@@ -415,11 +482,23 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
 
         final Vector3dc centerOfMass = subLevel.getMassTracker().getCenterOfMass();
         if (centerOfMass != null) {
-            Rapier3D.setCenterOfMass(this.scene.handle(), id, centerOfMass.x(), centerOfMass.y(), centerOfMass.z());
-            Rapier3D.setMassPropertiesFrom(this.scene.handle(), id, subLevel.getMassTracker());
+            Sable.LOGGER.debug("[SableDebug] onStatsChanged: id={}, centerOfMass=({}, {}, {}), mass={}", id, centerOfMass.x(), centerOfMass.y(), centerOfMass.z(), subLevel.getMassTracker().getMass());
+            try {
+                Rapier3D.setCenterOfMass(this.scene.handle(), id, centerOfMass.x(), centerOfMass.y(), centerOfMass.z());
+                Rapier3D.setMassPropertiesFrom(this.scene.handle(), id, subLevel.getMassTracker());
+            } catch (final Exception e) {
+                Sable.LOGGER.error("[SableDebug] EXCEPTION in onStatsChanged setCenterOfMass/setMassProperties, id={}", id, e);
+                throw e;
+            }
         }
 
-        Rapier3D.setLocalBounds(this.scene.handle(), id, plotBounds.minX(), plotBounds.minY(), plotBounds.minZ(), plotBounds.maxX(), plotBounds.maxY(), plotBounds.maxZ());
+        Sable.LOGGER.debug("[SableDebug] onStatsChanged: id={}, bounds=({},{},{} -> {},{},{})", id, plotBounds.minX(), plotBounds.minY(), plotBounds.minZ(), plotBounds.maxX(), plotBounds.maxY(), plotBounds.maxZ());
+        try {
+            Rapier3D.setLocalBounds(this.scene.handle(), id, plotBounds.minX(), plotBounds.minY(), plotBounds.minZ(), plotBounds.maxX(), plotBounds.maxY(), plotBounds.maxZ());
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in onStatsChanged setLocalBounds, id={}", id, e);
+            throw e;
+        }
     }
 
     /**
@@ -433,7 +512,14 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     public void teleport(final PhysicsPipelineBody body, final Vector3dc position, final Quaterniondc orientation) {
         this.assertBodyValid(body);
 
-        Rapier3D.teleportObject(this.scene.handle(), Rapier3D.getID(body), position.x(), position.y(), position.z(), orientation.x(), orientation.y(), orientation.z(), orientation.w());
+        final int id = Rapier3D.getID(body);
+        Sable.LOGGER.debug("[SableDebug] teleport: id={}, pos=({}, {}, {}), rot=({}, {}, {}, {})", id, position.x(), position.y(), position.z(), orientation.x(), orientation.y(), orientation.z(), orientation.w());
+        try {
+            Rapier3D.teleportObject(this.scene.handle(), id, position.x(), position.y(), position.z(), orientation.x(), orientation.y(), orientation.z(), orientation.w());
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in teleport, id={}", id, e);
+            throw e;
+        }
         if (body instanceof final ServerSubLevel subLevel) {
             subLevel.logicalPose().position().set(position);
             subLevel.logicalPose().orientation().set(orientation);
@@ -451,8 +537,15 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     public void applyImpulse(final PhysicsPipelineBody body, final Vector3dc position, final Vector3dc force) {
         this.assertBodyValid(body);
 
+        final int id = Rapier3D.getID(body);
         final Vector3dc centerOfMass = body.getMassTracker().getCenterOfMass();
-        Rapier3D.applyForce(this.scene.handle(), Rapier3D.getID(body), position.x() - centerOfMass.x(), position.y() - centerOfMass.y(), position.z() - centerOfMass.z(), force.x(), force.y(), force.z(), true);
+        Sable.LOGGER.debug("[SableDebug] applyImpulse: id={}, relPos=({}, {}, {}), force=({}, {}, {})", id, position.x() - centerOfMass.x(), position.y() - centerOfMass.y(), position.z() - centerOfMass.z(), force.x(), force.y(), force.z());
+        try {
+            Rapier3D.applyForce(this.scene.handle(), id, position.x() - centerOfMass.x(), position.y() - centerOfMass.y(), position.z() - centerOfMass.z(), force.x(), force.y(), force.z(), true);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in applyImpulse, id={}", id, e);
+            throw e;
+        }
     }
 
     /**
@@ -464,7 +557,14 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
     @Override
     public void applyLinearAndAngularImpulse(final PhysicsPipelineBody body, final Vector3dc force, final Vector3dc torque, final boolean wakeUp) {
         this.assertBodyValid(body);
-        Rapier3D.applyForceAndTorque(this.scene.handle(), Rapier3D.getID(body), force.x(), force.y(), force.z(), torque.x(), torque.y(), torque.z(), wakeUp);
+        final int id = Rapier3D.getID(body);
+        Sable.LOGGER.debug("[SableDebug] applyLinearAndAngularImpulse: id={}, force=({}, {}, {}), torque=({}, {}, {}), wakeUp={}", id, force.x(), force.y(), force.z(), torque.x(), torque.y(), torque.z(), wakeUp);
+        try {
+            Rapier3D.applyForceAndTorque(this.scene.handle(), id, force.x(), force.y(), force.z(), torque.x(), torque.y(), torque.z(), wakeUp);
+        } catch (final Exception e) {
+            Sable.LOGGER.error("[SableDebug] EXCEPTION in applyLinearAndAngularImpulse, id={}", id, e);
+            throw e;
+        }
     }
 
     /**
