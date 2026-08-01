@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.neoforge.mixin.compatibility.create.behaviour_compat
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
+import com.simibubi.create.content.contraptions.actors.roller.RollerMovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
 import dev.ryanhcode.sable.ActiveSableCompanion;
@@ -54,6 +55,10 @@ public abstract class BlockBreakingMovementBehaviourMixin implements MovementBeh
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     public void sable$testBreakingPosDist(final MovementContext context, final CallbackInfo ci) {
+        if ((Object) this instanceof RollerMovementBehaviour) {
+            return;
+        }
+
         final CompoundTag data = context.data;
         if (data.contains("BreakingPos") || data.contains("LastPos")) {
             final BlockPos blockPos = NbtUtils.readBlockPos(data, "BreakingPos").orElseGet(() -> NbtUtils.readBlockPos(data, "LastPos").orElse(null));
