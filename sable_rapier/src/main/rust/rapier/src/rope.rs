@@ -51,8 +51,11 @@ pub fn tick(scene: &PhysicsScene) {
 
     for (id, rope) in sable_data.rope_map.ropes.iter() {
         if let Some(attachment) = &rope.start_attachment {
-            if !sim.impulse_joint_set.contains(attachment.joint) {
-                dead_start_attachments.push(id.clone());
+            let endpoint_gone = attachment
+                .sub_level_id
+                .is_some_and(|id_b| !sable_data.level_colliders.contains_key(&id_b));
+            if !sim.impulse_joint_set.contains(attachment.joint) || endpoint_gone {
+                dead_start_attachments.push(*id);
             } else {
                 let local_anchor = attachment.location
                     - if let Some(id_b) = attachment.sub_level_id {
@@ -71,8 +74,11 @@ pub fn tick(scene: &PhysicsScene) {
         }
 
         if let Some(attachment) = &rope.end_attachment {
-            if !sim.impulse_joint_set.contains(attachment.joint) {
-                dead_end_attachments.push(id.clone());
+            let endpoint_gone = attachment
+                .sub_level_id
+                .is_some_and(|id_b| !sable_data.level_colliders.contains_key(&id_b));
+            if !sim.impulse_joint_set.contains(attachment.joint) || endpoint_gone {
+                dead_end_attachments.push(*id);
             } else {
                 let local_anchor = attachment.location
                     - if let Some(id_b) = attachment.sub_level_id {
@@ -265,7 +271,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_que
         let sable_data = scene.sable_data.read().unwrap();
         let sim_data = scene.sim_data.read().unwrap();
 
-        let strand = sable_data.rope_map.ropes.get(&(id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.get(&(id as usize)) else {
+            return env.new_double_array(0).unwrap();
+        };
 
         let flattened: Vec<jdouble> = strand
             .points
@@ -303,7 +311,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let mut sim_data = scene.sim_data.write().unwrap();
         let sim_data = &mut *sim_data;
 
-        let strand = sable_data.rope_map.ropes.remove(&(id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.remove(&(id as usize)) else {
+            return;
+        };
         for handle in strand.points {
             sim_data.rigid_body_set.remove(
                 handle,
@@ -332,7 +342,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         let mut sable_data = scene.sable_data.write().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let strand = sable_data.rope_map.ropes.get_mut(&(id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.get_mut(&(id as usize)) else {
+            return;
+        };
 
         strand.first_joint_length = length as Real;
         let first_joint = &mut sim_data
@@ -364,7 +376,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let mut sim_data = scene.sim_data.write().unwrap();
         let sim_data = &mut *sim_data;
 
-        let strand = sable_data.rope_map.ropes.get_mut(&(id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.get_mut(&(id as usize)) else {
+            return;
+        };
         let point = strand.points.remove(0);
         strand.joints.remove(0);
         sim_data.rigid_body_set.remove(
@@ -415,7 +429,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let mut sable_data = scene.sable_data.write().unwrap();
         let universal_drag = scene.universal_drag;
 
-        let strand = sable_data.rope_map.ropes.get_mut(&(id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.get_mut(&(id as usize)) else {
+            return;
+        };
         let point_radius = strand.point_radius;
 
         // set joint that will no longer be the first
@@ -464,7 +480,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let strand = sable_data.rope_map.ropes.get(&(rope_id as usize)).unwrap();
+        let Some(strand) = sable_data.rope_map.ropes.get(&(rope_id as usize)) else {
+            return;
+        };
 
         for point in &strand.points {
             sim_data
@@ -501,7 +519,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
             ..
         } = &mut *sable_data;
 
-        let strand = rope_map.ropes.get_mut(&(rope_id as usize)).unwrap();
+        let Some(strand) = rope_map.ropes.get_mut(&(rope_id as usize)) else {
+            return;
+        };
 
         let rope_body = if end > 0 {
             strand.points.last()
@@ -512,9 +532,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         let sub_level_body = if sub_level_id == -1 {
             ground_handle
         } else {
-            *rigid_bodies
-                .get(&(sub_level_id as LevelColliderID))
-                .unwrap()
+            let Some(rb) = rigid_bodies.get(&(sub_level_id as LevelColliderID)) else {
+                return;
+            };
+            *rb
         };
 
         let joint = RopeJointBuilder::new(0.0)

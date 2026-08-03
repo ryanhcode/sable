@@ -81,7 +81,10 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let sim_data = &mut *sim_data;
         let mut sable_data = scene.sable_data.write().unwrap();
 
-        let handle = sable_data.rigid_bodies[&(id as LevelColliderID)];
+        let Some(handle) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) else {
+            return;
+        };
+        let handle = *handle;
         sim_data.rigid_body_set.remove(
             handle,
             &mut sim_data.island_manager,

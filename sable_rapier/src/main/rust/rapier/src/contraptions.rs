@@ -36,11 +36,8 @@ macro_rules! extract_jint_array {
 fn get_kinematic_collider_info(
     sable: &mut SableSceneData,
     id: jint,
-) -> &mut ActiveLevelColliderInfo {
-    sable
-        .level_colliders
-        .get_mut(&(id as LevelColliderID))
-        .expect("No kinematic contraption with given ID!")
+) -> Option<&mut ActiveLevelColliderInfo> {
+    sable.level_colliders.get_mut(&(id as LevelColliderID))
 }
 
 #[unsafe(no_mangle)]
@@ -61,17 +58,16 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cre
 
         let should_be_static = mount_id == -1;
         let mount_rigid_body = if should_be_static {
-            let new_body = sim_data
-                .rigid_body_set
-                .insert(RigidBodyBuilder::kinematic_position_based());
-            Some(new_body)
-        } else {
             Some(
-                *sable_data
-                    .rigid_bodies
-                    .get(&(mount_id as LevelColliderID))
-                    .unwrap(),
+                sim_data
+                    .rigid_body_set
+                    .insert(RigidBodyBuilder::kinematic_position_based()),
             )
+        } else {
+            sable_data
+                .rigid_bodies
+                .get(&(mount_id as LevelColliderID))
+                .copied()
         };
 
         let mount_rigid_body: RigidBodyHandle = if let Some(body) = mount_rigid_body {
@@ -140,7 +136,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         let mut sim_data = scene.sim_data.write().unwrap();
         let mut sable_data = scene.sable_data.write().unwrap();
 
-        let info = get_kinematic_collider_info(&mut sable_data, id);
+        let Some(info) = get_kinematic_collider_info(&mut sable_data, id) else {
+            return;
+        };
         let collider_handle = info.collider;
 
         let collider = sim_data.collider_set.get_mut(collider_handle);
@@ -218,7 +216,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
 
     with_handle(handle, |scene| {
         let mut sable_data = scene.sable_data.write().unwrap();
-        let info = get_kinematic_collider_info(&mut sable_data, id);
+        let Some(info) = get_kinematic_collider_info(&mut sable_data, id) else {
+            return;
+        };
         if let Some(chunk_map) = &mut info.chunk_map {
             chunk_map.insert(crate::scene::pack_section_pos(x, y, z), chunk);
         }
@@ -240,8 +240,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let sim_data = &mut *sim_data;
         let mut sable_data = scene.sable_data.write().unwrap();
 
-        let info = sable_data.level_colliders.remove(&(id as LevelColliderID));
-        let info = info.unwrap();
+        let Some(info) = sable_data.level_colliders.remove(&(id as LevelColliderID)) else {
+            return;
+        };
 
         sim_data.collider_set.remove(
             info.collider,

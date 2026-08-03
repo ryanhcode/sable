@@ -329,13 +329,19 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let rb_a = if id_a == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_a as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_a as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let rb_b = if id_b == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_b as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_b as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let revolute = RevoluteJointBuilder::new(
@@ -416,13 +422,19 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let rb_a = if id_a == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_a as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_a as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let rb_b = if id_b == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_b as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_b as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let quat = Quat::from_xyzw(
@@ -508,13 +520,19 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let rb_a = if id_a == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_a as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_a as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let rb_b = if id_b == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_b as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_b as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let mut joint = GenericJointBuilder::new(JointAxesMask::empty()).softness(
@@ -602,13 +620,19 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         let rb_a = if id_a == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_a as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_a as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let rb_b = if id_b == -1 {
             scene.ground_handle.unwrap()
         } else {
-            sable_data.rigid_bodies[&(id_b as LevelColliderID)]
+            let Some(rb) = sable_data.rigid_bodies.get(&(id_b as LevelColliderID)) else {
+                return -1;
+            };
+            *rb
         };
 
         let locked_axes = JointAxesMask::from_bits_truncate(locked_axes_mask as u8);

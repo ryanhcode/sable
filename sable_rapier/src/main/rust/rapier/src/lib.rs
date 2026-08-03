@@ -282,12 +282,9 @@ pub fn get_rigid_body_mut<'a>(
     sim: &'a mut SimulationSceneData,
     sable_data: &SableSceneData,
     id: LevelColliderID,
-) -> &'a mut RigidBody {
-    let handle = sable_data
-        .rigid_bodies
-        .get(&id)
-        .expect("No rigid body for id");
-    &mut sim.rigid_body_set[*handle]
+) -> Option<&'a mut RigidBody> {
+    let handle = sable_data.rigid_bodies.get(&id)?;
+    sim.rigid_body_set.get_mut(*handle)
 }
 
 #[inline(always)]
@@ -295,12 +292,9 @@ pub fn get_rigid_body<'a>(
     sim: &'a SimulationSceneData,
     sable_data: &SableSceneData,
     id: LevelColliderID,
-) -> &'a RigidBody {
-    let handle = sable_data
-        .rigid_bodies
-        .get(&id)
-        .expect("No rigid body for id");
-    &sim.rigid_body_set[*handle]
+) -> Option<&'a RigidBody> {
+    let handle = sable_data.rigid_bodies.get(&id)?;
+    sim.rigid_body_set.get(*handle)
 }
 
 #[unsafe(no_mangle)]
@@ -527,18 +521,22 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         let sable_data = scene.sable_data.read().unwrap();
         let sim_data = scene.sim_data.read().unwrap();
 
-        let rb: &RigidBody =
-            &sim_data.rigid_body_set[sable_data.rigid_bodies[&(id as LevelColliderID)]];
-
-        let arr: [jdouble; 7] = [
-            rb.translation().x as jdouble,
-            rb.translation().y as jdouble,
-            rb.translation().z as jdouble,
-            rb.rotation().x as jdouble,
-            rb.rotation().y as jdouble,
-            rb.rotation().z as jdouble,
-            rb.rotation().w as jdouble,
-        ];
+        let arr: [jdouble; 7] = match sable_data
+            .rigid_bodies
+            .get(&(id as LevelColliderID))
+            .and_then(|body| sim_data.rigid_body_set.get(*body))
+        {
+            Some(rb) => [
+                rb.translation().x as jdouble,
+                rb.translation().y as jdouble,
+                rb.translation().z as jdouble,
+                rb.rotation().x as jdouble,
+                rb.rotation().y as jdouble,
+                rb.rotation().z as jdouble,
+                rb.rotation().w as jdouble,
+            ],
+            None => [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        };
 
         env.set_double_array_region(&store, 0, &arr).unwrap();
     })
@@ -691,10 +689,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_rem
         let mut sable_data = scene.sable_data.write().unwrap();
 
         sable_data.level_colliders.remove(&(id as LevelColliderID));
-        let handle = sable_data
-            .rigid_bodies
-            .remove(&(id as LevelColliderID))
-            .expect("No rigid body for id");
+        let Some(handle) = sable_data.rigid_bodies.remove(&(id as LevelColliderID)) else {
+            return;
+        };
 
         let mut sim_data = scene.sim_data.write().unwrap();
 
@@ -1112,7 +1109,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let rb = &mut sim_data.rigid_body_set[sable_data.rigid_bodies[&(id as LevelColliderID)]];
+        let Some(rb) = sable_data
+            .rigid_bodies
+            .get(&(id as LevelColliderID))
+            .and_then(|body| sim_data.rigid_body_set.get_mut(*body))
+        else {
+            return;
+        };
 
         rb.set_additional_mass_properties(
             MassProperties::with_inertia_matrix(Vec3::ZERO, mass as Real, inertia_tensor.into()),
@@ -1142,7 +1145,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_tel
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let rb = &mut sim_data.rigid_body_set[sable_data.rigid_bodies[&(id as LevelColliderID)]];
+        let Some(rb) = sable_data
+            .rigid_bodies
+            .get(&(id as LevelColliderID))
+            .and_then(|body| sim_data.rigid_body_set.get_mut(*body))
+        else {
+            return;
+        };
 
         let mut pose = *rb.position();
         pose.translation = Vec3::new(x as Real, y as Real, z as Real);
@@ -1164,7 +1173,13 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_wak
     with_handle(handle, |scene| {
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
-        let rb = &mut sim_data.rigid_body_set[sable_data.rigid_bodies[&(id as LevelColliderID)]];
+        let Some(rb) = sable_data
+            .rigid_bodies
+            .get(&(id as LevelColliderID))
+            .and_then(|body| sim_data.rigid_body_set.get_mut(*body))
+        else {
+            return;
+        };
         rb.wake_up(true);
     })
 }
@@ -1188,7 +1203,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     with_handle(handle, |scene| {
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
-        let rb = get_rigid_body_mut(&mut sim_data, &sable_data, id as LevelColliderID);
+        let Some(rb) = get_rigid_body_mut(&mut sim_data, &sable_data, id as LevelColliderID) else {
+            return;
+        };
 
         if wake_up == 0 && rb.is_sleeping() {
             return;
@@ -1288,10 +1305,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let body = sable_data
-            .rigid_bodies
-            .get(&(id as LevelColliderID))
-            .unwrap();
+        let Some(body) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) else {
+            return;
+        };
         let rb = &mut sim_data.rigid_body_set[*body];
 
         if wake_up == 0 && rb.is_sleeping() {
@@ -1333,10 +1349,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_app
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
 
-        let body = sable_data
-            .rigid_bodies
-            .get(&(id as LevelColliderID))
-            .unwrap();
+        let Some(body) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) else {
+            return;
+        };
         let rb = &mut sim_data.rigid_body_set[*body];
 
         if wake_up == 0 && rb.is_sleeping() {
@@ -1370,10 +1385,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         let sable_data = scene.sable_data.read().unwrap();
         let sim_data = scene.sim_data.read().unwrap();
 
-        let body = sable_data
-            .rigid_bodies
-            .get(&(id as LevelColliderID))
-            .unwrap();
+        let Some(body) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) else {
+            return;
+        };
         let rb = &sim_data.rigid_body_set[*body];
 
         let vel = rb.linvel();
@@ -1402,10 +1416,9 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_get
         let sable_data = scene.sable_data.read().unwrap();
         let sim_data = scene.sim_data.read().unwrap();
 
-        let body = sable_data
-            .rigid_bodies
-            .get(&(id as LevelColliderID))
-            .unwrap();
+        let Some(body) = sable_data.rigid_bodies.get(&(id as LevelColliderID)) else {
+            return;
+        };
         let rb = &sim_data.rigid_body_set[*body];
 
         let vel = rb.angvel();
