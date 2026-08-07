@@ -121,9 +121,18 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
             this.scene = new RapierPhysicsScene(Rapier3D.initialize(gravity.x(), gravity.y(), gravity.z(), universalDrag));
         } catch (final UnsatisfiedLinkError e) {
             Sable.LOGGER.error("Sable has failed to link with the natives for its Rapier pipeline. Please report with system details to " + Sable.ISSUE_TRACKER_URL, e);
-            final CrashReport crashReport = CrashReport.forThrowable(e.getCause(), "Sable linking with Rapier natives");
+            final CrashReport crashReport = CrashReport.forThrowable(e.getCause() != null ? e.getCause() : e, "Sable linking with Rapier natives");
             final CrashReportCategory category = crashReport.addCategory("Natives");
             category.setDetail("Name", Rapier3D.NATIVE_NAME);
+            throw new ReportedException(crashReport);
+        } catch (final RuntimeException e) {
+            // Native panics in initialize are converted to RuntimeException (see sable_rapier JNI catch_unwind).
+            // Previously these killed the JVM with hs_err and no crash-report.
+            Sable.LOGGER.error("Sable Rapier physics scene failed to initialize. Please report with system details to " + Sable.ISSUE_TRACKER_URL, e);
+            final CrashReport crashReport = CrashReport.forThrowable(e, "Sable initializing Rapier physics scene");
+            final CrashReportCategory category = crashReport.addCategory("Natives");
+            category.setDetail("Name", Rapier3D.NATIVE_NAME);
+            category.setDetail("Note", "If CurseForge/Overwolf was closed while Minecraft stayed open, fully quit the game and relaunch via the launcher before reporting.");
             throw new ReportedException(crashReport);
         }
     }

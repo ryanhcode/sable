@@ -18,6 +18,7 @@ use jni::sys::{jboolean, jdouble, jint, jlong};
 use jni::{JNIEnv, JavaVM};
 use rapier3d::glamx::{DVec3, Quat};
 use std::collections::HashMap;
+use std::io::{self, Write};
 use std::sync::{Arc, OnceLock, RwLock};
 
 use fern::colors::{Color, ColoredLevelConfig};
@@ -303,122 +304,166 @@ pub fn get_rigid_body<'a>(
     &sim.rigid_body_set[*handle]
 }
 
+/// Stdout/stderr attached to CurseForge/Overwolf become broken pipes when the launcher is closed
+/// while Minecraft stays open. fern → log then panics with os error 232, aborting initialize even
+/// though the physics scene was already constructed. Treat closed-pipe writes as success.
+struct IgnoreClosedPipe<W>(W);
+
+impl<W: Write> Write for IgnoreClosedPipe<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self.0.write(buf) {
+            Err(e) if is_closed_pipe(&e) => Ok(buf.len()),
+            other => other,
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self.0.flush() {
+            Err(e) if is_closed_pipe(&e) => Ok(()),
+            other => other,
+        }
+    }
+}
+
+fn is_closed_pipe(err: &io::Error) -> bool {
+    matches!(
+        err.kind(),
+        io::ErrorKind::BrokenPipe | io::ErrorKind::UnexpectedEof
+    ) || err.raw_os_error() == Some(232) // Windows ERROR_NO_DATA / "The pipe is being closed"
+}
+
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_initialize<'local>(
-    env: JNIEnv<'local>,
+    mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     x: jdouble,
     y: jdouble,
     z: jdouble,
     universal_drag: jdouble,
 ) -> jlong {
-    PHYSICS_STATE.get_or_init(|| {
-        let colors = ColoredLevelConfig::new()
-            .info(Color::Green)
-            .error(Color::Red)
-            .debug(Color::Blue);
+    // initialize used to unwind across the JNI boundary on panic, which hard-kills the JVM
+    // (EXCEPTION_UNCAUGHT_CXX_EXCEPTION / hs_err) with no Minecraft crash report. Mirror tick/step.
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        PHYSICS_STATE.get_or_init(|| {
+            let colors = ColoredLevelConfig::new()
+                .info(Color::Green)
+                .error(Color::Red)
+                .debug(Color::Blue);
 
-        let _ = fern::Dispatch::new()
-            .format(move |out, message, record| {
-                out.finish(format_args!(
-                    "[{}] [{}] ({}) {}",
-                    humantime::format_rfc3339(std::time::SystemTime::now()),
-                    colors.color(record.level()),
-                    record.target(),
-                    message
-                ))
-            })
-            .level(log::LevelFilter::Info)
-            .level_for("jni", log::LevelFilter::Error)
-            .chain(std::io::stdout())
-            .apply();
+            let _ = fern::Dispatch::new()
+                .format(move |out, message, record| {
+                    out.finish(format_args!(
+                        "[{}] [{}] ({}) {}",
+                        humantime::format_rfc3339(std::time::SystemTime::now()),
+                        colors.color(record.level()),
+                        record.target(),
+                        message
+                    ))
+                })
+                .level(log::LevelFilter::Info)
+                .level_for("jni", log::LevelFilter::Error)
+                .chain(Box::new(IgnoreClosedPipe(io::stdout())) as Box<dyn Write + Send>)
+                .apply();
 
-        RwLock::new(PhysicsState {
-            integration_parameters: IntegrationParameters {
-                dt: 1.0 / 20.0,
+            RwLock::new(PhysicsState {
+                integration_parameters: IntegrationParameters {
+                    dt: 1.0 / 20.0,
 
-                max_ccd_substeps: 3,
-                normalized_prediction_distance: 0.005,
+                    max_ccd_substeps: 3,
+                    normalized_prediction_distance: 0.005,
 
-                contact_softness: SpringCoefficients {
-                    natural_frequency: 30.0,
-                    damping_ratio: 5.0,
+                    contact_softness: SpringCoefficients {
+                        natural_frequency: 30.0,
+                        damping_ratio: 5.0,
+                    },
+
+                    normalized_max_corrective_velocity: 50.0,
+                    normalized_allowed_linear_error: 0.0025,
+
+                    ..IntegrationParameters::default()
                 },
+                voxel_collider_map: VoxelColliderMap::new(),
+            })
+        });
 
-                normalized_max_corrective_velocity: 50.0,
-                normalized_allowed_linear_error: 0.0025,
+        let ground = RigidBodyBuilder::fixed();
 
-                ..IntegrationParameters::default()
-            },
-            voxel_collider_map: VoxelColliderMap::new(),
-        })
-    });
+        let collider = ColliderBuilder::new(SharedShape::new(LevelCollider::new(None, true)))
+            .collision_groups(LEVEL_GROUP)
+            .build();
 
-    let ground = RigidBodyBuilder::fixed();
+        let sable_data = Arc::new(RwLock::new(SableSceneData {
+            main_level_chunks: HashMap::<i64, ChunkSection>::new(),
+            octree_chunks: HashMap::<i64, OctreeChunkSection>::new(),
+            joint_set: SableJointSet::new(),
+            rope_map: RopeMap::default(),
+            level_colliders: HashMap::<LevelColliderID, ActiveLevelColliderInfo>::new(),
+            rigid_bodies: HashMap::<LevelColliderID, RigidBodyHandle>::new(),
+        }));
+        let manifold_info_map = Arc::new(SableManifoldInfoMap::default());
+        let reported_collisions = Arc::new(ReportedCollisionBuffer::new());
+        let current_step_vm = Some(Arc::new(unsafe {
+            JavaVM::from_raw(env.get_java_vm().unwrap().get_java_vm_pointer()).unwrap()
+        }));
 
-    let collider = ColliderBuilder::new(SharedShape::new(LevelCollider::new(None, true)))
-        .collision_groups(LEVEL_GROUP)
-        .build();
+        let dispatcher = SableDispatcher {
+            sable_data: Arc::clone(&sable_data),
+            manifold_info_map: Arc::clone(&manifold_info_map),
+        };
 
-    let sable_data = Arc::new(RwLock::new(SableSceneData {
-        main_level_chunks: HashMap::<i64, ChunkSection>::new(),
-        octree_chunks: HashMap::<i64, OctreeChunkSection>::new(),
-        joint_set: SableJointSet::new(),
-        rope_map: RopeMap::default(),
-        level_colliders: HashMap::<LevelColliderID, ActiveLevelColliderInfo>::new(),
-        rigid_bodies: HashMap::<LevelColliderID, RigidBodyHandle>::new(),
+        let mut scene = PhysicsScene {
+            sim_data: RwLock::new(SimulationSceneData {
+                pipeline: PhysicsPipeline::new(),
+                rigid_body_set: RigidBodySet::new(),
+                collider_set: ColliderSet::new(),
+                island_manager: IslandManager::new(),
+                broad_phase: DefaultBroadPhase::new(),
+                narrow_phase: NarrowPhase::with_query_dispatcher(
+                    dispatcher.chain(DefaultQueryDispatcher),
+                ),
+                impulse_joint_set: ImpulseJointSet::new(),
+                multibody_joint_set: MultibodyJointSet::new(),
+                ccd_solver: CCDSolver::new(),
+                physics_hooks: SablePhysicsHooks {
+                    sable_data: Arc::clone(&sable_data),
+                    manifold_info_map: Arc::clone(&manifold_info_map),
+                    current_step_vm: current_step_vm.clone(),
+                },
+                event_handler: SableEventHandler {
+                    reported_collisions: Arc::clone(&reported_collisions),
+                },
+            }),
+            sable_data,
+            ground_handle: None,
+            reported_collisions,
+            current_step_vm,
+            gravity: Vec3::new(x as Real, y as Real, z as Real),
+            universal_drag: universal_drag as Real,
+            manifold_info_map,
+        };
+
+        {
+            let mut sim_data = scene.sim_data.write().unwrap();
+            sim_data.collider_set.insert(collider);
+
+            scene.ground_handle = Some(sim_data.rigid_body_set.insert(ground));
+        }
+
+        info!("Rapier scene initialized");
+        Arc::into_raw(Arc::new(scene)) as jlong
     }));
-    let manifold_info_map = Arc::new(SableManifoldInfoMap::default());
-    let reported_collisions = Arc::new(ReportedCollisionBuffer::new());
-    let current_step_vm = Some(Arc::new(unsafe {
-        JavaVM::from_raw(env.get_java_vm().unwrap().get_java_vm_pointer()).unwrap()
-    }));
 
-    let dispatcher = SableDispatcher {
-        sable_data: Arc::clone(&sable_data),
-        manifold_info_map: Arc::clone(&manifold_info_map),
-    };
-
-    let mut scene = PhysicsScene {
-        sim_data: RwLock::new(SimulationSceneData {
-            pipeline: PhysicsPipeline::new(),
-            rigid_body_set: RigidBodySet::new(),
-            collider_set: ColliderSet::new(),
-            island_manager: IslandManager::new(),
-            broad_phase: DefaultBroadPhase::new(),
-            narrow_phase: NarrowPhase::with_query_dispatcher(
-                dispatcher.chain(DefaultQueryDispatcher),
-            ),
-            impulse_joint_set: ImpulseJointSet::new(),
-            multibody_joint_set: MultibodyJointSet::new(),
-            ccd_solver: CCDSolver::new(),
-            physics_hooks: SablePhysicsHooks {
-                sable_data: Arc::clone(&sable_data),
-                manifold_info_map: Arc::clone(&manifold_info_map),
-                current_step_vm: current_step_vm.clone(),
-            },
-            event_handler: SableEventHandler {
-                reported_collisions: Arc::clone(&reported_collisions),
-            },
-        }),
-        sable_data,
-        ground_handle: None,
-        reported_collisions,
-        current_step_vm,
-        gravity: Vec3::new(x as Real, y as Real, z as Real),
-        universal_drag: universal_drag as Real,
-        manifold_info_map,
-    };
-
-    {
-        let mut sim_data = scene.sim_data.write().unwrap();
-        sim_data.collider_set.insert(collider);
-
-        scene.ground_handle = Some(sim_data.rigid_body_set.insert(ground));
+    match result {
+        Ok(handle) => handle,
+        Err(payload) => {
+            let msg = format!(
+                "Rapier native panic during initialize: {}",
+                panic_message(&payload)
+            );
+            let _ = env.throw_new("java/lang/RuntimeException", &msg);
+            0
+        }
     }
-
-    info!("Rapier scene initialized");
-    Arc::into_raw(Arc::new(scene)) as jlong
 }
 
 #[unsafe(no_mangle)]
