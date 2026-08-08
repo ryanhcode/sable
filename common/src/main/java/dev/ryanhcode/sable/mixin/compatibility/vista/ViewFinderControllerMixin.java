@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Vista compatibility: apply the sub-level orientation to the camera rotation when setting up the camera.
+ */
 @Mixin(ViewFinderController.class)
 public class ViewFinderControllerMixin {
 

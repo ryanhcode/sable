@@ -44,6 +44,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.client.particle.Particle} to add sub-level tracking, movement, collision and light color support to particles.
+ */
 @Mixin(Particle.class)
 public abstract class ParticleMixin implements ParticleExtension {
 

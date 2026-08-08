@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.block.ModelBlockRenderer} to apply dynamic directional shading to blocks rendered inside sub-levels.
+ */
 @Mixin(ModelBlockRenderer.class)
 public class ModelBlockRendererMixin {
 

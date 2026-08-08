@@ -6,6 +6,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+/**
+ * Accessor exposing the private chunks array of {@link net.minecraft.client.multiplayer.ClientChunkCache.Storage}.
+ */
 @Mixin(ClientChunkCache.Storage.class)
 public interface ClientChunkCacheStorageAccessor {
 

@@ -29,6 +29,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.NozzleBlockEntity} to provide wind lift as a sub-level actor.
+ */
+
 @Mixin(NozzleBlockEntity.class)
 public abstract class NozzleHoveringMixin extends SmartBlockEntity implements BlockEntitySubLevelActor {
 

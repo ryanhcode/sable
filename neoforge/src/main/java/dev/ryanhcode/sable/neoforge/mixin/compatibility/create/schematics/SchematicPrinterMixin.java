@@ -27,6 +27,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.SchematicPrinter} to load and transform sub-level templates in schematics.
+ */
+
 @Mixin(SchematicPrinter.class)
 public class SchematicPrinterMixin implements SchematicPrinterExtension {
 

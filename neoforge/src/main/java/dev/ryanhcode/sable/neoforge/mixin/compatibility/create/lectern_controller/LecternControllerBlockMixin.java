@@ -9,6 +9,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.link.controller.LecternControllerBlock} to prevent the controller from dropping when moved into a sub-level.
+ */
+
 @Mixin(LecternControllerBlock.class)
 public class LecternControllerBlockMixin implements BlockSubLevelAssemblyListener {
 

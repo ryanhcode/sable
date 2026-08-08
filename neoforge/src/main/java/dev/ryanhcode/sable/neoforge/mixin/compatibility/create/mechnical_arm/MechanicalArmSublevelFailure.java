@@ -17,6 +17,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointHandler} to filter cross-sub-level arm interaction points and give feedback.
+ */
+
 @Mixin(ArmInteractionPointHandler.class)
 public class MechanicalArmSublevelFailure {
 

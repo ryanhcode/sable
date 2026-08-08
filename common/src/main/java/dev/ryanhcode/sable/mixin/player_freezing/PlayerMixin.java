@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.player.Player} to implement {@link dev.ryanhcode.sable.mixinterface.player_freezing.PlayerFreezeExtension}, managing the frozen-to sub-level state and teleporting on finalization.
+ */
 @Mixin(Player.class)
 public abstract class PlayerMixin extends Entity implements PlayerFreezeExtension {
 

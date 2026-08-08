@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Set;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerPlayer} to adjust the position of sent teleport packets when riding a sub-level vehicle.
+ */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin extends Player {
 

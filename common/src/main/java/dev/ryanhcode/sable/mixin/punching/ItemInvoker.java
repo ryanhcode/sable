@@ -8,6 +8,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
+/**
+ * Invoker exposing the static private getPlayerPOVHitResult method of {@link net.minecraft.world.item.Item}.
+ */
 @Mixin(Item.class)
 public interface ItemInvoker {
     @Invoker("getPlayerPOVHitResult")

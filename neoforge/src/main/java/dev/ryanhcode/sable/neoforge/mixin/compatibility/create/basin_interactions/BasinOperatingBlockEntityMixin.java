@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity} to locate basins in sub-levels and force periodic updates.
+ */
+
 @Mixin(BasinOperatingBlockEntity.class)
 public abstract class BasinOperatingBlockEntityMixin {
     @Shadow

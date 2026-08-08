@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import snownee.jade.addon.create.CreatePlugin;
 
+/**
+ * Compatibility with Jade's Create addon: transform the player eye position and view direction into the sub-level local coordinate system.
+ */
 @Mixin(CreatePlugin.class)
 public class CreatePluginMixin {
 

@@ -21,6 +21,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.client.particle.TerrainParticle} to scale the light color of terrain particles when inside a sub-level.
+ */
 @Mixin(TerrainParticle.class)
 public abstract class TerrainParticleMixin extends Particle {
 

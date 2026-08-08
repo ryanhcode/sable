@@ -5,6 +5,9 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.chunk.LevelChunk} to implement {@link dev.ryanhcode.sable.mixinterface.loaded_chunk_debug.DebugLevelChunkExtension}, tracking the last update time for the debug overlay.
+ */
 @Mixin(LevelChunk.class)
 public class LevelChunkMixin implements DebugLevelChunkExtension {
 

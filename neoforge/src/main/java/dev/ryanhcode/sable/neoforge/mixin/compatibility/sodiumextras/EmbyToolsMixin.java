@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import toni.sodiumextras.EmbyTools;
 
+/**
+ * Mixin into {@link toni.sodiumextras.EmbyTools} (Sodium Extras) so distance checks account for sub-levels.
+ */
+
 @Mixin(EmbyTools.class)
 public class EmbyToolsMixin {
 

@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.LivingEntity} to handle inherited velocity and collision effects when mobs collide with sub-levels.
+ */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements LivingEntityMovementExtension {
     @Shadow public abstract LivingEntity.Fallsounds getFallSounds();

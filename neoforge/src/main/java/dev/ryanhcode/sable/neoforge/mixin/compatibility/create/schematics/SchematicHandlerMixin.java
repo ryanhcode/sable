@@ -19,6 +19,10 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.SchematicHandler} to place sub-level templates into the schematic render world.
+ */
+
 @Mixin(SchematicHandler.class)
 public class SchematicHandlerMixin {
 

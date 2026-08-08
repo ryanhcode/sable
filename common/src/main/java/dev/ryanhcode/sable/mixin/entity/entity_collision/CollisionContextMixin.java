@@ -7,6 +7,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link net.minecraft.world.phys.shapes.CollisionContext} so entities use the pre-allocated collision context.
+ */
 @Mixin(CollisionContext.class)
 public interface CollisionContextMixin {
 

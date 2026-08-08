@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlockEntity} to drop travelling packages when a connection is removed.
+ */
+
 @Mixin(ChainConveyorBlockEntity.class)
 public abstract class ChainConveyorBlockEntityMixin {
 

@@ -15,6 +15,10 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.graph.TrackGraphVisualizer} so track graph visualization displays correctly in sub-levels.
+ */
+
 @Mixin(TrackGraphVisualizer.class)
 public class TrackGraphVisualizerMixin {
 

@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.entity.CarriageContraptionVisual} so train contraption visuals translate correctly in sub-levels.
+ */
+
 @Mixin(CarriageContraptionVisual.class)
 public abstract class CarriageContraptionVisualMixin extends ContraptionVisual<CarriageContraptionEntity> {
 

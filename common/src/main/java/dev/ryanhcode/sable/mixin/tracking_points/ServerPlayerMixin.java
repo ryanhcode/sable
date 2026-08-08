@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerPlayer} to generate and store a tracking point when saving player data.
+ */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
 

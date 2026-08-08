@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 
+/**
+ * Mixin into {@link net.minecraft.client.Camera} to correctly return the fog type when the camera is inside a fluid in a sub-level.
+ */
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 

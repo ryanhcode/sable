@@ -26,6 +26,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Iterator;
 import java.util.Set;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.ai.navigation.PathNavigation} to support pathfinding inside sub-levels by converting the target to local coordinates.
+ */
 @Mixin(PathNavigation.class)
 public abstract class PathNavigationMixin {
 

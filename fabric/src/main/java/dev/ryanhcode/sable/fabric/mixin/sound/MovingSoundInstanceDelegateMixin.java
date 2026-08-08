@@ -10,6 +10,10 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Fabric mixin into {@link MovingSoundInstanceDelegate} to make the delegate implement {@link SoundInstance} and
+ * forward audio stream loading to the wrapped sound instance.
+ */
 @Mixin(MovingSoundInstanceDelegate.class)
 public abstract class MovingSoundInstanceDelegateMixin implements SoundInstance {
 

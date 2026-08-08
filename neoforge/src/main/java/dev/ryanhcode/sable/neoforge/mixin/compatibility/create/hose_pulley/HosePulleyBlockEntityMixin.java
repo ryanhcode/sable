@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.fluids.hosePulley.HosePulleyBlockEntity} so the hose pulley can find fluids and blocks in sub-levels.
+ */
+
 @Mixin(HosePulleyBlockEntity.class)
 public abstract class HosePulleyBlockEntityMixin extends SmartBlockEntity {
 

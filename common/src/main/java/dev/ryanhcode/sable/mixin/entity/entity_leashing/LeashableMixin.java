@@ -11,6 +11,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Leashable} so the leash behaviour accounts for sub-level position and velocity transforms.
+ */
 @Mixin(Leashable.class)
 public interface LeashableMixin {
 
