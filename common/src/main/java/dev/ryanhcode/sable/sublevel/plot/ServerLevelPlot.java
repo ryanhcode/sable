@@ -421,6 +421,29 @@ public class ServerLevelPlot extends LevelPlot {
     }
 
     /**
+     * Returns the block-space offset applied when serialized plot contents are loaded here.
+     */
+    public BlockPos getRelocationOffset(final CompoundTag tag) {
+        final ServerLevel level = this.getSubLevel().getLevel();
+        final int sourceOriginX = tag.contains("plot_grid_origin_x")
+                ? tag.getInt("plot_grid_origin_x")
+                : this.container.getOrigin().x;
+        final int sourceOriginZ = tag.contains("plot_grid_origin_z")
+                ? tag.getInt("plot_grid_origin_z")
+                : this.container.getOrigin().y;
+        final int sourcePlotX = sourceOriginX + tag.getInt("plot_x");
+        final int sourcePlotZ = sourceOriginZ + tag.getInt("plot_z");
+        final int sourceCenterY = tag.contains("plot_center_y")
+                ? tag.getInt("plot_center_y")
+                : this.getCenterBlock().getY();
+
+        return new BlockPos(
+                (this.plotPos.x - sourcePlotX) << (this.logSize + 4),
+                this.getCenterBlock().getY() - sourceCenterY,
+                (this.plotPos.z - sourcePlotZ) << (this.logSize + 4));
+    }
+
+    /**
      * Deserializes a plot from an NBT tag
      */
     public void load(final CompoundTag tag) {
@@ -436,23 +459,13 @@ public class ServerLevelPlot extends LevelPlot {
 
         final ServerSubLevel subLevel = this.getSubLevel();
         final ServerLevel level = subLevel.getLevel();
-        final int sourceOriginX = tag.contains("plot_grid_origin_x")
-                ? tag.getInt("plot_grid_origin_x")
-                : this.container.getOrigin().x;
-        final int sourceOriginZ = tag.contains("plot_grid_origin_z")
-                ? tag.getInt("plot_grid_origin_z")
-                : this.container.getOrigin().y;
-        final int sourcePlotX = sourceOriginX + tag.getInt("plot_x");
-        final int sourcePlotZ = sourceOriginZ + tag.getInt("plot_z");
-        final int blockOffsetX = (this.plotPos.x - sourcePlotX) << (this.logSize + 4);
-        final int blockOffsetZ = (this.plotPos.z - sourcePlotZ) << (this.logSize + 4);
+        final BlockPos relocationOffset = this.getRelocationOffset(tag);
+        final int blockOffsetX = relocationOffset.getX();
+        final int blockOffsetZ = relocationOffset.getZ();
         final int sourceMinSection = tag.contains("min_section_y")
                 ? tag.getInt("min_section_y")
                 : level.getMinSection();
-        final int sourceCenterY = tag.contains("plot_center_y")
-                ? tag.getInt("plot_center_y")
-                : this.getCenterBlock().getY();
-        final int blockOffsetY = this.getCenterBlock().getY() - sourceCenterY;
+        final int blockOffsetY = relocationOffset.getY();
 
         if (tag.contains("biome")) {
             final ResourceLocation location = ResourceLocation.tryParse(tag.getString("biome"));

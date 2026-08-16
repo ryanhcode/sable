@@ -50,6 +50,8 @@ public final class SubLevelTransferTest {
         final Vector3d sourcePosition = new Vector3d(sourceCenter.x, sourceCenter.y, sourceCenter.z);
         final ServerSubLevel source = spawnSingleBlockSubLevel(
                 sourceContainer, sourcePosition, Blocks.DIAMOND_BLOCK.defaultBlockState());
+        final ServerSubLevel destinationOccupant = spawnSingleBlockSubLevel(
+                destinationContainer, new Vector3d(0.5, 80.0, 0.5), Blocks.STONE.defaultBlockState());
         final UUID uuid = source.getUniqueId();
         final CompoundTag userData = new CompoundTag();
         userData.putString("transfer_test", "preserved");
@@ -74,6 +76,7 @@ public final class SubLevelTransferTest {
 
         final Pose3d destinationPose = new Pose3d(source.logicalPose());
         destinationPose.position().set(20.5, 90.0, -12.5);
+        final BlockPos sourcePlotCenter = source.getPlot().getCenterBlock();
         final SubLevelTransferResult result = SubLevelTransferService.transfer(source, destinationLevel, destinationPose);
         final ServerSubLevel replacement = result.root();
 
@@ -108,6 +111,20 @@ public final class SubLevelTransferTest {
             helper.fail("Destination pose was not applied");
             return;
         }
+        final BlockPos destinationPlotCenter = replacement.getPlot().getCenterBlock();
+        final Vector3d expectedRotationPoint = new Vector3d(destinationPose.rotationPoint()).add(
+                destinationPlotCenter.getX() - sourcePlotCenter.getX(),
+                destinationPlotCenter.getY() - sourcePlotCenter.getY(),
+                destinationPlotCenter.getZ() - sourcePlotCenter.getZ());
+        if (sourcePlotCenter.equals(destinationPlotCenter)) {
+            helper.fail("Transfer test did not allocate a relocated destination plot");
+            return;
+        }
+        if (replacement.logicalPose().rotationPoint().distance(expectedRotationPoint) > 0.001) {
+            helper.fail("Rotation point was not relocated with plot contents: expected="
+                    + expectedRotationPoint + ", actual=" + replacement.logicalPose().rotationPoint());
+            return;
+        }
 
         final RigidBodyHandle replacementHandle = RigidBodyHandle.of(replacement);
         if (replacementHandle == null
@@ -118,6 +135,7 @@ public final class SubLevelTransferTest {
         }
 
         removeSubLevel(destinationContainer, replacement);
+        removeSubLevel(destinationContainer, destinationOccupant);
         helper.succeed();
     }
 

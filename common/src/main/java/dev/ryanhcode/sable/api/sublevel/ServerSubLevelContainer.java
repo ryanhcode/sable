@@ -239,6 +239,40 @@ public class ServerSubLevelContainer extends SubLevelContainer {
     }
 
     /**
+     * Adds a force-loading ticket that only lasts for the current server session and is not written to saved data.
+     */
+    public <T> boolean addTransientForceLoadTicket(
+            final ServerSubLevel subLevel,
+            final SubLevelLoadingTicketType<T> ticketType,
+            final T key) {
+        final SubLevelLoadingTicket<T> ticket = new SubLevelLoadingTicket<>(
+                ticketType, subLevel.getUniqueId(), key);
+        return this.activeTickets
+                .computeIfAbsent(subLevel, ignored -> new ObjectArraySet<>())
+                .add(ticket);
+    }
+
+    /**
+     * Removes a force-loading ticket previously added with {@link #addTransientForceLoadTicket}.
+     */
+    public <T> boolean removeTransientForceLoadTicket(
+            final ServerSubLevel subLevel,
+            final SubLevelLoadingTicketType<T> ticketType,
+            final T key) {
+        final ObjectSet<SubLevelLoadingTicket<?>> tickets = this.activeTickets.get(subLevel);
+        if (tickets == null) {
+            return false;
+        }
+
+        final boolean removed = tickets.remove(new SubLevelLoadingTicket<>(
+                ticketType, subLevel.getUniqueId(), key));
+        if (tickets.isEmpty()) {
+            this.activeTickets.remove(subLevel);
+        }
+        return removed;
+    }
+
+    /**
      * Removes a sub-level force-loading ticket
      *
      * @param subLevel the loaded sub-level to remove the ticket from

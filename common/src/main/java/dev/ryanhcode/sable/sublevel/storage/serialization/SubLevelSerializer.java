@@ -20,6 +20,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -196,6 +197,13 @@ public class SubLevelSerializer {
         }
 
         final ServerLevelPlot plot = subLevel.getPlot();
+        if (destinationPose != null) {
+            final BlockPos relocationOffset = plot.getRelocationOffset(plotTag);
+            pose.rotationPoint().add(
+                    relocationOffset.getX(),
+                    relocationOffset.getY(),
+                    relocationOffset.getZ());
+        }
         try {
             plot.load(plotTag);
         } catch (final RuntimeException e) {
