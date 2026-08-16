@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
+import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.plot.ServerLevelPlot;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import org.joml.Quaterniondc;
 
 import java.util.List;
 import java.util.UUID;
@@ -129,13 +131,41 @@ public class SubLevelSerializer {
      * @param halfLoadedSubLevel the half loaded sub-level to fully load
      */
     public static ServerSubLevel fullyLoad(final ServerLevel level, final SubLevelData halfLoadedSubLevel) {
+        return fullyLoad(level, halfLoadedSubLevel, null, null);
+    }
+
+    /**
+     * Loads a serialized sub-level into the first free plot while applying a dimension-transfer transform.
+     * Velocities are retained exactly and rotated into the destination coordinate system.
+     *
+     * @param level              the destination level
+     * @param halfLoadedSubLevel the serialized source data
+     * @param destinationPose    the destination pose
+     * @param velocityRotation   rotation from source-world vectors to destination-world vectors
+     * @return the replacement sub-level, or {@code null} when allocation fails
+     */
+    public static ServerSubLevel fullyLoadForTransfer(
+            final ServerLevel level,
+            final SubLevelData halfLoadedSubLevel,
+            final Pose3dc destinationPose,
+            final Quaterniondc velocityRotation) {
+        return fullyLoad(level, halfLoadedSubLevel, destinationPose, velocityRotation);
+    }
+
+    private static ServerSubLevel fullyLoad(
+            final ServerLevel level,
+            final SubLevelData halfLoadedSubLevel,
+            @Nullable final Pose3dc destinationPose,
+            @Nullable final Quaterniondc velocityRotation) {
         final CompoundTag tag = halfLoadedSubLevel.fullTag();
         final CompoundTag plotTag = tag.getCompound("plot");
 
         final int plotX = plotTag.getInt("plot_x");
         final int plotZ = plotTag.getInt("plot_z");
 
-        final Pose3d pose = SableNBTUtils.readPose3d(tag.getCompound("pose"));
+        final Pose3d pose = destinationPose == null
+                ? SableNBTUtils.readPose3d(tag.getCompound("pose"))
+                : new Pose3d(destinationPose);
 
         final Vector3d position = pose.position();
         final Vector3d cor = pose.rotationPoint();
@@ -154,14 +184,24 @@ public class SubLevelSerializer {
 
         final ServerSubLevel subLevel;
         try {
-            subLevel = (ServerSubLevel) plotContainer.allocateSubLevel(halfLoadedSubLevel.uuid(), plotX, plotZ, pose);
+            subLevel = destinationPose == null
+                    ? (ServerSubLevel) plotContainer.allocateSubLevel(halfLoadedSubLevel.uuid(), plotX, plotZ, pose)
+                    : (ServerSubLevel) plotContainer.allocateNewSubLevel(halfLoadedSubLevel.uuid(), pose);
         } catch (final IllegalArgumentException e) {
             Sable.LOGGER.error("Failed to load sub-level {}, skipping", halfLoadedSubLevel, e);
+            return null;
+        } catch (final IllegalStateException e) {
+            Sable.LOGGER.error("Failed to allocate a plot for sub-level {}, skipping", halfLoadedSubLevel, e);
             return null;
         }
 
         final ServerLevelPlot plot = subLevel.getPlot();
-        plot.load(plotTag);
+        try {
+            plot.load(plotTag);
+        } catch (final RuntimeException e) {
+            plotContainer.removeSubLevel(subLevel, SubLevelRemovalReason.REMOVED);
+            throw e;
+        }
 
         if (plot.getBoundingBox() == BoundingBox3i.EMPTY || plot.getBoundingBox().volume() <= 0) {
             Sable.LOGGER.error("Failed to load sub-level, invalid plot bounds: {}", plot.getBoundingBox() == BoundingBox3i.EMPTY ? "EMPTY" : plot.getBoundingBox());
@@ -174,17 +214,25 @@ public class SubLevelSerializer {
         physicsSystem.getPipeline().teleport(subLevel, position, pose.orientation());
         subLevel.updateLastPose();
 
-        Vector3dc linearVelocity = JOMLConversion.ZERO;
-        Vector3dc angularVelocity = JOMLConversion.ZERO;
+        final double velocityMultiplier = velocityRotation == null
+                ? SableConfig.VELOCITY_RETAINED_ON_LOAD.getAsDouble()
+                : 1.0;
+        Vector3d linearVelocity = new Vector3d();
+        Vector3d angularVelocity = new Vector3d();
 
         if (tag.contains("linear_velocity")) {
             linearVelocity = SableNBTUtils.readVector3d(tag.getCompound("linear_velocity"))
-                    .mul(SableConfig.VELOCITY_RETAINED_ON_LOAD.getAsDouble());
+                    .mul(velocityMultiplier);
         }
 
         if (tag.contains("angular_velocity")) {
             angularVelocity = SableNBTUtils.readVector3d(tag.getCompound("angular_velocity"))
-                    .mul(SableConfig.VELOCITY_RETAINED_ON_LOAD.getAsDouble());
+                    .mul(velocityMultiplier);
+        }
+
+        if (velocityRotation != null) {
+            velocityRotation.transform(linearVelocity);
+            velocityRotation.transform(angularVelocity);
         }
 
         physicsSystem.getPipeline().addLinearAndAngularVelocity(subLevel, linearVelocity, angularVelocity);

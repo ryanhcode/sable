@@ -336,6 +336,10 @@ public class ServerLevelPlot extends LevelPlot {
         final CompoundTag tag = new CompoundTag();
         tag.putInt("plot_x", this.plotPos.x - this.container.getOrigin().x);
         tag.putInt("plot_z", this.plotPos.z - this.container.getOrigin().y);
+        tag.putInt("plot_grid_origin_x", this.container.getOrigin().x);
+        tag.putInt("plot_grid_origin_z", this.container.getOrigin().y);
+        tag.putInt("min_section_y", this.getSubLevel().getLevel().getMinSection());
+        tag.putInt("plot_center_y", this.getCenterBlock().getY());
         tag.putInt("log_size", this.logSize);
         tag.putString("biome", this.biome.location().toString());
         tag.putInt("data_version", DATA_VERSION);
@@ -432,6 +436,23 @@ public class ServerLevelPlot extends LevelPlot {
 
         final ServerSubLevel subLevel = this.getSubLevel();
         final ServerLevel level = subLevel.getLevel();
+        final int sourceOriginX = tag.contains("plot_grid_origin_x")
+                ? tag.getInt("plot_grid_origin_x")
+                : this.container.getOrigin().x;
+        final int sourceOriginZ = tag.contains("plot_grid_origin_z")
+                ? tag.getInt("plot_grid_origin_z")
+                : this.container.getOrigin().y;
+        final int sourcePlotX = sourceOriginX + tag.getInt("plot_x");
+        final int sourcePlotZ = sourceOriginZ + tag.getInt("plot_z");
+        final int blockOffsetX = (this.plotPos.x - sourcePlotX) << (this.logSize + 4);
+        final int blockOffsetZ = (this.plotPos.z - sourcePlotZ) << (this.logSize + 4);
+        final int sourceMinSection = tag.contains("min_section_y")
+                ? tag.getInt("min_section_y")
+                : level.getMinSection();
+        final int sourceCenterY = tag.contains("plot_center_y")
+                ? tag.getInt("plot_center_y")
+                : this.getCenterBlock().getY();
+        final int blockOffsetY = this.getCenterBlock().getY() - sourceCenterY;
 
         if (tag.contains("biome")) {
             final ResourceLocation location = ResourceLocation.tryParse(tag.getString("biome"));
@@ -458,7 +479,13 @@ public class ServerLevelPlot extends LevelPlot {
 
             boolean hasLit = false;
             for (final String sectionKey : sectionsTag.getAllKeys()) {
-                final int yIndex = Integer.parseInt(sectionKey);
+                final int sourceSectionY = sourceMinSection + Integer.parseInt(sectionKey);
+                final int destinationSectionY = sourceSectionY + Math.floorDiv(blockOffsetY, 16);
+                final int yIndex = level.getSectionIndexFromSectionY(destinationSectionY);
+                if (yIndex < 0 || yIndex >= chunk.getSectionsCount()) {
+                    throw new IllegalArgumentException("Serialized section Y " + sourceSectionY
+                            + " is outside destination build height after relocation");
+                }
 
 
                 final LevelChunkSection[] sections = chunk.getSections();
@@ -497,10 +524,12 @@ public class ServerLevelPlot extends LevelPlot {
 
             if (dataVersion >= 0) {
                 final LevelChunkTicks<Block> blockTicks = LevelChunkTicks.load(
-                        chunkTag.getList("block_ticks", Tag.TAG_COMPOUND), id -> BuiltInRegistries.BLOCK.getOptional(ResourceLocation.tryParse(id)), global
+                        relocatePositions(chunkTag.getList("block_ticks", Tag.TAG_COMPOUND), blockOffsetX, blockOffsetY, blockOffsetZ),
+                        id -> BuiltInRegistries.BLOCK.getOptional(ResourceLocation.tryParse(id)), global
                 );
                 final LevelChunkTicks<Fluid> fluidTicks = LevelChunkTicks.load(
-                        chunkTag.getList("fluid_ticks", Tag.TAG_COMPOUND), id -> BuiltInRegistries.FLUID.getOptional(ResourceLocation.tryParse(id)), global
+                        relocatePositions(chunkTag.getList("fluid_ticks", Tag.TAG_COMPOUND), blockOffsetX, blockOffsetY, blockOffsetZ),
+                        id -> BuiltInRegistries.FLUID.getOptional(ResourceLocation.tryParse(id)), global
                 );
 
                 //noinspection unchecked
@@ -536,7 +565,10 @@ public class ServerLevelPlot extends LevelPlot {
 
             // Add block entities
             for (int i = 0; i < blockEntitiesTag.size(); i++) {
-                final CompoundTag blockEntityTag = blockEntitiesTag.getCompound(i);
+                final CompoundTag blockEntityTag = blockEntitiesTag.getCompound(i).copy();
+                blockEntityTag.putInt("x", blockEntityTag.getInt("x") + blockOffsetX);
+                blockEntityTag.putInt("y", blockEntityTag.getInt("y") + blockOffsetY);
+                blockEntityTag.putInt("z", blockEntityTag.getInt("z") + blockOffsetZ);
                 final boolean keepBlockEntityPacked = blockEntityTag.getBoolean("keepPacked");
 
                 if (keepBlockEntityPacked) {
@@ -652,6 +684,41 @@ public class ServerLevelPlot extends LevelPlot {
         subLevel.updateMergedMassData(1.0f);
         physicsSystem.getPipeline().onStatsChanged(subLevel);
 
+    }
+
+    /**
+     * Collects root entities stored in this plot's chunks. Passengers are transferred with their vehicle.
+     */
+    public List<Entity> collectRootEntities() {
+        final Set<Entity> entities = new ReferenceOpenHashSet<>();
+        final PersistentEntitySectionManager<Entity> manager = this.getSubLevel().getLevel().entityManager;
+        for (final PlotChunkHolder chunk : this.getLoadedChunks()) {
+            final Stream<EntitySection<Entity>> sections = manager.sectionStorage.getExistingSectionsInChunk(chunk.getPos().toLong());
+            for (final EntitySection<Entity> section : sections.toList()) {
+                section.getEntities().filter(entity -> !entity.isPassenger()).forEach(entities::add);
+            }
+        }
+        return List.copyOf(entities);
+    }
+
+    private static ListTag relocatePositions(
+            final ListTag positions,
+            final int offsetX,
+            final int offsetY,
+            final int offsetZ) {
+        if (offsetX == 0 && offsetY == 0 && offsetZ == 0) {
+            return positions;
+        }
+
+        final ListTag relocated = new ListTag();
+        for (final Tag position : positions) {
+            final CompoundTag relocatedPosition = ((CompoundTag) position).copy();
+            relocatedPosition.putInt("x", relocatedPosition.getInt("x") + offsetX);
+            relocatedPosition.putInt("y", relocatedPosition.getInt("y") + offsetY);
+            relocatedPosition.putInt("z", relocatedPosition.getInt("z") + offsetZ);
+            relocated.add(relocatedPosition);
+        }
+        return relocated;
     }
 
     /**

@@ -139,11 +139,37 @@ public class ServerSubLevelContainer extends SubLevelContainer {
 
         super.removeSubLevel(x, z, reason);
 
-        if (reason == SubLevelRemovalReason.REMOVED) {
+        if (reason.clearsOccupancy()) {
             final ServerLevel level = this.getLevel();
             SubLevelOccupancySavedData.getOrLoad(level).setDirty();
             this.holdingChunkMap.queueDeletion(subLevel);
         }
+    }
+
+    /**
+     * Moves loading-ticket ownership to a replacement sub-level in another container.
+     */
+    @ApiStatus.Internal
+    public void transferTicketsTo(
+            final ServerSubLevel source,
+            final ServerSubLevelContainer destinationContainer,
+            final ServerSubLevel destination) {
+        final UUID uuid = source.getUniqueId();
+        final SubLevelTicketInfo info = this.allTickets.remove(uuid);
+        this.activeTickets.remove(source);
+
+        if (info == null) {
+            return;
+        }
+
+        info.setPointer(null);
+        destinationContainer.allTickets.put(uuid, info);
+        if (!info.tickets().isEmpty()) {
+            destinationContainer.activeTickets.put(destination, new ObjectArraySet<>(info.tickets()));
+        }
+
+        SubLevelTicketsSavedData.getOrLoad(this.getLevel()).setDirty();
+        SubLevelTicketsSavedData.getOrLoad(destinationContainer.getLevel()).setDirty();
     }
 
     @Override

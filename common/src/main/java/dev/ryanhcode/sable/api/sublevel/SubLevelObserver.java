@@ -25,6 +25,16 @@ public interface SubLevelObserver {
     }
 
     /**
+     * Called after a server sub-level has moved between level containers.
+     * Implementations must replace references to {@code source} with {@code destination}.
+     *
+     * @param source      the removed source instance
+     * @param destination the replacement instance in the destination level
+     */
+    default void onSubLevelTransferred(final SubLevel source, final SubLevel destination) {
+    }
+
+    /**
      * Called every tick for each {@link SubLevelContainer}.
      *
      * @param subLevels the sub-level container that is ticking
