@@ -42,6 +42,14 @@ public class SubLevelRegionFile extends SubLevelStorageFile {
         }
     }
 
+    public void tryRemove(final int localX, final int localZ) {
+        try {
+            this.write(this.getIndex(localX, localZ), (CompoundTag) null);
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to remove sub-level holding chunk at ({}, {})", localX, localZ, e);
+        }
+    }
+
     @Nullable
     public SubLevelHoldingChunk read(final ChunkPos chunkPos) {
         final int localX = chunkPos.getRegionLocalX();

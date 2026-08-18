@@ -26,6 +26,8 @@ public class SableTCPPackets {
 
         PACKET_MANAGER.registerClientbound(ClientboundPhysicsPropertyPacket.TYPE, ClientboundPhysicsPropertyPacket.CODEC, ClientboundPhysicsPropertyPacket::handle);
         PACKET_MANAGER.registerClientbound(ClientboundFloatingBlockMaterialPacket.TYPE, ClientboundFloatingBlockMaterialPacket.CODEC, ClientboundFloatingBlockMaterialPacket::handle);
+        PACKET_MANAGER.registerClientbound(ClientboundDimensionPhysicsPacket.TYPE, ClientboundDimensionPhysicsPacket.CODEC, ClientboundDimensionPhysicsPacket::handle);
+
         PACKET_MANAGER.registerClientbound(ClientboundRecentlySplitSubLevelPacket.TYPE, ClientboundRecentlySplitSubLevelPacket.CODEC, ClientboundRecentlySplitSubLevelPacket::handle);
 
         PACKET_MANAGER.registerClientbound(ClientboundSableUDPActivationPacket.TYPE, ClientboundSableUDPActivationPacket.CODEC, ClientboundSableUDPActivationPacket::handle);

@@ -1,2 +1,1 @@
-- Fix a crash with sub-level splitting
-- Fix and add recovery for an issue with sub-levels not loading in because their bounds got set to [0,0,0,0,0,0]
+- Fix an issue where assembling massless Create contraptions would crash the server

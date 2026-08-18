@@ -26,6 +26,7 @@ public class QueuedForceGroup {
         this.forceTotal.applyImpulseAtPoint(this.subLevel.getMassTracker(), point, force);
         this.recordPointForce(point, force);
     }
+
     public void recordPointForce(final Vector3dc point, final Vector3dc force) {
         if (!this.subLevel.isTrackingIndividualQueuedForces()) {
             return;

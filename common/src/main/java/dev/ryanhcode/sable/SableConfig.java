@@ -18,8 +18,8 @@ public final class SableConfig {
     public static final ModConfigSpec.IntValue SUB_LEVEL_PUNCH_COOLDOWN_TICKS;
     public static final ModConfigSpec.BooleanValue DISABLE_UDP_PIPELINE;
     public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
-    public static final ModConfigSpec.BooleanValue VERBOSE_SERIALIZATION_LOGGING;
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_SAVING_LOG_MESSAGE;
+    public static final ModConfigSpec.BooleanValue VERBOSE_SERIALIZATION_LOGGING;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();

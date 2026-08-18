@@ -74,7 +74,3 @@ reason = "${mod_name} supports Shoulder Surfing Reloaded ${shouldersurfing_versi
 [[dependencies.sable]]
 modId = "scalablelux"
 type = "incompatible"
-
-[[dependencies.sable]]
-modId = "littletiles"
-type = "incompatible"

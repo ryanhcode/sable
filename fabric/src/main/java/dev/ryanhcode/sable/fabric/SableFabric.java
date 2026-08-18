@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.fabric;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.SableCommonEvents;
 import dev.ryanhcode.sable.SableConfig;
+import dev.ryanhcode.sable.SableServerConfig;
 import dev.ryanhcode.sable.command.SableCommand;
 import dev.ryanhcode.sable.command.argument.SubLevelSelectorModifiers;
 import dev.ryanhcode.sable.index.SableAttributes;
@@ -43,5 +44,6 @@ public final class SableFabric implements ModInitializer {
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((player, joined) -> SableCommonEvents.syncDataPacket(packet -> player.connection.send(packet)));
 
         NeoForgeConfigRegistry.INSTANCE.register(Sable.MOD_ID, ModConfig.Type.COMMON, SableConfig.SPEC);
+        NeoForgeConfigRegistry.INSTANCE.register(Sable.MOD_ID, ModConfig.Type.SERVER, SableServerConfig.SPEC);
     }
 }

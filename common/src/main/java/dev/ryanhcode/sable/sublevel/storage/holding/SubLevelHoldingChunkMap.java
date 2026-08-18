@@ -270,6 +270,10 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
                     this.queuedUnloads.add(holdingChunkPos);
                 }
             }
+
+            if (holdingChunk.isEmpty()) {
+                this.queuedUnloads.add(holdingChunkPos);
+            }
         }
 
         for (final ChunkPos unload : this.queuedUnloads) {
@@ -283,6 +287,7 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
                 for (final HoldingSubLevel holdingSubLevel : holdingChunk.getLoadedHoldingSubLevels()) {
                     this.allHoldingSubLevels.remove(holdingSubLevel.data().uuid());
                 }
+
                 this.setDirty(unload);
             }
         }
@@ -297,7 +302,11 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
             }
 
             if (holdingChunk != null) {
-                this.storage.attemptSaveHoldingChunk(chunkPos, holdingChunk);
+                if (holdingChunk.isEmpty()) {
+                    this.storage.attemptRemoveHoldingChunk(chunkPos);
+                } else {
+                    this.storage.attemptSaveHoldingChunk(chunkPos, holdingChunk);
+                }
             }
         }
 
@@ -312,6 +321,7 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
             }
 
             this.storage.flush();
+            this.storage.pruneCache();
         } catch (final IOException e) {
             Sable.LOGGER.error("Failed to flush sub-level storage to disk", e);
         }

@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.sublevel.storage.serialization;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.SableServerConfig;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.sublevel.storage.holding.GlobalSavedSubLevelPointer;
 import dev.ryanhcode.sable.sublevel.storage.holding.SavedSubLevelPointer;
@@ -8,6 +9,7 @@ import dev.ryanhcode.sable.sublevel.storage.holding.SubLevelHoldingChunk;
 import dev.ryanhcode.sable.sublevel.storage.region.SubLevelRegionFile;
 import dev.ryanhcode.sable.sublevel.storage.region.SubLevelStorageFile;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.FileUtil;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
@@ -51,7 +53,12 @@ public class SubLevelStorage implements AutoCloseable {
         }
 
         if (this.regionCache.size() >= MAX_CACHE_SIZE) {
-            this.regionCache.removeLast().close();
+            final SubLevelRegionFile last = this.regionCache.removeLast();
+            if (last.isEmpty() && SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                last.delete();
+            } else {
+                last.close();
+            }
         }
 
         final Path path = this.getPath(chunkPos);
@@ -70,7 +77,13 @@ public class SubLevelStorage implements AutoCloseable {
         }
 
         if (this.storageCache.size() >= MAX_CACHE_SIZE) {
-            this.storageCache.removeLast().close();
+            final SubLevelStorageFile last = this.storageCache.removeLast();
+
+            if (last.isEmpty() && SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                last.delete();
+            } else {
+                last.close();
+            }
         }
 
         FileUtil.createDirectoriesSafe(this.folder);
@@ -100,7 +113,15 @@ public class SubLevelStorage implements AutoCloseable {
             regionFile.trySave(chunkPos.getRegionLocalX(), chunkPos.getRegionLocalZ(), holdingChunk);
         } catch (final IOException e) {
             Sable.LOGGER.error("Failed to save holding chunk for {}", chunkPos, e);
+        }
+    }
 
+    public void attemptRemoveHoldingChunk(final ChunkPos chunkPos) {
+        try {
+            final SubLevelRegionFile regionFile = this.getRegionFile(chunkPos);
+            regionFile.tryRemove(chunkPos.getRegionLocalX(), chunkPos.getRegionLocalZ());
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to remove holding chunk for {}", chunkPos, e);
         }
     }
 
@@ -262,6 +283,41 @@ public class SubLevelStorage implements AutoCloseable {
     @ApiStatus.Internal
     public Path getFolder() {
         return this.folder;
+    }
+
+    /**
+     * Prunes all empty files in the cache
+     */
+    public void pruneCache() throws IOException {
+        final ObjectIterator<SubLevelStorageFile> storageFiles = this.storageCache.values().iterator();
+
+        while (storageFiles.hasNext()) {
+            final SubLevelStorageFile storageFile = storageFiles.next();
+
+            if (storageFile.isEmpty()) {
+                if (SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                    storageFile.delete();
+                } else {
+                    storageFile.close();
+                }
+                storageFiles.remove();
+            }
+        }
+
+        final ObjectIterator<SubLevelRegionFile> regionFiles = this.regionCache.values().iterator();
+
+        while (regionFiles.hasNext()) {
+            final SubLevelRegionFile regionFile = regionFiles.next();
+
+            if (regionFile.isEmpty()) {
+                if (SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                    regionFile.delete();
+                } else {
+                    regionFile.close();
+                }
+                regionFiles.remove();
+            }
+        }
     }
 
     /**

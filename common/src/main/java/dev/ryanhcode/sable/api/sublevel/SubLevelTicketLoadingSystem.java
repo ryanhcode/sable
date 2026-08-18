@@ -7,6 +7,8 @@ import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.UUID;
+
 /**
  * Manages the {@code activeTickets} map in {@link ServerSubLevelContainer}
  */
@@ -30,17 +32,18 @@ public class SubLevelTicketLoadingSystem implements SubLevelObserver {
     @Override
     public void onSubLevelRemoved(final SubLevel subLevel, final SubLevelRemovalReason reason) {
         final ServerSubLevel serverSubLevel = ((ServerSubLevel) subLevel);
+        final UUID uuid = subLevel.getUniqueId();
 
         if (reason == SubLevelRemovalReason.UNLOADED) {
             this.container.activeTickets.remove(serverSubLevel);
 
-            final SubLevelTicketInfo info = this.container.allTickets.get(serverSubLevel);
+            final SubLevelTicketInfo info = this.container.allTickets.get(uuid);
 
             if (info != null) {
                 info.setPointer(serverSubLevel.getLastSerializationPointer());
             }
         } else if (reason == SubLevelRemovalReason.REMOVED) {
-            this.container.allTickets.remove(subLevel.getUniqueId());
+            this.container.allTickets.remove(uuid);
             this.container.activeTickets.remove(serverSubLevel);
         }
     }

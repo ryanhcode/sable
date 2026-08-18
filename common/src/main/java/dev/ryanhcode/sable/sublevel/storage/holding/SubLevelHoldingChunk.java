@@ -188,6 +188,10 @@ public class SubLevelHoldingChunk {
         return this.keepLoaded;
     }
 
+    public boolean isEmpty() {
+        return this.pointers.isEmpty() && this.loadedHoldingSubLevels.isEmpty();
+    }
+
     @Override
     public String toString() {
         return "SubLevelHoldingChunk{" +

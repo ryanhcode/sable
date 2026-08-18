@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.plot;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
@@ -33,6 +34,7 @@ public class ChunkMapMixin {
     @Inject(method = "getPlayers", at = @At("HEAD"), cancellable = true)
     private void sable$getPlayers(final ChunkPos chunkPos, final boolean bl, final CallbackInfoReturnable<List<ServerPlayer>> cir) {
         final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
+        assert container != null;
 
         if (container.inBounds(chunkPos)) {
             final List<ServerPlayer> players = container.getPlayersTracking(chunkPos);
@@ -56,15 +58,18 @@ public class ChunkMapMixin {
         return !updatingChunkMap.values().stream().anyMatch(chunkHolder -> !(chunkHolder instanceof PlotChunkHolder));
     }
 
-    @Inject(method = "isChunkTracked", at = @At(value = "HEAD"), cancellable = true)
-    private void sable$isChunkTracked(final ServerPlayer serverPlayer, final int i, final int j, final CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "isChunkTracked", at = @At(value = "RETURN"))
+    private boolean sable$isChunkTracked(boolean original, final ServerPlayer serverPlayer, final int x, final int z) {
         final SubLevelContainer container = SubLevelContainer.getContainer(this.level);
+        assert container != null;
 
-        final LevelPlot plot = container.getPlot(new ChunkPos(i, j));
+        final LevelPlot plot = container.getPlot(new ChunkPos(x, z));
         if (plot != null) {
             final ServerSubLevel subLevel = (ServerSubLevel) plot.getSubLevel();
-            cir.setReturnValue(subLevel.getTrackingPlayers().contains(serverPlayer.getGameProfile().getId()));
+            return subLevel.getTrackingPlayers().contains(serverPlayer.getGameProfile().getId());
         }
+
+        return original;
     }
 
     @Inject(method = "anyPlayerCloseEnoughForSpawning", at = @At("HEAD"), cancellable = true)

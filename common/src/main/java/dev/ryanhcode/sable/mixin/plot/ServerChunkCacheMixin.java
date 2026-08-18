@@ -1,5 +1,6 @@
 package dev.ryanhcode.sable.mixin.plot;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.sublevel.plot.PlotChunkHolder;
@@ -84,14 +85,14 @@ public class ServerChunkCacheMixin {
         }
     }
 
-    @Inject(method = "hasChunk", at = @At("HEAD"), cancellable = true)
-    private void hasChunk(final int x, final int z, final CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "hasChunk", at = @At("RETURN"))
+    private boolean hasChunk(final boolean original, final int x, final int z) {
         final SubLevelContainer container = this.sable$getPlotContainer();
         if (container.inBounds(x, z)) {
-            final ChunkAccess chunk = container.getChunk(new ChunkPos(x, z));
-
-            cir.setReturnValue(chunk != null);
+            return container.getChunk(new ChunkPos(x, z)) != null;
         }
+
+        return original;
     }
 
 
@@ -105,15 +106,15 @@ public class ServerChunkCacheMixin {
         }
     }
 
-    @Inject(method = "isPositionTicking", at = @At("HEAD"), cancellable = true)
-    private void isPositionTicking(final long pos, final CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "isPositionTicking", at = @At("RETURN"))
+    private boolean isPositionTicking(final boolean original, final long chunkPos) {
         final SubLevelContainer container = this.sable$getPlotContainer();
-        if (container.inBounds(ChunkPos.getX(pos), ChunkPos.getZ(pos))) {
-            final ChunkPos chunkPos = new ChunkPos(pos);
-            final LevelChunk chunk = container.getChunk(chunkPos);
-
-            cir.setReturnValue(chunk != null);
+        if (container.inBounds(ChunkPos.getX(chunkPos), ChunkPos.getZ(chunkPos))) {
+            final LevelChunk chunk = container.getChunk(new ChunkPos(chunkPos));
+            return chunk != null;
         }
+
+        return original;
     }
 
     @Inject(method = "getFullChunk", at = @At("HEAD"), cancellable = true)

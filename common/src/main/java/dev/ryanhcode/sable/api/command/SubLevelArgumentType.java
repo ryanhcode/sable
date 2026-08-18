@@ -9,10 +9,15 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import dev.ryanhcode.sable.command.argument.SubLevelSelector;
 import dev.ryanhcode.sable.command.argument.SubLevelSelectorModifierType;
 import dev.ryanhcode.sable.command.argument.SubLevelSelectorType;
+import dev.ryanhcode.sable.command.argument.SubLevelSuggestionProvider;
+import dev.ryanhcode.sable.command.argument.selector.SubLevelTarget;
+import dev.ryanhcode.sable.command.argument.selector.SubLevelTargetNone;
+import dev.ryanhcode.sable.command.argument.selector.SubLevelTargetSelector;
+import dev.ryanhcode.sable.command.argument.selector.SubLevelTargetUUID;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -24,26 +29,25 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
+public class SubLevelArgumentType implements ArgumentType<SubLevelTarget> {
 
-    public static final Function<SuggestionsBuilder, CompletableFuture<Suggestions>> NO_SUGGESTIONS = SuggestionsBuilder::buildFuture;
-    private static final SimpleCommandExceptionType ERROR_SINGLE_SUB_LEVEL_REQUIRED =
+    public static final Function<SuggestionsBuilder, SuggestionsBuilder> NO_SUGGESTIONS = b -> b;
+    public static final SimpleCommandExceptionType ERROR_SINGLE_SUB_LEVEL_REQUIRED =
             new SimpleCommandExceptionType(Component.translatable("argument.sable.single_sub_level_required"));
-    private static final SimpleCommandExceptionType ERROR_INVALID_SUBLEVEL =
-            new SimpleCommandExceptionType(Component.translatable("argument.sable.sub_level.invalid"));
-    private static final SimpleCommandExceptionType UNEXPECTED_END_OF_INPUT =
+    public static final SimpleCommandExceptionType ERROR_INVALID_SELECTOR =
+            new SimpleCommandExceptionType(Component.translatable("argument.sable.invalid_selector"));
+    public static final SimpleCommandExceptionType ERROR_UNEXPECTED_END_OF_INPUT =
             new SimpleCommandExceptionType(Component.translatable("argument.sable.unexpected_end_of_input"));
+    public static final SimpleCommandExceptionType ERROR_INVALID_UUID = new SimpleCommandExceptionType(Component.translatable("argument.sable.invalid_uuid"));
+    public static final SimpleCommandExceptionType ERROR_CANNOT_FIND_SUB_LEVEL = new SimpleCommandExceptionType(Component.translatable("argument.sable.cannot_find_sub_level"));
     private static final String STATIC_WORLD = "static_world";
     private static final Collection<String> EXAMPLES = Arrays.stream(SubLevelSelectorType.values())
             .map(type -> "@" + type.getChar()).toList();
-    private static Function<SuggestionsBuilder, CompletableFuture<Suggestions>> suggestions = NO_SUGGESTIONS;
+    private static Function<SuggestionsBuilder, SuggestionsBuilder> SELECTOR_SUGGESTIONS = NO_SUGGESTIONS;
     private final boolean allowStaticLevel;
     private final boolean allowMultiple;
 
@@ -53,11 +57,11 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
     }
 
     public static Collection<ServerSubLevel> getSubLevels(final CommandContext<CommandSourceStack> ctx, final String name) throws CommandSyntaxException {
-        return ctx.getArgument(name, SubLevelSelector.class).getSubLevels(ctx.getSource());
+        return ctx.getArgument(name, SubLevelTarget.class).getSubLevels(ctx.getSource());
     }
 
     public static ServerSubLevel getSingleSubLevel(final CommandContext<CommandSourceStack> ctx, final String name) throws CommandSyntaxException {
-        final Collection<ServerSubLevel> subLevels = ctx.getArgument(name, SubLevelSelector.class).getSubLevels(ctx.getSource());
+        final Collection<ServerSubLevel> subLevels = ctx.getArgument(name, SubLevelTarget.class).getSubLevels(ctx.getSource());
         if (subLevels.size() > 1) {
             throw ERROR_SINGLE_SUB_LEVEL_REQUIRED.create();
         }
@@ -83,7 +87,7 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
 
     private static @NotNull List<Pair<SubLevelSelectorModifierType, SubLevelSelectorModifierType.Modifier>> parseSelectorArguments(final StringReader reader) throws CommandSyntaxException {
         final List<Pair<SubLevelSelectorModifierType, SubLevelSelectorModifierType.Modifier>> modifiers = new ObjectArrayList<>();
-        setSuggestions(reader, "[");
+        setSelectorSuggestions(reader, "[");
 
         final List<Pair<String, @Nullable Message>> permittedPreEntryToken = new ArrayList<>(SubLevelSelectorModifierType.getAllNamesWithTooltip()
                 .stream().map(s -> Pair.of(s.first() + "=", s.second())).toList());
@@ -93,28 +97,28 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
         if (reader.canRead() && reader.peek() == '[') {
             reader.skip();
 
-            setSuggestionsWithTooltip(reader, permittedPreEntryToken);
+            setSelectorSuggestionsWithTooltip(reader, permittedPreEntryToken);
             while (reader.canRead() && reader.peek() != ']') {
                 if (reader.peek() == ',') {
                     reader.skip();
                 }
-                setSuggestionsWithTooltip(reader, permittedPreEntryToken);
+                setSelectorSuggestionsWithTooltip(reader, permittedPreEntryToken);
 
                 final String propertyName = readUntilEndOrCharacter(reader, '=');
 
                 if (!reader.canRead() || reader.peek() != '=') {
-                    throw UNEXPECTED_END_OF_INPUT.createWithContext(reader);
+                    throw ERROR_UNEXPECTED_END_OF_INPUT.createWithContext(reader);
                 }
                 reader.skip();
 
                 final SubLevelSelectorModifierType modifierType = SubLevelSelectorModifierType.getModifier(propertyName, reader);
                 if (modifierType == null) {
-                    throw UNEXPECTED_END_OF_INPUT.createWithContext(reader);
+                    throw ERROR_UNEXPECTED_END_OF_INPUT.createWithContext(reader);
                 }
                 final SubLevelSelectorModifierType.Modifier modifier = modifierType.getParser().parse(reader);
                 modifiers.add(Pair.of(modifierType, modifier));
 
-                setSuggestionsWithTooltip(reader, permittedPreEntryToken);
+                setSelectorSuggestionsWithTooltip(reader, permittedPreEntryToken);
                 if (isFirstEntry) {
                     permittedPreEntryToken.add(Pair.of(",", null));
                     isFirstEntry = false;
@@ -124,32 +128,33 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
             if (reader.canRead() && reader.peek() == ']') {
                 reader.skip();
             } else {
-                throw UNEXPECTED_END_OF_INPUT.createWithContext(reader);
+                throw ERROR_UNEXPECTED_END_OF_INPUT.createWithContext(reader);
             }
         }
 
         return modifiers;
     }
 
-    public static void setSuggestions(final StringReader reader, final String... suggested) {
-        setSuggestions(reader, Arrays.asList(suggested));
+    public static void setSelectorSuggestions(final StringReader reader, final String... suggested) {
+        setSelectorSuggestions(reader, Arrays.asList(suggested));
     }
 
-    public static void setSuggestions(final StringReader reader, final List<String> suggested) {
-        setSuggestionsWithTooltip(reader, suggested.stream().map(s -> Pair.of(s, (Message) null)).toList());
+    public static void setSelectorSuggestions(final StringReader reader, final List<String> suggested) {
+        setSelectorSuggestionsWithTooltip(reader, suggested.stream().map(s -> Pair.of(s, (Message) null)).toList());
     }
 
     @SafeVarargs
-    public static void setSuggestionsWithTooltip(final StringReader reader, final Pair<String, @Nullable Message>... suggested) {
-        setSuggestionsWithTooltip(reader, Arrays.asList(suggested));
+    public static void setSelectorSuggestionsWithTooltip(final StringReader reader, final Pair<String, @Nullable Message>... suggested) {
+        setSelectorSuggestionsWithTooltip(reader, Arrays.asList(suggested));
     }
 
-    public static void setSuggestionsWithTooltip(final StringReader reader, final List<Pair<String, @Nullable Message>> suggested) {
+    public static void setSelectorSuggestionsWithTooltip(final StringReader reader, final List<Pair<String, @Nullable Message>> suggested) {
         final int cursor = reader.getCursor();
-        suggestions = builder -> {
+        SELECTOR_SUGGESTIONS = builder -> {
             final SuggestionsBuilder nextSuggestion = builder.createOffset(cursor);
+            final String input = builder.getInput().substring(cursor);
             for (final Pair<String, @Nullable Message> suggestion : suggested) {
-                if (!suggestion.first().startsWith(builder.getInput().substring(cursor))) {
+                if (!suggestion.first().startsWith(input)) {
                     continue;
                 }
                 if (suggestion.second() != null) {
@@ -158,7 +163,7 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
                     nextSuggestion.suggest(suggestion.first());
                 }
             }
-            return nextSuggestion.buildFuture();
+            return nextSuggestion;
         };
     }
 
@@ -168,13 +173,13 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
             builder.append(reader.read());
         }
         if (builder.isEmpty()) {
-            throw UNEXPECTED_END_OF_INPUT.create();
+            throw ERROR_UNEXPECTED_END_OF_INPUT.create();
         }
         return builder.toString();
     }
 
     @Override
-    public SubLevelSelector parse(final StringReader reader) throws CommandSyntaxException {
+    public SubLevelTarget parse(final StringReader reader) throws CommandSyntaxException {
         final ObjectList<Pair<String, @Nullable Message>> allowedSelectors = new ObjectArrayList<>();
         if (this.allowStaticLevel) {
             allowedSelectors.add(Pair.of(STATIC_WORLD, Component.translatable("argument.sable.body.static_world")));
@@ -182,35 +187,40 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
         for (final SubLevelSelectorType selector : SubLevelSelectorType.values()) {
             allowedSelectors.add(Pair.of("@" + selector.getChar(), selector.getTooltip()));
         }
-        setSuggestionsWithTooltip(reader, allowedSelectors);
+        setSelectorSuggestionsWithTooltip(reader, allowedSelectors);
 
         if (this.allowStaticLevel && reader.canRead(STATIC_WORLD.length()) && reader.peek() == STATIC_WORLD.charAt(0)) {
             final String staticWorld = reader.readString();
 
             if (!staticWorld.equals(STATIC_WORLD)) {
-                throw ERROR_INVALID_SUBLEVEL.create();
+                throw ERROR_INVALID_SELECTOR.create();
             }
 
-            return new SubLevelSelector(null, new ObjectArrayList<>());
+            return SubLevelTargetNone.INSTANCE;
         }
 
         if (!reader.canRead()) {
-            throw ERROR_INVALID_SUBLEVEL.create();
+            throw ERROR_INVALID_SELECTOR.create();
         }
 
-        final char firstChar = reader.read();
+        final char firstChar = reader.peek();
 
-        if (!reader.canRead() || firstChar != '@') {
-            throw ERROR_INVALID_SUBLEVEL.create();
+        if (firstChar == '@') {
+            reader.skip();
+            return this.parseSelector(reader);
+        } else {
+            return this.parseUUID(reader);
         }
+    }
 
+    private SubLevelTarget parseSelector(final StringReader reader) throws CommandSyntaxException {
         if (!reader.canRead()) {
-            throw ERROR_INVALID_SUBLEVEL.create();
+            throw ERROR_INVALID_SELECTOR.create();
         }
 
         final SubLevelSelectorType selectorType = SubLevelSelectorType.of(reader.read());
         if (selectorType == null) {
-            throw ERROR_INVALID_SUBLEVEL.create();
+            throw ERROR_INVALID_SELECTOR.create();
         }
 
         int maximumResults = Integer.MAX_VALUE;
@@ -230,19 +240,41 @@ public class SubLevelArgumentType implements ArgumentType<SubLevelSelector> {
             throw ERROR_SINGLE_SUB_LEVEL_REQUIRED.create();
         }
 
-        return new SubLevelSelector(selectorType, modifiers);
+        return new SubLevelTargetSelector(selectorType, modifiers);
+    }
+
+    private SubLevelTarget parseUUID(final StringReader reader) throws CommandSyntaxException {
+        final String s = reader.readString();
+        try {
+            return new SubLevelTargetUUID(UUID.fromString(s));
+        } catch (final IllegalArgumentException e) {
+            throw ERROR_INVALID_UUID.createWithContext(reader);
+        }
     }
 
     @Override
-    public <S> CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> pContext, final SuggestionsBuilder builder) {
+    public <S> CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> pContext, SuggestionsBuilder builder) {
         final StringReader stringreader = new StringReader(builder.getInput());
-        stringreader.setCursor(builder.getStart());
-        suggestions = NO_SUGGESTIONS;
+        final int start = builder.getStart();
+        stringreader.setCursor(start);
+        SELECTOR_SUGGESTIONS = NO_SUGGESTIONS;
         try {
             this.parse(stringreader);
         } catch (final CommandSyntaxException ignored) {
         }
-        return suggestions.apply(builder);
+        builder = SELECTOR_SUGGESTIONS.apply(builder);
+
+        if (pContext.getSource() instanceof final SubLevelSuggestionProvider suggestionProvider) {
+            final SubLevel subLevel = suggestionProvider.getSelectedSubLevel();
+            if (subLevel != null) {
+                final String uuid = subLevel.getUniqueId().toString();
+                final String input = builder.getInput().substring(start);
+                if (uuid.startsWith(input)) {
+                    builder.suggest(uuid);
+                }
+            }
+        }
+        return builder.buildFuture();
     }
 
     @Override

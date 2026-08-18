@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.api.command.SableCommandHelper;
 import dev.ryanhcode.sable.api.command.SubLevelArgumentType;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
+import dev.ryanhcode.sable.api.sublevel.ticket.SubLevelLoadingTicket;
 import dev.ryanhcode.sable.api.sublevel.ticket.SubLevelLoadingTicketType;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.network.packets.tcp.ClientboundEnterGizmoPacket;
@@ -30,9 +31,7 @@ import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
-import java.util.Collection;
-import java.util.Formatter;
-import java.util.Locale;
+import java.util.*;
 
 public class SableCommand {
 
@@ -53,15 +52,8 @@ public class SableCommand {
 
         sableBuilder
                 .then(debugBuilder
-                        .then(Commands.literal("udp_test").executes(ctx -> {
-                            final SableUDPServer server = SableUDPServer.getServer(ctx.getSource().getServer());
-
-                            if (server != null) {
-                                server.sendUDPPacket(ctx.getSource().getPlayerOrException(), new SableUDPEchoPacket("Skibidi Toilet"), true);
-                            }
-
-                            return 1;
-                        }))
+                        .then(Commands.literal("udp_test")
+                                .executes(SableCommand::executeUDPTestCommand))
                 );
 
         sableBuilder
@@ -74,92 +66,29 @@ public class SableCommand {
                                 .executes(SableCommand::executeSetPhysicsPausedCommand)))
 
                 .then(Commands.literal("forceload")
-                        .then(Commands.literal("add").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
-                            final CommandSourceStack source = ctx.getSource();
-                            final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
-                            final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
-
-                            int count = 0;
-                            for (final ServerSubLevel subLevel : subLevels) {
-                                if (container.addForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
-                                    count++;
-                                }
-                            }
-
-                            final int finalCount = count;
-                            source.sendSuccess(() -> Component.translatable("commands.sable.forceload.add.count", finalCount), true);
-                            return count;
-                        })))
-                        .then(Commands.literal("remove").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
-                            final CommandSourceStack source = ctx.getSource();
-                            final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
-                            final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
-
-                            int count = 0;
-                            for (final ServerSubLevel subLevel : subLevels) {
-                                if (container.removeForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
-                                    count++;
-                                }
-                            }
-
-                            final int finalCount = count;
-                            source.sendSuccess(() -> Component.translatable("commands.sable.forceload.remove.count", finalCount), true);
-                            return count;
-                        })))
+                        .then(Commands.literal("add").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels())
+                                .executes(SableCommand::executeForceloadAddCommand)))
+                        .then(Commands.literal("query")
+                                .executes(SableCommand::executeForceloadQueryCommand))
+                        .then(Commands.literal("remove").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels())
+                                .executes(SableCommand::executeForceloadRemoveCommand)))
                 )
-                .then(Commands.literal("info").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels()).executes(ctx -> {
-                    final CommandSourceStack source = ctx.getSource();
-                    final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
-                    final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
-
-                    if (subLevels.isEmpty()) {
-                        throw SableCommandHelper.ERROR_NO_SUB_LEVELS_FOUND.create();
-                    }
-
-                    source.sendSuccess(() -> Component.translatable("commands.sable.info.count", subLevels.size()), false);
-                    for (final ServerSubLevel subLevel : subLevels) {
-                        final Pose3dc pose = subLevel.logicalPose();
-                        source.sendSuccess(() -> {
-                            final Vector3dc pos = pose.position();
-                            final MutableComponent component = Component.translatable("commands.sable.info.name", Component.literal(subLevel.getName() != null ? subLevel.getName() : subLevel.getUniqueId().toString()));
-                            final ResourceLocation dimension = subLevel.getLevel().dimension().location();
-                            final GlobalSavedSubLevelPointer pointer = subLevel.getLastSerializationPointer();
-                            final Component fileId = Component.translatable("commands.sable.info.name.tooltip", pointer != null ? pointer.toString() : "None yet");
-                            component.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, new Formatter().format(Locale.ROOT, "/execute in %s run tp @s %.2f %.2f %.2f", dimension, pos.x(), pos.y(), pos.z()).toString()))
-                                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, fileId))
-                                    .withColor(ChatFormatting.GRAY));
-                            return component;
-                        }, false);
-                        source.sendSuccess(() -> {
-                            final Vector3dc pos = pose.position();
-                            return Component.translatable("commands.sable.info.position", pos.x(), pos.y(), pos.z());
-                        }, false);
-                        source.sendSuccess(() -> {
-                            final Quaterniondc orientation = pose.orientation();
-                            return Component.translatable("commands.sable.info.orientation", orientation.x(), orientation.y(), orientation.z(), orientation.w());
-                        }, false);
-                        source.sendSuccess(() -> {
-                            return Component.translatable("commands.sable.info.mass", subLevel.getMassTracker().getMass());
-                        }, false);
-
-                        final SubLevelPhysicsSystem physicsSystem = container.physicsSystem();
-                        final RigidBodyHandle handle = physicsSystem.getPhysicsHandle(subLevel);
-                        source.sendSuccess(() -> {
-                            final Vector3dc pos = handle.getLinearVelocity(new Vector3d());
-                            return Component.translatable("commands.sable.info.linear_velocity",
-                                    pos.x(), pos.y(), pos.z());
-                        }, false);
-                        source.sendSuccess(() -> {
-                            final Vector3dc pos = handle.getAngularVelocity(new Vector3d());
-                            return Component.translatable("commands.sable.info.angular_velocity", pos.x(), pos.y(), pos.z());
-                        }, false);
-                    }
-                    return subLevels.size();
-                })));
+                .then(Commands.literal("info").then(Commands.argument("sub_level", SubLevelArgumentType.subLevels())
+                        .executes(SableCommand::executeInfoCommand)));
 
 
         dispatcher.register(sableBuilder);
 
+    }
+
+    private static int executeUDPTestCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final SableUDPServer server = SableUDPServer.getServer(ctx.getSource().getServer());
+
+        if (server != null) {
+            server.sendUDPPacket(ctx.getSource().getPlayerOrException(), new SableUDPEchoPacket("Skibidi Toilet"), true);
+        }
+
+        return 1;
     }
 
     private static int executeEnableGizmoCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -187,5 +116,138 @@ public class SableCommand {
 
         ctx.getSource().sendSuccess(() -> Component.translatable("commands.sable.physics.paused.success", Boolean.toString(pause)), true);
         return 1;
+    }
+
+    private static int executeForceloadQueryCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final CommandSourceStack source = ctx.getSource();
+        final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+
+        final Map<ServerSubLevel, Set<SubLevelLoadingTicket<?>>> allTickets = container.collectForceLoadTickets();
+
+        int subLevelCount = 0;
+        int ticketCount = 0;
+        for (final Map.Entry<ServerSubLevel, Set<SubLevelLoadingTicket<?>>> entry : allTickets.entrySet()) {
+            subLevelCount ++;
+            ticketCount += entry.getValue().size();
+        }
+
+        final Component dimension = Component.translationArg(ctx.getSource().getLevel().dimension().location());
+
+        if (ticketCount == 0) {
+            source.sendFailure(Component.translatable("commands.sable.forceload.query.none", dimension));
+            return ticketCount;
+        }
+
+        final int finalTicketCount = ticketCount;
+        final int finalSubLevelCount = subLevelCount;
+        source.sendSuccess(() -> Component.translatable("commands.sable.forceload.query.count", finalTicketCount, finalSubLevelCount, dimension), true);
+
+        for (final Map.Entry<ServerSubLevel, Set<SubLevelLoadingTicket<?>>> entry : allTickets.entrySet()) {
+            final ServerSubLevel subLevel = entry.getKey();
+
+            source.sendSuccess(() -> {
+                final String uuid = subLevel.getUniqueId().toString();
+                final MutableComponent component = Component.translatable("commands.sable.forceload.sub_level_name", Component.literal(subLevel.getName() != null ? subLevel.getName() : uuid));
+                component.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, uuid))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(uuid)))
+                        .withColor(ChatFormatting.GRAY));
+                return component;
+            }, true);
+
+            final Set<SubLevelLoadingTicket<?>> tickets = entry.getValue();
+            for (final SubLevelLoadingTicket<?> ticket : tickets) {
+                source.sendSuccess(() -> Component.translatable("commands.sable.forceload.ticket", ticket.toCompactString()), false);
+            }
+        }
+
+        return ticketCount;
+    }
+
+    private static int executeForceloadAddCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final CommandSourceStack source = ctx.getSource();
+        final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+        final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+        int count = 0;
+        for (final ServerSubLevel subLevel : subLevels) {
+            if (container.addForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
+                count++;
+            }
+        }
+
+        final int finalCount = count;
+        source.sendSuccess(() -> Component.translatable("commands.sable.forceload.add.count", finalCount), true);
+        return count;
+    }
+
+    private static int executeForceloadRemoveCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final CommandSourceStack source = ctx.getSource();
+        final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+        final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+        int count = 0;
+        for (final ServerSubLevel subLevel : subLevels) {
+            if (container.removeForceLoadTicket(subLevel, SubLevelLoadingTicketType.COMMAND_FORCED, Unit.INSTANCE)) {
+                count++;
+            }
+        }
+
+        final int finalCount = count;
+        source.sendSuccess(() -> Component.translatable("commands.sable.forceload.remove.count", finalCount), true);
+        return count;
+    }
+
+    private static int executeInfoCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final CommandSourceStack source = ctx.getSource();
+        final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
+        final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+        if (subLevels.isEmpty()) {
+            throw SableCommandHelper.ERROR_NO_SUB_LEVELS_FOUND.create();
+        }
+
+        source.sendSuccess(() -> Component.translatable("commands.sable.info.count", subLevels.size()), false);
+        for (final ServerSubLevel subLevel : subLevels) {
+            final Pose3dc pose = subLevel.logicalPose();
+            source.sendSuccess(() -> {
+                final String uuid = subLevel.getUniqueId().toString();
+                final MutableComponent component = Component.translatable("commands.sable.info.name", Component.literal(subLevel.getName() != null ? subLevel.getName() : uuid));
+                component.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, uuid))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(uuid)))
+                        .withColor(ChatFormatting.GRAY));
+                return component;
+            }, false);
+            source.sendSuccess(() -> {
+                final Vector3dc pos = pose.position();
+                final GlobalSavedSubLevelPointer pointer = subLevel.getLastSerializationPointer();
+                final ResourceLocation dimension = subLevel.getLevel().dimension().location();
+                final Component fileId = Component.translatable("commands.sable.info.name.tooltip", pointer != null ? pointer.toString() : "None yet");
+                final MutableComponent component = Component.translatable("commands.sable.info.position", pos.x(), pos.y(), pos.z());
+                component.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, new Formatter().format(Locale.ROOT, "/execute in %s run tp @s %.2f %.2f %.2f", dimension, pos.x(), pos.y(), pos.z()).toString()))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, fileId))
+                        .withColor(ChatFormatting.GRAY));
+                return component;
+            }, false);
+            source.sendSuccess(() -> {
+                final Quaterniondc orientation = pose.orientation();
+                return Component.translatable("commands.sable.info.orientation", orientation.x(), orientation.y(), orientation.z(), orientation.w());
+            }, false);
+            source.sendSuccess(() -> {
+                return Component.translatable("commands.sable.info.mass", subLevel.getMassTracker().getMass());
+            }, false);
+
+            final SubLevelPhysicsSystem physicsSystem = container.physicsSystem();
+            final RigidBodyHandle handle = physicsSystem.getPhysicsHandle(subLevel);
+            source.sendSuccess(() -> {
+                final Vector3dc pos = handle.getLinearVelocity(new Vector3d());
+                return Component.translatable("commands.sable.info.linear_velocity",
+                        pos.x(), pos.y(), pos.z());
+            }, false);
+            source.sendSuccess(() -> {
+                final Vector3dc pos = handle.getAngularVelocity(new Vector3d());
+                return Component.translatable("commands.sable.info.angular_velocity", pos.x(), pos.y(), pos.z());
+            }, false);
+        }
+        return subLevels.size();
     }
 }

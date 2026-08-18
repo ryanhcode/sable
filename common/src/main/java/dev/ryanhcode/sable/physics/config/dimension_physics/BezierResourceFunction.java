@@ -4,6 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.ryanhcode.sable.util.SableCodecUtil;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,11 @@ public class BezierResourceFunction {
     public static final Codec<BezierResourceFunction> CODEC = BezierPoint.CODEC.listOf().flatXmap(
             (bezierPoints -> DataResult.success(new BezierResourceFunction(bezierPoints))),
             (bezierResourceFunction -> DataResult.success(bezierResourceFunction.getPoints()))
+    );
+
+    public static final StreamCodec<ByteBuf, BezierResourceFunction> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.collection(ArrayList::new, BezierPoint.STREAM_CODEC), BezierResourceFunction::getPoints,
+            BezierResourceFunction::new
     );
 
     private final List<BezierPoint> points;
@@ -74,5 +82,12 @@ public class BezierResourceFunction {
                 SableCodecUtil.positiveDouble(true).fieldOf("value").forGetter(BezierPoint::value),
                 Codec.DOUBLE.fieldOf("slope").forGetter(BezierPoint::slope)
         ).apply(instance, BezierPoint::new));
+
+        public static final StreamCodec<ByteBuf, BezierPoint> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.DOUBLE, BezierPoint::altitude,
+                ByteBufCodecs.DOUBLE, BezierPoint::value,
+                ByteBufCodecs.DOUBLE, BezierPoint::slope,
+                BezierPoint::new
+        );
     }
 }

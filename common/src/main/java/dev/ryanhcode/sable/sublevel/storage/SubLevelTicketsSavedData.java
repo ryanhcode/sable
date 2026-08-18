@@ -109,10 +109,10 @@ public class SubLevelTicketsSavedData extends SavedData {
     }
 
     private static <T> CompoundTag serializeTicket(final SubLevelLoadingTicket<T> ticket) {
-        final SubLevelLoadingTicketType<T> type = ticket.getType();
+        final SubLevelLoadingTicketType<T> type = ticket.type();
         final Codec<T> codec = type.codec();
 
-        return codec.encodeStart(NbtOps.INSTANCE, ticket.getKey())
+        return codec.encodeStart(NbtOps.INSTANCE, ticket.key())
                 .resultOrPartial(error -> Sable.LOGGER.warn("Failed to serialize ticket key for type {}: {}", type.name(), error))
                 .map(keyTag -> {
                     final CompoundTag tag = new CompoundTag();

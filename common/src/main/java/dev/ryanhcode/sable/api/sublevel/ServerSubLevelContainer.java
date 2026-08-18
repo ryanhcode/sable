@@ -273,6 +273,11 @@ public class ServerSubLevelContainer extends SubLevelContainer {
         return subLevels;
     }
 
+    @ApiStatus.Internal
+    public Map<ServerSubLevel, Set<SubLevelLoadingTicket<?>>> collectForceLoadTickets() {
+        return Collections.unmodifiableMap(this.activeTickets);
+    }
+
     /**
      * Loads sub-level tickets
      */

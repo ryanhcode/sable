@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.BitSet;
+import java.util.stream.Stream;
 
 /**
  * A storage file for sub-levels.
@@ -208,6 +209,10 @@ public class SubLevelStorageFile implements AutoCloseable {
         return byteBuffer;
     }
 
+    public boolean isEmpty() {
+        return this.usedSectors.length() <= (this.beginningSectorSize / this.sectorSize);
+    }
+
     /**
      * Writes a sub-levels data to disk
      *
@@ -251,10 +256,14 @@ public class SubLevelStorageFile implements AutoCloseable {
         this.usedIndices.set(index, true);
         this.writeHeader();
 
+        final Path externalPath = this.getExternalFilePath(index);
         if (savingToExternalFile) {
-            Files.move(temporaryExternalFile, this.getExternalFilePath(index), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temporaryExternalFile, externalPath, StandardCopyOption.REPLACE_EXISTING);
         } else {
-            Files.deleteIfExists(this.getExternalFilePath(index));
+            // we're not saving to an external file, but the previous time we were writing to this index there
+            // could've been an external file. so we remove it just in case, to prevent the detached files sticking
+            // around forever
+            Files.deleteIfExists(externalPath);
         }
 
         // clear the previous span of sectors if we used to store data there for this sub-level index
@@ -351,6 +360,8 @@ public class SubLevelStorageFile implements AutoCloseable {
             this.usedSectors.clear(spanStart, spanStart + this.getSpanLength(span));
 
             this.writeHeader();
+
+            Files.deleteIfExists(this.getExternalFilePath(index));
         }
     }
 
@@ -377,26 +388,6 @@ public class SubLevelStorageFile implements AutoCloseable {
         return (start << 8) | length; // Pack the offset and length into a single integer
     }
 
-    /**
-     * Frees any native resources held by this object.
-     */
-    @Override
-    public void close() throws IOException {
-        try {
-            this.padOrTruncateToFullSector();
-        } finally {
-            try {
-                this.file.force(true);
-            } finally {
-                this.file.close();
-            }
-        }
-    }
-
-    public void flush() throws IOException {
-        this.file.force(true);
-    }
-
     private void padOrTruncateToFullSector() throws IOException {
         // how many sectors of data are we using?
         final int bytesNeededForFile = this.usedSectors.length() * this.sectorSize;
@@ -413,6 +404,72 @@ public class SubLevelStorageFile implements AutoCloseable {
                 this.file.write(byteBuffer, desiredSize - 1);
             }
         }
+    }
+
+    /**
+     * Frees any native resources held by this object.
+     */
+    @Override
+    public void close() throws IOException {
+        try {
+            this.padOrTruncateToFullSector();
+        } finally {
+            try {
+                this.file.force(true);
+            } finally {
+                this.file.close();
+            }
+        }
+    }
+
+    public void delete() {
+        try {
+            this.file.close();
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to close sub-level storage file {} before deletion", this.path, e);
+        }
+
+        try {
+            Files.deleteIfExists(this.path);
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to delete sub-level storage file {}", this.path, e);
+        }
+
+        // Attempt to delete all the external files
+        // Technically, I don't think it's possible for this to matter? Because by the time the storage file is deleted,
+        // it's assumed to be empty. So all the external files should be gone anyway. But let's do it anyway to be safe
+        this.deleteExternalFiles();
+    }
+
+    /**
+     * Attempts to delete all the external storage files
+     */
+    private void deleteExternalFiles() {
+        if (!Files.isDirectory(this.externalFileDir)) {
+            return;
+        }
+
+        try (final Stream<Path> list = Files.list(this.externalFileDir)) {
+            list.forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (final IOException e) {
+                    Sable.LOGGER.error("Failed to delete external sub-level storage file {}", path, e);
+                }
+            });
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to list external sub-level storage directory {}", this.externalFileDir, e);
+        }
+
+        try {
+            Files.deleteIfExists(this.externalFileDir);
+        } catch (final IOException e) {
+            Sable.LOGGER.error("Failed to delete external sub-level storage directory {}", this.externalFileDir, e);
+        }
+    }
+
+    public void flush() throws IOException {
+        this.file.force(true);
     }
 
     class SectorSpanDataBuffer extends ByteArrayOutputStream {

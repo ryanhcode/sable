@@ -6,6 +6,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
+import dev.ryanhcode.sable.network.packets.tcp.ClientboundDimensionPhysicsPacket;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -85,6 +86,30 @@ public class DimensionPhysicsData {
         return physics.universalDrag().orElseGet(defaultPhysics.universalDrag()::orElseThrow);
     }
 
+    public static void addPhysicsWithPriority(final ResourceKey<Level> key, final DimensionPhysics newProperties) {
+        final DimensionPhysics existing = DIMENSION_PHYSICS_DATA.get(key);
+
+        if (existing != null) {
+            if (newProperties.priority() > existing.priority()) {
+                DIMENSION_PHYSICS_DATA.put(key, newProperties);
+            }
+        } else {
+            DIMENSION_PHYSICS_DATA.put(key, newProperties);
+        }
+    }
+
+    public static void putPhysics(final ResourceKey<Level> key, final DimensionPhysics newProperties) {
+        DIMENSION_PHYSICS_DATA.put(key, newProperties);
+    }
+
+    public static void clearPhysics() {
+        DIMENSION_PHYSICS_DATA.clear();
+    }
+
+    public static ClientboundDimensionPhysicsPacket compilePacket() {
+        return new ClientboundDimensionPhysicsPacket(DIMENSION_PHYSICS_DATA.values().stream().toList());
+    }
+
     public static class ReloadListener extends SimpleJsonResourceReloadListener {
 
         private static final Gson GSON = new Gson();
@@ -97,21 +122,9 @@ public class DimensionPhysicsData {
             super(ReloadListener.GSON, NAME);
         }
 
-        public static void addKeyWithPriority(final Map<ResourceKey<Level>, DimensionPhysics> data, final ResourceKey<Level> key, final DimensionPhysics newProperties) {
-            final DimensionPhysics existing = data.get(key);
-
-            if (existing != null) {
-                if (newProperties.priority() > existing.priority()) {
-                    data.put(key, newProperties);
-                }
-            } else {
-                data.put(key, newProperties);
-            }
-        }
-
         @Override
         protected void apply(final Map<ResourceLocation, JsonElement> map, final ResourceManager resourceManager, final ProfilerFiller profiler) {
-            DIMENSION_PHYSICS_DATA.clear();
+            clearPhysics();
 
             for (final Map.Entry<ResourceLocation, JsonElement> entry : map.entrySet()) {
                 try {
@@ -124,7 +137,7 @@ public class DimensionPhysicsData {
                     final DimensionPhysics dimensionPhysics = dataResult.getOrThrow();
                     final ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, dimensionPhysics.dimension());
 
-                    addKeyWithPriority(DIMENSION_PHYSICS_DATA, dimension, dimensionPhysics);
+                    addPhysicsWithPriority(dimension, dimensionPhysics);
                 } catch (final Exception e) {
                     Sable.LOGGER.error("Error while loading dimension data \"{}\" : {} ", entry.getKey(), e.getMessage());
                 }

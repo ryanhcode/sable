@@ -156,7 +156,7 @@ public class SubLevelSerializer {
         try {
             subLevel = (ServerSubLevel) plotContainer.allocateSubLevel(halfLoadedSubLevel.uuid(), plotX, plotZ, pose);
         } catch (final IllegalArgumentException e) {
-            Sable.LOGGER.error("Failed to load sub-level, skipping", halfLoadedSubLevel, e);
+            Sable.LOGGER.error("Failed to load sub-level {}, skipping", halfLoadedSubLevel, e);
             return null;
         }
 

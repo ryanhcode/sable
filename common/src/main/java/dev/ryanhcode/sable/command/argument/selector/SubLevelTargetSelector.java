@@ -1,12 +1,12 @@
-package dev.ryanhcode.sable.command.argument;
+package dev.ryanhcode.sable.command.argument.selector;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.command.SableCommandHelper;
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
+import dev.ryanhcode.sable.command.argument.SubLevelSelectorModifierType;
+import dev.ryanhcode.sable.command.argument.SubLevelSelectorType;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -19,12 +19,12 @@ import org.joml.Vector3d;
 
 import java.util.*;
 
-public class SubLevelSelector {
+public class SubLevelTargetSelector extends SubLevelTarget {
 
     private final SubLevelSelectorType type;
     private final List<Pair<SubLevelSelectorModifierType, SubLevelSelectorModifierType.Modifier>> modifiers;
 
-    public SubLevelSelector(final SubLevelSelectorType type, final List<Pair<SubLevelSelectorModifierType, SubLevelSelectorModifierType.Modifier>> modifiers) {
+    public SubLevelTargetSelector(final SubLevelSelectorType type, final List<Pair<SubLevelSelectorModifierType, SubLevelSelectorModifierType.Modifier>> modifiers) {
         this.type = type;
         this.modifiers = modifiers;
     }
@@ -33,11 +33,8 @@ public class SubLevelSelector {
         return this.type;
     }
 
+    @Override
     public Collection<ServerSubLevel> getSubLevels(final CommandSourceStack source) throws CommandSyntaxException {
-        if (this.type == null) {
-            return List.of();
-        }
-
         final ServerLevel level = source.getLevel();
         final ServerSubLevelContainer container = SableCommandHelper.requireSubLevelContainer(source);
 
@@ -135,5 +132,4 @@ public class SubLevelSelector {
 
         return modifiedSubLevels;
     }
-
 }

@@ -78,6 +78,11 @@
   "commands.sable.forceload.add.count": "Added force-loading tickets for %s sub-level(s)",
   "commands.sable.forceload.remove.count": "Removed force-loading tickets for %s sub-level(s)",
 
+  "commands.sable.forceload.query.none": "No force-loading tickets were found in %s",
+  "commands.sable.forceload.query.count": "%s force-loading ticket(s) were found for %s sub-level(s) in %s:",
+  "commands.sable.forceload.sub_level_name": "%s:",
+  "commands.sable.forceload.ticket": "    %s",
+
   "argument.sable.body.selector.all": "All sub-levels",
   "argument.sable.body.selector.nearest": "Nearest sub-level",
   "argument.sable.body.selector.random": "Random sub-level",
@@ -108,7 +113,9 @@
   "argument.sable.sub_level.modifier.sort": "Sort the sub-levels by distance",
   "argument.sable.unexpected_end_of_input": "Unexpected end of input",
   "argument.sable.single_sub_level_required": "Only one sub-level is allowed, but the provided selector allows more than one",
-  "argument.sable.sub_level.invalid": "Invalid sub-level selector",
+  "argument.sable.invalid_selector": "Invalid sub-level selector",
+  "argument.sable.invalid_uuid": "Invalid UUID",
+  "argument.sable.cannot_find_sub_level": "Cannot find sub-level",
   "argument.sable.sub_level.expected_end_of_modifier": "Expected end of modifier",
   "argument.sable.sub_level.expected_positive_integer": "Expected a positive integer",
   "argument.sable.sub_level.expected_positive_decimal": "Expected a positive decimal",

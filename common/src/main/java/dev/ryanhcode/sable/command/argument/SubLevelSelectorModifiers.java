@@ -129,7 +129,7 @@ public class SubLevelSelectorModifiers {
         }, SubLevelSelectorModifierType.FilterPriority.FILTER);
 
         SubLevelSelectorModifierType.registerType("sort", (reader) -> {
-            SubLevelArgumentType.setSuggestions(reader, "nearest", "furthest");
+            SubLevelArgumentType.setSelectorSuggestions(reader, "nearest", "furthest");
             final String filtering = tryReadString(reader, EXPECTED_SORTING_TYPE, "nearest", "furthest");
             expectEndOfModifier(reader);
             return new SubLevelSortModifier(filtering);

@@ -146,6 +146,7 @@
     "compatibility.create.schematics.SchematicPrinterMixin",
     "compatibility.create.schematics.SchematicToolBaseMixin",
     "compatibility.create.schematics.StructureTemplateMixin",
+    "compatibility.create.sticker.ContraptionMixin",
     "compatibility.create.sticker.StickerBlockEntityMixin",
     "compatibility.create.sticker.StickerBlockMixin",
     "compatibility.create.stock_ticker.StockTickerInteractionHandlerMixin",

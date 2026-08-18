@@ -39,7 +39,7 @@ public class FloatingBlockController {
         this.containers.clear();
         this.containers.add(this.sublevelContainer);
 
-        for(final KinematicContraption contraption : this.subLevel.getPlot().getContraptions()) {
+        for (final KinematicContraption contraption : this.subLevel.getPlot().getContraptions()) {
             final FloatingClusterContainer container = contraption.sable$getFloatingClusterContainer();
 
             final Vector3dc lastPosition = new Vector3d(contraption.sable$getPosition(partialPhysicsTick - 1.0f));
@@ -64,7 +64,7 @@ public class FloatingBlockController {
 
         localGravity.set(DimensionPhysicsData.getGravity(this.subLevel.getLevel(), this.subLevel.logicalPose().position()));
         this.subLevel.logicalPose().orientation().transformInverse(localGravity);
-        if(!this.needsTicking())
+        if (!this.needsTicking())
             return;
 
         this.subLevel.logicalPose().orientation().transformInverse(linearVelocity, localLinearVelocity);
@@ -82,10 +82,10 @@ public class FloatingBlockController {
                 if (cluster.getMaterial().scaleWithPressure())
                     cluster.getBlockData().computePressureScale(this.subLevel);
 
-                this.applyFriction(container,cluster, localGravity, localLinearVelocity, localAngularVelocity, clusterFrictionForce, clusterFrictionTorque);
+                this.applyFriction(container, cluster, localGravity, localLinearVelocity, localAngularVelocity, clusterFrictionForce, clusterFrictionTorque);
 
                 final Vector3d recordedClusterFrictionForce = new Vector3d(clusterFrictionForce);
-                this.recordForce(container,cluster, dragGroup, recordedClusterFrictionForce);
+                this.recordForce(container, cluster, dragGroup, recordedClusterFrictionForce);
                 recordedFrictionForces.add(recordedClusterFrictionForce);
 
                 frictionForce.add(clusterFrictionForce);
@@ -113,19 +113,18 @@ public class FloatingBlockController {
         for (final Vector3d force : recordedFrictionForces) {
             force.mul(timeStep);//forceScale *
         }
-        if(localGravity.lengthSquared()>0)
+        if (localGravity.lengthSquared() > 0)
             this.applyLift(localGravity, linearImpulse, angularImpulse, timeStep);
 
         linearImpulse.fma(timeStep, frictionForce);
         angularImpulse.fma(timeStep, frictionTorque);
     }
 
-    public boolean needsTicking()
-    {
-        if(this.sublevelContainer.needsTicking())
+    public boolean needsTicking() {
+        if (this.sublevelContainer.needsTicking())
             return true;
         for (final FloatingClusterContainer container : this.containers) {
-            if(container.needsTicking())
+            if (container.needsTicking())
                 return true;
         }
         return false;
@@ -174,7 +173,7 @@ public class FloatingBlockController {
                 //unit: strength * weight
                 final double weightedForce = clusterForce * cluster.getBlockData().totalScale;
 
-                this.getTrueWeightedClusterPosition(container,cluster,weightedPositionTemp);
+                this.getTrueWeightedClusterPosition(container, cluster, weightedPositionTemp);
 
                 if (material.preventSelfLift()) {
                     totalForce += weightedForce;
@@ -186,7 +185,7 @@ public class FloatingBlockController {
                     if (this.subLevel.isTrackingIndividualQueuedForces()) {
                         final QueuedForceGroup levitationGroup = this.subLevel.getOrCreateQueuedForceGroup(ForceGroups.LEVITATION.get());
 
-                        this.recordForce(container,cluster, levitationGroup, new Vector3d(localGravity).mul(-weightedForce * timeStep));
+                        this.recordForce(container, cluster, levitationGroup, new Vector3d(localGravity).mul(-weightedForce * timeStep));
                     }
 
                     localGravity.cross(weightedPositionTemp, torqueTemp);//torqueTemp unit: weight * position * gravity
@@ -226,7 +225,7 @@ public class FloatingBlockController {
                     final Vector3d force = new Vector3d(localGravity).mul(timeStep * -cluster.getBlockData().totalScale * material.liftStrength());
                     force.mul(scaleFactor);
 
-                    this.recordForce(container,cluster, levitationGroup, force);
+                    this.recordForce(container, cluster, levitationGroup, force);
                 }
             }
         }
@@ -237,13 +236,13 @@ public class FloatingBlockController {
         angularImpulse.fma(timeStep, liftingTorque);
     }
 
-    private void recordForce(final FloatingClusterContainer container,final FloatingBlockCluster cluster, final QueuedForceGroup forceGroup, final Vector3d force) {
-        forceGroup.recordPointForce(this.getTrueWeightedClusterPosition(container,cluster,new Vector3d()).div(cluster.getBlockData().totalScale).add(this.subLevel.getMassTracker().getCenterOfMass()), force);
+    private void recordForce(final FloatingClusterContainer container, final FloatingBlockCluster cluster, final QueuedForceGroup forceGroup, final Vector3d force) {
+        forceGroup.recordPointForce(this.getTrueWeightedClusterPosition(container, cluster, new Vector3d()).div(cluster.getBlockData().totalScale).add(this.subLevel.getMassTracker().getCenterOfMass()), force);
     }
-    private Vector3d getTrueWeightedClusterPosition(final FloatingClusterContainer container,final FloatingBlockCluster cluster,final Vector3d pos)
-    {
-        container.rotationOffset.transform(cluster.getBlockData().weightedPosition,pos);
-        return pos.fma(cluster.getBlockData().totalScale,container.positionOffset);
+
+    private Vector3d getTrueWeightedClusterPosition(final FloatingClusterContainer container, final FloatingBlockCluster cluster, final Vector3d pos) {
+        container.rotationOffset.transform(cluster.getBlockData().weightedPosition, pos);
+        return pos.fma(cluster.getBlockData().totalScale, container.positionOffset);
     }
 
     private static final Matrix3d containerRotation = new Matrix3d();
@@ -261,10 +260,10 @@ public class FloatingBlockController {
     private static final Vector3d shiftedCenter = new Vector3d();
     private static final Vector3d linearSlowDrag = new Vector3d();
 
-    private void applyFriction(final FloatingClusterContainer container,final FloatingBlockCluster cluster, final Vector3dc localGravity, final Vector3dc linearVelocity, final Vector3dc angularVelocity, final Vector3d frictionForce, final Vector3d frictionTorque) {
+    private void applyFriction(final FloatingClusterContainer container, final FloatingBlockCluster cluster, final Vector3dc localGravity, final Vector3dc linearVelocity, final Vector3dc angularVelocity, final Vector3d frictionForce, final Vector3d frictionTorque) {
 
         double frictionScale = 1;
-        if(cluster.getMaterial().scaleWithGravity())
+        if (cluster.getMaterial().scaleWithGravity())
             frictionScale = localGravity.length();
         if (cluster.getMaterial().scaleWithPressure())
             frictionScale *= cluster.getBlockData().getPressureScale();
@@ -274,7 +273,7 @@ public class FloatingBlockController {
             speedScale = 0;
 
         totalAngularVelocity.set(angularVelocity).add(container.angularVelocity);
-        this.getTrueWeightedClusterPosition(container,cluster,clusterCenter).div(cluster.getBlockData().totalScale);
+        this.getTrueWeightedClusterPosition(container, cluster, clusterCenter).div(cluster.getBlockData().totalScale);
 
         cluster.getBlockData().outerProduct.scale(1 / cluster.getBlockData().totalScale, averagePositionMatrix);
 
@@ -291,8 +290,8 @@ public class FloatingBlockController {
 
         //velocity of the center of lift in local space
         angularVelocity.cross(clusterCenter, meanVelocity);
-        container.rotationOffset.transform(cluster.getBlockData().weightedPosition,rotatedPos).div(cluster.getBlockData().totalScale);
-        final Vector3d extraContainerVelocity = container.angularVelocity.cross(rotatedPos,rotatedPos);
+        container.rotationOffset.transform(cluster.getBlockData().weightedPosition, rotatedPos).div(cluster.getBlockData().totalScale);
+        final Vector3d extraContainerVelocity = container.angularVelocity.cross(rotatedPos, rotatedPos);
         meanVelocity.add(linearVelocity).add(container.velocity).add(extraContainerVelocity);
 
         //center of the shifted position distribution relative to clusterCenter, variance is shiftedPositionMatrix
@@ -343,7 +342,7 @@ public class FloatingBlockController {
     }
 
     private Matrix3d getGravityMatrix(final Vector3dc g, final double verticalDrag, final double horizontalDrag, final Matrix3d target) {
-        if(g.lengthSquared() > 0.00001)
+        if (g.lengthSquared() > 0.00001)
             SableMathUtils.setOuterProduct(g, g, (horizontalDrag - verticalDrag) / g.dot(g), target);
         else
             target.identity();
@@ -365,31 +364,31 @@ public class FloatingBlockController {
         return v * (1 - Math.exp(-k / v)) / k;
     }
 
-    private double getKineticClampingFactor(final Vector3dc currentLinearVelocity,final Vector3dc currentAngularVelocity,final Vector3d frictionForce,final Vector3d frictionTorque,final double timestep) {
+    private double getKineticClampingFactor(final Vector3dc currentLinearVelocity, final Vector3dc currentAngularVelocity, final Vector3d frictionForce, final Vector3d frictionTorque, final double timestep) {
 
         final double numerator = currentLinearVelocity.dot(frictionForce) + currentAngularVelocity.dot(frictionTorque);
-        double denominator = frictionForce.dot(frictionForce)* this.subLevel.getMassTracker().getInverseMass() +
-                SableMathUtils.multiplyInnerProduct(frictionTorque, this.subLevel.getMassTracker().getInverseInertiaTensor(),frictionTorque);
-        denominator*=timestep;
-        if(denominator < 1E-10)
+        double denominator = frictionForce.dot(frictionForce) * this.subLevel.getMassTracker().getInverseMass() +
+                SableMathUtils.multiplyInnerProduct(frictionTorque, this.subLevel.getMassTracker().getInverseInertiaTensor(), frictionTorque);
+        denominator *= timestep;
+        if (denominator < 1E-10)
             return 1;
-        final double t = -numerator/denominator;
-        return Math.max(Math.min(t,1),0);
+        final double t = -numerator / denominator;
+        return Math.max(Math.min(t, 1), 0);
     }
 
     public void addFloatingBlock(final BlockState state, final Vector3d pos) {
-        this.sublevelContainer.addFloatingBlock(state,pos);
+        this.sublevelContainer.addFloatingBlock(state, pos);
     }
 
     public void removeFloatingBlock(final BlockState state, final Vector3d pos) {
-        this.sublevelContainer.removeFloatingBlock(state,pos);
+        this.sublevelContainer.removeFloatingBlock(state, pos);
     }
 
     public void queueAddFloatingBlock(final BlockState state, final BlockPos pos) {
-        this.sublevelContainer.queueAddFloatingBlock(state,pos);
+        this.sublevelContainer.queueAddFloatingBlock(state, pos);
     }
 
     public void queueRemoveFloatingBlock(final BlockState state, final BlockPos pos) {
-        this.sublevelContainer.queueRemoveFloatingBlock(state,pos);
+        this.sublevelContainer.queueRemoveFloatingBlock(state, pos);
     }
 }

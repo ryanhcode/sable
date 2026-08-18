@@ -7,14 +7,20 @@ import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.block_breakers.SubLevelBlockBreakingUtility;
 import dev.ryanhcode.sable.sublevel.SubLevel;
+import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,45 +56,60 @@ public abstract class BlockBreakingMovementBehaviourMixin implements MovementBeh
                 original.call(context, breakingPosWSublevel);
             }
         }
+
+        //make sure we're actually starting to break something
+        if (context.stall && (context.data.contains("BreakingPos"))) {
+            final Vector3d checkPos = JOMLConversion.toJOML(context.position);
+
+            //project our position into the real world
+            final SubLevel parentSublevel = Sable.HELPER.getContaining(context.world, context.position);
+            if (parentSublevel != null) {
+                parentSublevel.logicalPose().transformPosition(checkPos);
+            }
+
+            //project our position into the target's plot
+            final SubLevel targetSublevel = Sable.HELPER.getContaining(context.world, NbtUtils.readBlockPos(context.data, "BreakingPos").orElseThrow());
+            if (targetSublevel != null) {
+                targetSublevel.logicalPose().transformPositionInverse(checkPos);
+            }
+
+            //save the current projected position to check movement distance against
+            context.data.put("ProjectedPos", VecHelper.writeNBT(JOMLConversion.toMojang(checkPos)));
+        }
+    }
+
+    @Inject(method = "cancelStall", at = @At("TAIL"))
+    public void sable$removeProjected(final MovementContext context, final CallbackInfo ci) {
+        context.data.remove("ProjectedPos");
     }
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    public void sable$testBreakingPosDist(final MovementContext context, final CallbackInfo ci) {
+    public void sable$testProjectedPosDist(final MovementContext context, final CallbackInfo ci) {
         final CompoundTag data = context.data;
-        if (data.contains("BreakingPos") || data.contains("LastPos")) {
-            final BlockPos blockPos = NbtUtils.readBlockPos(data, "BreakingPos").orElseGet(() -> NbtUtils.readBlockPos(data, "LastPos").orElse(null));
 
+        //kind of a work-around to not require injecting into every place where BreakingPos is removed.
+        if (!context.data.contains("BreakingPos")) {
+            data.remove("ProjectedPos");
+            return;
+        }
+
+        final Vec3 sublevelLocalCenter = context.contraption.entity.toGlobalVector(context.localPos.getCenter(), 1);
+        if (data.contains("ProjectedPos") && Sable.HELPER.distanceSquaredWithSubLevels(context.world, VecHelper.readNBT(data.getList("ProjectedPos", Tag.TAG_DOUBLE)), sublevelLocalCenter) > 2*2) {
+            final BlockPos blockPos = NbtUtils.readBlockPos(data, "BreakingPos").orElse(null);
+
+            data.remove("Progress");
+            data.remove("TicksUntilNextProgress");
+            data.remove("BreakingPos");
+            data.remove("LastPos");
+            data.remove("WaitingTicks");
+            data.remove("ProjectedPos");
+
+            context.stall = false;
             if (blockPos != null) {
-                final Vec3 localCenter = context.localPos.getCenter();
-
-                Vec3 sublevelLocalCenter = context.contraption.entity.toGlobalVector(localCenter, 1);
-                Vec3 targetCenter = blockPos.getCenter();
-
-                final ActiveSableCompanion helper = Sable.HELPER;
-                final SubLevel parentSublevel = helper.getContaining(context.world, context.contraption.anchor);
-                final SubLevel targetSubLevel = helper.getContaining(context.world, blockPos);
-
-                if (parentSublevel != null) {
-                    sublevelLocalCenter = parentSublevel.logicalPose().transformPosition(sublevelLocalCenter);
-                }
-
-                if (targetSubLevel != null) {
-                    targetCenter = targetSubLevel.logicalPose().transformPosition(targetCenter);
-                }
-
-                if (sublevelLocalCenter.distanceToSqr(targetCenter) > 2 * 2) {
-                    data.remove("Progress");
-                    data.remove("TicksUntilNextProgress");
-                    data.remove("BreakingPos");
-                    data.remove("LastPos");
-                    data.remove("WaitingTicks");
-
-                    context.stall = false;
-                    context.world.destroyBlockProgress(data.getInt("BreakerId"), blockPos, -1);
-
-                    ci.cancel();
-                }
+                context.world.destroyBlockProgress(data.getInt("BreakerId"), blockPos, -1);
             }
+
+            ci.cancel();
         }
     }
 }

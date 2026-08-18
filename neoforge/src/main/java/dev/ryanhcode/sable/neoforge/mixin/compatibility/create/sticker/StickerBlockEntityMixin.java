@@ -64,6 +64,12 @@ public abstract class StickerBlockEntityMixin extends SmartBlockEntity implement
     @Unique
     private boolean sable$hasConstraint;
 
+    /**
+     * kinda hacky but we ball
+     */
+    @Unique
+    private boolean sable$doNotSaveConstraint;
+
     private StickerBlockEntityMixin(final BlockEntityType<?> type, final BlockPos pos, final BlockState state) {
         super(type, pos, state);
     }
@@ -250,11 +256,18 @@ public abstract class StickerBlockEntityMixin extends SmartBlockEntity implement
         this.sable$tickConstraint();
     }
 
+    @Override
+    public void sable$saveToContraption(final HolderLookup.Provider registries) {
+        this.sable$doNotSaveConstraint = true;
+        this.saveWithFullMetadata(registries);
+        this.sable$doNotSaveConstraint = false;
+    }
+
     @Inject(method = "write", at = @At("TAIL"))
     public void write(final CompoundTag compound, final HolderLookup.Provider registries, final boolean clientPacket, final CallbackInfo ci) {
         if (clientPacket) {
             compound.putBoolean("SableHasConstraint", this.sable$handle != null);
-        } else if (this.sable$handle != null) {
+        } else if (this.sable$handle != null && !this.sable$doNotSaveConstraint) {
             final CompoundTag constraint = new CompoundTag();
             final BlockPos blockPos = this.getBlockPos();
             constraint.putInt("ThisX", blockPos.getX());

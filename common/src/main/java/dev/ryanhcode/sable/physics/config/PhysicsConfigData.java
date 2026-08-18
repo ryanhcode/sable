@@ -1,5 +1,8 @@
 package dev.ryanhcode.sable.physics.config;
 
+import dev.ryanhcode.sable.SableConfig;
+import dev.ryanhcode.sable.SableServerConfig;
+
 public class PhysicsConfigData {
     /**
      * The number of solver iterations run by the constraints solver for calculating forces.
@@ -28,4 +31,8 @@ public class PhysicsConfigData {
      * Physics ticks done per game tick in the physics pipeline.
      */
     public int substepsPerTick = 2;
+
+    public void updateFromConfig() {
+        this.substepsPerTick = SableServerConfig.SUB_LEVEL_SUBSTEPS_PER_TICK.getAsInt();
+    }
 }

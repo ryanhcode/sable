@@ -7,6 +7,7 @@ import dev.ryanhcode.sable.network.packets.tcp.ClientboundPhysicsPropertyPacket;
 import dev.ryanhcode.sable.physics.chunk.VoxelNeighborhoodState;
 import dev.ryanhcode.sable.physics.config.FloatingBlockMaterialDataHandler;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertiesDefinitionLoader;
+import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import dev.ryanhcode.sable.physics.floating_block.FloatingBlockController;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -93,6 +94,7 @@ public class SableCommonEvents {
 
     public static void syncDataPacket(final VeilPacketManager.PacketSink sink) {
         sink.sendPacket(PhysicsBlockPropertiesDefinitionLoader.INSTANCE.getDefinitions().stream().map(ClientboundPhysicsPropertyPacket::new).toArray(CustomPacketPayload[]::new));
+        sink.sendPacket(DimensionPhysicsData.compilePacket());
         sink.sendPacket(FloatingBlockMaterialDataHandler.allMaterials.entrySet().stream().map(e -> new ClientboundFloatingBlockMaterialPacket(e.getKey(), e.getValue())).toArray(CustomPacketPayload[]::new));
     }
 }

@@ -3,6 +3,9 @@ package dev.ryanhcode.sable.physics.config.dimension_physics;
 import com.mojang.datafixers.kinds.Applicative;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.Level;
@@ -29,6 +32,29 @@ public record DimensionPhysics(ResourceLocation dimension, int priority, Optiona
             Codec.optionalField("magnetic_north", ExtraCodecs.VECTOR3F, false).forGetter(DimensionPhysics::magneticNorth),
             Codec.BOOL.optionalFieldOf("ignore_chunks", false).forGetter(DimensionPhysics::ignoreChunks)
     ).apply(Applicative.unbox(instance), DimensionPhysics::new));
+
+    public static final StreamCodec<ByteBuf, DimensionPhysics> STREAM_CODEC = StreamCodec.ofMember(
+            (dim, buf) -> {
+                ResourceLocation.STREAM_CODEC.encode(buf, dim.dimension);
+                ByteBufCodecs.INT.encode(buf, dim.priority);
+                ByteBufCodecs.FLOAT.apply(ByteBufCodecs::optional).encode(buf, dim.universalDrag);
+                ByteBufCodecs.VECTOR3F.apply(ByteBufCodecs::optional).encode(buf, dim.baseGravity);
+                ByteBufCodecs.DOUBLE.apply(ByteBufCodecs::optional).encode(buf, dim.basePressure);
+                BezierResourceFunction.STREAM_CODEC.apply(ByteBufCodecs::optional).encode(buf, dim.pressureFunction);
+                ByteBufCodecs.VECTOR3F.apply(ByteBufCodecs::optional).encode(buf, dim.magneticNorth);
+                ByteBufCodecs.BOOL.encode(buf, dim.ignoreChunks);
+            },
+            buf -> new DimensionPhysics(
+                ResourceLocation.STREAM_CODEC.decode(buf),
+                ByteBufCodecs.INT.decode(buf),
+                ByteBufCodecs.FLOAT.apply(ByteBufCodecs::optional).decode(buf),
+                ByteBufCodecs.VECTOR3F.apply(ByteBufCodecs::optional).decode(buf),
+                ByteBufCodecs.DOUBLE.apply(ByteBufCodecs::optional).decode(buf),
+                BezierResourceFunction.STREAM_CODEC.apply(ByteBufCodecs::optional).decode(buf),
+                ByteBufCodecs.VECTOR3F.apply(ByteBufCodecs::optional).decode(buf),
+                ByteBufCodecs.BOOL.decode(buf)
+            )
+    );
 
     public static DimensionPhysics createDefault(final Level level) {
         // constructs a bezier air pressure curve approximating an exponential decay, centered around sea level

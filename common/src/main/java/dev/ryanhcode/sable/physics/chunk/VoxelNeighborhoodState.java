@@ -2,7 +2,8 @@ package dev.ryanhcode.sable.physics.chunk;
 
 import dev.ryanhcode.sable.api.block.BlockWithSubLevelCollisionCallback;
 import dev.ryanhcode.sable.util.LevelAccelerator;
-import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -13,7 +14,6 @@ import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.BiFunction;
 
 public enum VoxelNeighborhoodState {
@@ -23,36 +23,50 @@ public enum VoxelNeighborhoodState {
     CORNER(0xeb6c0b),
     INTERIOR(0x000000);
 
-    public static BiFunction<BlockGetter, BlockState, Boolean> IS_SOLID_MEMOIZED = new BiFunction<>() {
-        private final Int2BooleanOpenHashMap cache = new Int2BooleanOpenHashMap();
+    private static final BiFunction<BlockGetter, BlockState, Boolean> IS_SOLID_MEMOIZED = new BiFunction<>() {
+        private final Reference2BooleanMap<BlockState> cache = new Reference2BooleanOpenHashMap<>();
 
         @Override
         public Boolean apply(final BlockGetter blockGetter, final BlockState state) {
-            return this.cache.computeIfAbsent(state.hashCode(), x -> {
-                // TODO add the blockgetter and position as context
-                if (state.isAir())
-                    return false;
+            if (this.cache.containsKey(state)) {
+                return this.cache.getBoolean(state);
+            }
 
-                if (state.getBlock() instanceof MovingPistonBlock)
-                    return true;
+            // TODO add the blockgetter and position as context
+            if (state.isAir()) {
+                this.cache.put(state, false);
+                return false;
+            }
 
-                return !state.getCollisionShape(blockGetter, BlockPos.ZERO).isEmpty();
-            });
+            if (state.getBlock() instanceof MovingPistonBlock) {
+                this.cache.put(state, true);
+                return true;
+            }
+
+            final boolean notEmpty = !state.getCollisionShape(blockGetter, BlockPos.ZERO).isEmpty();
+            this.cache.put(state, notEmpty);
+            return notEmpty;
         }
     };
 
-    public static BiFunction<BlockGetter, BlockState, Boolean> IS_FULL_BLOCK = new BiFunction<>() {
-        private final Int2BooleanOpenHashMap cache = new Int2BooleanOpenHashMap();
+    private static final BiFunction<BlockGetter, BlockState, Boolean> IS_FULL_BLOCK = new BiFunction<>() {
+        private final Reference2BooleanMap<BlockState> cache = new Reference2BooleanOpenHashMap<>();
 
         @Override
         public Boolean apply(final BlockGetter blockGetter, final BlockState state) {
-            return this.cache.computeIfAbsent(state.hashCode(), x -> {
-                // TODO add the blockgetter and position as context
-                if (state.isAir())
-                    return false;
+            if (this.cache.containsKey(state)) {
+                return this.cache.getBoolean(state);
+            }
 
-                return state.isCollisionShapeFullBlock(blockGetter, BlockPos.ZERO);
-            });
+            // TODO add the blockgetter and position as context
+            if (state.isAir()) {
+                this.cache.put(state, false);
+                return false;
+            }
+
+            final boolean fullBlock = state.isCollisionShapeFullBlock(blockGetter, BlockPos.ZERO);
+            this.cache.put(state, fullBlock);
+            return fullBlock;
         }
     };
 
@@ -78,8 +92,9 @@ public enum VoxelNeighborhoodState {
         final ChunkPos initialPos = new ChunkPos(pos);
         final BlockState state = chunk != null ? level.getBlockState(chunk, pos) : level.getBlockState(pos);
 
-        if (isLiquid(state) || BlockWithSubLevelCollisionCallback.hasCallback(state))
+        if (isLiquid(state) || BlockWithSubLevelCollisionCallback.hasCallback(state)) {
             return CORNER;
+        }
 
         if (!isSolid(level, pos, state)) {
             return EMPTY;
