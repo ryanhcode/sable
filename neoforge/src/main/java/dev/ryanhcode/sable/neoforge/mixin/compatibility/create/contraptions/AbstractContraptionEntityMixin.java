@@ -153,7 +153,7 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
             final StructureTemplate.StructureBlockInfo info = entry.getValue();
             final BlockState state = info.state();
 
-            if (state.isAir()) continue;
+            if (state.isAir() || PhysicsBlockPropertyHelper.getMass(this.sable$blockGetter(), blockPos, state) == 0) continue;
 
             if (this.sable$localBounds == null) {
                 this.sable$localBounds = new BoundingBox3i(blockPos.getX(), blockPos.getY(), blockPos.getZ(), blockPos.getX(), blockPos.getY(), blockPos.getZ());
