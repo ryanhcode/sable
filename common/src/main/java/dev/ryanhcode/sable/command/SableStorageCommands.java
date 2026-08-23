@@ -30,7 +30,7 @@ public class SableStorageCommands {
 
     public static void register(final LiteralArgumentBuilder<CommandSourceStack> sableBuilder, final CommandBuildContext buildContext) {
         sableBuilder.then(Commands.literal("storage")
-                .then(Commands.literal("prune_regions")
+                .then(Commands.literal("prune_holding_chunks")
                         .executes(ctx -> {
                             final ServerLevel level = ctx.getSource().getLevel();
                             final ServerSubLevelContainer container = ServerSubLevelContainer.getContainer(level);

@@ -18,6 +18,8 @@ use jni::sys::{jboolean, jdouble, jint, jlong};
 use jni::{JNIEnv, JavaVM};
 use rapier3d::glamx::{DVec3, Quat};
 use std::collections::HashMap;
+use std::io::ErrorKind::BrokenPipe;
+use std::io::{self, Write};
 use std::sync::{Arc, OnceLock, RwLock};
 
 use fern::colors::{Color, ColoredLevelConfig};
@@ -303,6 +305,39 @@ pub fn get_rigid_body<'a>(
     &sim.rigid_body_set[*handle]
 }
 
+struct LogWriter;
+
+impl Write for LogWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let mut stdout = io::stdout().lock();
+        match stdout.write(buf) {
+            Err(error) => {
+                if error.kind() == BrokenPipe {
+                    Ok(buf.len())
+                } else {
+                    Err(error)
+                }
+            }
+            other => other,
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        let mut stdout = io::stdout().lock();
+
+        match stdout.flush() {
+            Err(error) => {
+                if error.kind() == BrokenPipe {
+                    Ok(())
+                } else {
+                    Err(error)
+                }
+            }
+            other => other,
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_initialize<'local>(
     env: JNIEnv<'local>,
@@ -330,7 +365,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_ini
             })
             .level(log::LevelFilter::Info)
             .level_for("jni", log::LevelFilter::Error)
-            .chain(std::io::stdout())
+            .chain(fern::Output::writer(Box::new(LogWriter), "\n"))
             .apply();
 
         RwLock::new(PhysicsState {

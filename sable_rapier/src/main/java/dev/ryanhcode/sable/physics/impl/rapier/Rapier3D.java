@@ -50,12 +50,12 @@ public final class Rapier3D {
         final Path gameDir = SableLoaderPlatform.INSTANCE.getGameDirectory();
         if (gameDir != null) {
             final Path gameDirRelativeDir = gameDir.resolve(".sable").resolve("natives").normalize();
-            Sable.LOGGER.info("Using game-dir-relative Rapier native directory {}", gameDirRelativeDir.toAbsolutePath());
+            Sable.LOGGER.info("Using game directory relative Sable Rapier native directory {}", gameDirRelativeDir.toAbsolutePath());
             return gameDirRelativeDir;
         }
 
         final Path fallbackDir = Paths.get(System.getProperty("user.home", System.getProperty("user.dir")), ".sable", "natives");
-        Sable.LOGGER.info("Using fallback Rapier native directory {}", fallbackDir.toAbsolutePath());
+        Sable.LOGGER.info("Using fallback Sable Rapier native directory {}", fallbackDir.toAbsolutePath());
         return fallbackDir;
     }
 

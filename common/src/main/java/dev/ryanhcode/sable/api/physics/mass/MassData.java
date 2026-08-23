@@ -34,7 +34,7 @@ public interface MassData {
     Vector3dc getCenterOfMass();
 
     default boolean isInvalid() {
-        return this.getMass() <= 0.0;
+        return this.getMass() <= 0.0 || this.getCenterOfMass() == null;
     }
 
     /**

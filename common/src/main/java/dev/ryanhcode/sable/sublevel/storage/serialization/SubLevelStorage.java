@@ -1,6 +1,7 @@
 package dev.ryanhcode.sable.sublevel.storage.serialization;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.SableServerConfig;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.sublevel.storage.holding.GlobalSavedSubLevelPointer;
 import dev.ryanhcode.sable.sublevel.storage.holding.SavedSubLevelPointer;
@@ -53,7 +54,7 @@ public class SubLevelStorage implements AutoCloseable {
 
         if (this.regionCache.size() >= MAX_CACHE_SIZE) {
             final SubLevelRegionFile last = this.regionCache.removeLast();
-            if (last.isEmpty()) {
+            if (last.isEmpty() && SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
                 last.delete();
             } else {
                 last.close();
@@ -78,7 +79,7 @@ public class SubLevelStorage implements AutoCloseable {
         if (this.storageCache.size() >= MAX_CACHE_SIZE) {
             final SubLevelStorageFile last = this.storageCache.removeLast();
 
-            if (last.isEmpty()) {
+            if (last.isEmpty() && SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
                 last.delete();
             } else {
                 last.close();
@@ -294,7 +295,11 @@ public class SubLevelStorage implements AutoCloseable {
             final SubLevelStorageFile storageFile = storageFiles.next();
 
             if (storageFile.isEmpty()) {
-                storageFile.delete();
+                if (SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                    storageFile.delete();
+                } else {
+                    storageFile.close();
+                }
                 storageFiles.remove();
             }
         }
@@ -305,7 +310,11 @@ public class SubLevelStorage implements AutoCloseable {
             final SubLevelRegionFile regionFile = regionFiles.next();
 
             if (regionFile.isEmpty()) {
-                regionFile.delete();
+                if (SableServerConfig.SUB_LEVEL_STORAGE_PRUNING.get()) {
+                    regionFile.delete();
+                } else {
+                    regionFile.close();
+                }
                 regionFiles.remove();
             }
         }
