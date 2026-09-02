@@ -32,8 +32,8 @@ Join sable zone for development discussion: https://discord.gg/pnkzu2dtVA
 # Building Rust Natives
 
 1. Install Docker from https://www.docker.com/get-started/ or from your relevant package manager
-2. Run `gradlew common:buildImages` (only has to be done once)
-3. Run `gradlew common:buildRustNatives`
+2. Run `gradlew sable_rapier:buildImages` (only has to be done once)
+3. Run `gradlew sable_rapier:buildRustNatives`
 
 ### Thanks
 
