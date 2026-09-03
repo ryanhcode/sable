@@ -17,14 +17,23 @@ import org.joml.Vector2i;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import java.util.function.Consumer;
+import java.util.UUID;
 
 public final class SableTestHelper {
 
     public static ServerSubLevel spawnSubLevel(final SubLevelContainer plotContainer, final Vector3dc pos, final Consumer<CommonLevelAccessor> setter) {
+        return spawnSubLevel(plotContainer, UUID.randomUUID(), pos, setter);
+    }
+
+    public static ServerSubLevel spawnSubLevel(
+            final SubLevelContainer plotContainer,
+            final UUID uuid,
+            final Vector3dc pos,
+            final Consumer<CommonLevelAccessor> setter) {
         final Pose3d pose = new Pose3d();
         pose.position().set(pos);
 
-        final SubLevel subLevel = plotContainer.allocateNewSubLevel(pose);
+        final SubLevel subLevel = plotContainer.allocateNewSubLevel(uuid, pose);
         final LevelPlot plot = subLevel.getPlot();
 
         final ChunkPos center = plot.getCenterChunk();
@@ -37,6 +46,14 @@ public final class SableTestHelper {
 
     public static ServerSubLevel spawnSingleBlockSubLevel(final SubLevelContainer plotContainer, final Vector3dc pos, final BlockState state) {
         return spawnSubLevel(plotContainer, pos, accessor -> accessor.setBlock(BlockPos.ZERO, state, 3));
+    }
+
+    public static ServerSubLevel spawnSingleBlockSubLevel(
+            final SubLevelContainer plotContainer,
+            final UUID uuid,
+            final Vector3dc pos,
+            final BlockState state) {
+        return spawnSubLevel(plotContainer, uuid, pos, accessor -> accessor.setBlock(BlockPos.ZERO, state, 3));
     }
 
     public static Vector3d absoluteDirection(final GameTestHelper helper, final Vector3dc localDirection) {

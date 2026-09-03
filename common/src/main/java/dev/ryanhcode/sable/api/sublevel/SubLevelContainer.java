@@ -230,13 +230,24 @@ public abstract class SubLevelContainer {
      * @return the allocated plot
      */
     public SubLevel allocateNewSubLevel(final Pose3d pose) {
+        return this.allocateNewSubLevel(UUID.randomUUID(), pose);
+    }
+
+    /**
+     * Allocates the first free plot for a sub-level with an existing persistent ID.
+     *
+     * @param uuid the persistent sub-level ID
+     * @param pose the initial pose
+     * @return the allocated sub-level
+     */
+    public SubLevel allocateNewSubLevel(final UUID uuid, final Pose3d pose) {
         final Vector2i firstEmptyPlot = this.getFirstEmptyPlot();
 
         if (firstEmptyPlot == null) {
             throw new IllegalStateException("No empty plots left in the plotgrid");
         }
 
-        return this.allocateSubLevel(UUID.randomUUID(), firstEmptyPlot.x, firstEmptyPlot.y, pose);
+        return this.allocateSubLevel(uuid, firstEmptyPlot.x, firstEmptyPlot.y, pose);
     }
 
     /**
@@ -492,7 +503,7 @@ public abstract class SubLevelContainer {
         this.allSubLevels.remove(subLevel);
         this.subLevelsByUUID.remove(subLevel.getUniqueId());
 
-        if (reason == SubLevelRemovalReason.REMOVED) {
+        if (reason.clearsOccupancy()) {
             this.getOccupancy().clear(index);
         }
     }
@@ -527,6 +538,14 @@ public abstract class SubLevelContainer {
      */
     public @Nullable SubLevel getSubLevel(final UUID uuid) {
         return this.subLevelsByUUID.get(uuid);
+    }
+
+    /**
+     * Notifies this container's observers that one sub-level instance replaced another.
+     */
+    @ApiStatus.Internal
+    public void notifySubLevelTransferred(final SubLevel source, final SubLevel destination) {
+        this.observers.forEach(observer -> observer.onSubLevelTransferred(source, destination));
     }
 
     /**
