@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Set;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerPlayer} to project coordinates from sub-levels to the global frame when the player teleports.
+ */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
 

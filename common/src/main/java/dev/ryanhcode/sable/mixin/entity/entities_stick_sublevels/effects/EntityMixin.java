@@ -29,6 +29,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to fix the particle effects spawned by entities on sub-levels and the block position below their feet.
+ */
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 

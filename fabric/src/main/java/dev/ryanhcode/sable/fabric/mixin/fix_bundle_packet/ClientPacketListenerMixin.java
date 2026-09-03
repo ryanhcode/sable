@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Fabric mixin into {@link ClientPacketListener} that disables the main-thread re-dispatch of bundle packets, as the
+ * sub-level packet handling already runs on the correct thread.
+ */
 @Mixin(ClientPacketListener.class)
 public class ClientPacketListenerMixin {
 

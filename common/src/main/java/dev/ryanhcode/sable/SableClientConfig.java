@@ -18,6 +18,10 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Arrays;
 
+/**
+ * Client-side configuration options for Sable's rendering and networking, defined as a NeoForge
+ * {@link ModConfigSpec}. Changes are applied by {@link #onUpdate(boolean)}.
+ */
 public final class SableClientConfig {
 
     public static final ModConfigSpec SPEC;

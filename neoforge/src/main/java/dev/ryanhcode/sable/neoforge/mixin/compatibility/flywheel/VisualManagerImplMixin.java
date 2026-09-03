@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link dev.engine_room.flywheel.impl.visualization.VisualManagerImpl} to provide visualization contexts for sub-level embeddings.
+ */
+
 @Mixin(value = VisualManagerImpl.class, remap = false)
 public abstract class VisualManagerImplMixin<T, S extends Storage<T>> implements VisualManager<T> {
 

@@ -12,6 +12,10 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.packagePort.frogport.FrogportBlock} to project the player position into a sub-level when placing a frogport.
+ */
+
 @Mixin(FrogportBlock.class)
 public class FrogportBlockMixin {
     @WrapOperation(method = "lambda$setPlacedBy$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;position()Lnet/minecraft/world/phys/Vec3;"))

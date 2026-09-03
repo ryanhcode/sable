@@ -24,6 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Handle the enter and exit logic of the sub-level view when cycling camera types.
+ */
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
 

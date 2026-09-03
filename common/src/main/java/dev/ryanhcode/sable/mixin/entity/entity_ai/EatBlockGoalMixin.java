@@ -12,6 +12,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.ai.goal.EatBlockGoal} so mobs can eat blocks correctly while on sub-levels.
+ */
 @Mixin(EatBlockGoal.class)
 public class EatBlockGoalMixin {
 

@@ -5,6 +5,9 @@ import dev.ryanhcode.sable.sound.SoundInstanceDelegated;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Etched compatibility: make StopListeningSound implement {@link SoundInstanceDelegated} to support delegating moving sound instances in sub-levels.
+ */
 @Mixin(targets = "gg.moonflower.etched.api.sound.StopListeningSound")
 public class StopListeningSoundMixin implements SoundInstanceDelegated {
 

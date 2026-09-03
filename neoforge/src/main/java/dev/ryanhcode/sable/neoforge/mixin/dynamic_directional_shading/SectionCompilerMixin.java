@@ -19,6 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.chunk.SectionCompiler} to mark sub-level sections to enable dynamic directional shading.
+ */
+
 @Mixin(SectionCompiler.class)
 public class SectionCompilerMixin {
 

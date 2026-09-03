@@ -25,6 +25,10 @@ import org.spongepowered.asm.util.Annotations;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Base {@link IMixinConfigPlugin} used by all Sable mixin configs. Conditionally applies renderer mixins (Sodium vs
+ * vanilla) and compatibility mixins, honoring {@link MixinModVersionConstraint} version ranges on target mods.
+ */
 public abstract class AbstractSableMixinPlugin implements IMixinConfigPlugin {
     public static final Logger LOGGER = LogUtils.getLogger();
     private final Object2BooleanMap<String> modLoadedCache = new Object2BooleanOpenHashMap<>();

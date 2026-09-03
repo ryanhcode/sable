@@ -19,6 +19,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.crusher.CrushingWheelControllerBlockEntity} so the crushing wheel controller can process entities in sub-levels.
+ */
+
 @Mixin(CrushingWheelControllerBlockEntity.class)
 public abstract class CrushingWheelControllerBlockEntityMixin extends SmartBlockEntity {
 

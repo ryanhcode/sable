@@ -10,6 +10,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.factoryBoard.FactoryPanelConnectionHandler} so panel connection distance checks account for sub-levels.
+ */
+
 @Mixin(FactoryPanelConnectionHandler.class)
 public class FactoryPanelConnectionHandlerMixin {
 

@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.gametest.framework.TestCommand} to remove intersecting sub-levels when a game test is reset.
+ */
 @Mixin(TestCommand.class)
 public class TestCommandMixin {
 

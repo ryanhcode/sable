@@ -51,6 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.packet.SchematicPlacePacket} to spawn sub-levels when placing schematics.
+ */
+
 @Mixin(SchematicPlacePacket.class)
 public class SchematicPlacePacketMixin {
 

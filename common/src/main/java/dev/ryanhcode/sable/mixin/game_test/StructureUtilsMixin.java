@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.gametest.framework.StructureUtils} to remove sub-levels when clearing space for a structure.
+ */
 @Mixin(StructureUtils.class)
 public class StructureUtilsMixin {
 

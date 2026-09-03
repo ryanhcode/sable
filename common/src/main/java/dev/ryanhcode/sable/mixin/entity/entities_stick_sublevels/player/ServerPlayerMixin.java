@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerPlayer} to make the server player inherit the motion of the tracked sub-level each tick.
+ */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin extends Entity {
 

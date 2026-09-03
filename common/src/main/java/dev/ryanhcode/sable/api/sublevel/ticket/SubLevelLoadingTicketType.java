@@ -10,6 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A registry entry describing the kind of loading ticket a sub-level can be held by, along with the codec used to
+ * serialize its key. Types are created and looked up by {@link ResourceLocation}.
+ */
 public record SubLevelLoadingTicketType<T>(ResourceLocation name, Codec<T> codec) {
     private static final Map<ResourceLocation, SubLevelLoadingTicketType<?>> REGISTRY = new HashMap<>();
 

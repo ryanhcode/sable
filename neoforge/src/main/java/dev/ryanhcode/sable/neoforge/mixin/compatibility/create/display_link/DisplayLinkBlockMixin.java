@@ -8,6 +8,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.displayLink.DisplayLinkBlock} to preserve the display link target when moving into a sub-level.
+ */
+
 @Mixin(DisplayLinkBlock.class)
 public class DisplayLinkBlockMixin implements BlockSubLevelAssemblyListener {
 

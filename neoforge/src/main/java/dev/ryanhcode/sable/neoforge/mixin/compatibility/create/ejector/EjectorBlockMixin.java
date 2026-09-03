@@ -12,6 +12,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.depot.EjectorBlock} so the ejector accounts for sub-levels when flinging entities.
+ */
+
 @Mixin(EjectorBlock.class)
 public class EjectorBlockMixin {
 

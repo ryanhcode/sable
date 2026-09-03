@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.track.CurvedTrackDestroyPacket} so curved track destruction operates in world coordinates.
+ */
+
 @Mixin(CurvedTrackDestroyPacket.class)
 public class CurvedTrackDestroyPacketMixin {
 

@@ -12,6 +12,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.VineBlock} to stop vines growing inside a sub-level from spreading beyond its plot bounds.
+ */
 @Mixin(VineBlock.class)
 public class VineBlockMixin {
 

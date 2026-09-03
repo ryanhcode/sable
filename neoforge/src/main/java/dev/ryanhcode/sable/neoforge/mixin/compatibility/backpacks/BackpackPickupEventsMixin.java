@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+/**
+ * Compatibility mixin for {@link com.spydnel.backpacks.events.BackpackPickupEvents} (Backpacks for Dummies), making backpack pickup checks account for sub-levels.
+ */
+
 @Mixin(BackpackPickupEvents.class)
 public class BackpackPickupEventsMixin {
 

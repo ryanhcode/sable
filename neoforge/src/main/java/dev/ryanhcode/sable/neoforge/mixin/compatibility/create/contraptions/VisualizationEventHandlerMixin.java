@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link dev.engine_room.flywheel.impl.visualization.VisualizationEventHandler} to create Flywheel render info when an entity joins a sub-level.
+ */
+
 @Mixin(VisualizationEventHandler.class)
 public class VisualizationEventHandlerMixin {
 

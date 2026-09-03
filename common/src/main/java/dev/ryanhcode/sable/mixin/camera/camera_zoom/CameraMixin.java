@@ -32,6 +32,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
 
+/**
+ * Implement camera zoom in sub-level view, smoothly interpolating and clamping the maximum zoom distance to the sub-level bounds.
+ */
 @Mixin(Camera.class)
 public abstract class CameraMixin implements CameraZoomExtension {
 

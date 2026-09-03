@@ -10,6 +10,10 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Fabric mixin into {@link LevelChunk} to skip {@link BlockState#onPlace} events while blocks are being assembled
+ * into a sub-level.
+ */
 @Mixin(LevelChunk.class)
 public class LevelChunkMixin {
 

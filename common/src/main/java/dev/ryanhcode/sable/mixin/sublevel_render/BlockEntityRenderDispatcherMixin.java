@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Makes block entity render light colors account for sub-levels and uses the sub-level local camera position for visibility checks.
+ */
 @Mixin(BlockEntityRenderDispatcher.class)
 public abstract class BlockEntityRenderDispatcherMixin implements BlockEntityRenderDispatcherExtension {
 

@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.item.PrimedTnt} to convert the initial velocity of TNT spawned inside a sub-level into local coordinates.
+ */
 @Mixin(PrimedTnt.class)
 public abstract class PrimedTntMixin extends Entity {
 

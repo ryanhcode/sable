@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.ai.navigation.GroundPathNavigation} so ground pathfinding creates paths in local coordinates on sub-levels.
+ */
 @Mixin(GroundPathNavigation.class)
 public abstract class GroundPathNavigationMixin {
 

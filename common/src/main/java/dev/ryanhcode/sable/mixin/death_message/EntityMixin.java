@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to clear the last tracked sub-level when the entity lands on the ground.
+ */
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 

@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.client.Camera} to move the camera position along with the tracked or ridden sub-level.
+ */
 @Mixin(Camera.class)
 public class CameraMixin {
 

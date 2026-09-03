@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ChunkMap.TrackedEntity} to make server entity tracking transform the positions of entities inside sub-levels into global coordinates.
+ */
 @Mixin(targets = "net.minecraft.server.level.ChunkMap$TrackedEntity")
 public class TrackedEntityMixin {
 

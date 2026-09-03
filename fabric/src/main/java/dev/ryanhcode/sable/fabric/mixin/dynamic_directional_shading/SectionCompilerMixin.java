@@ -16,6 +16,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Fabric mixin into {@link SectionCompiler} to switch the model renderer cache to sub-level mode while compiling
+ * chunk sections that belong to a sub-level plot.
+ */
 @Mixin(SectionCompiler.class)
 public class SectionCompilerMixin {
 

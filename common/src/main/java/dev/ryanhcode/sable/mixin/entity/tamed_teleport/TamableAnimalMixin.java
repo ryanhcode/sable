@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.TamableAnimal} to make tamed animals consider sub-levels when teleporting to their owner.
+ */
 @Mixin(TamableAnimal.class)
 public class TamableAnimalMixin {
 

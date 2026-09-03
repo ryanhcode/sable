@@ -4,6 +4,9 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.chunk.LevelChunk;
 
+/**
+ * Loader-specific serialization hooks for reading and writing chunk light data and attachments of sub-level plots.
+ */
 public interface SablePlotPlatform {
     SablePlotPlatform INSTANCE = SablePlatformUtil.load(SablePlotPlatform.class);
 

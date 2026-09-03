@@ -17,6 +17,10 @@ import net.neoforged.neoforge.items.IItemHandler;
 import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.chute.ChuteBlockEntity} so chutes can grab inventory capabilities across sub-levels.
+ */
+
 @Mixin(ChuteBlockEntity.class)
 public abstract class ChuteBlockEntityMixin extends SmartBlockEntity {
 

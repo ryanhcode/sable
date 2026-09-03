@@ -22,6 +22,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.deployer.DeployerBlockEntity} so the deployer can compute distances and find targets in sub-levels.
+ */
+
 @Mixin(DeployerBlockEntity.class)
 public abstract class DeployerBlockEntityMixin extends SmartBlockEntity {
 

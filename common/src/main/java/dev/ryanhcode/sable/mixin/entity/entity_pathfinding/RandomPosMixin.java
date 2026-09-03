@@ -11,6 +11,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.ai.util.RandomPos} so wandering target positions are generated in local coordinates on sub-levels.
+ */
 @Mixin(RandomPos.class)
 public class RandomPosMixin {
 

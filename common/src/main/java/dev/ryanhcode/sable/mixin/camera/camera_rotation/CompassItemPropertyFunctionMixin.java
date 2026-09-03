@@ -11,6 +11,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * Make the compass target angle calculation take sub-level transforms into account.
+ */
 @Mixin(CompassItemPropertyFunction.class)
 public abstract class CompassItemPropertyFunctionMixin {
 

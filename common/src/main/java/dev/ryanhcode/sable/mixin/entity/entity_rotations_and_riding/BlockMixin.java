@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.Block} to rotate the landing velocity damping along with the entity's orientation.
+ */
 @Mixin(Block.class)
 public class BlockMixin {
 

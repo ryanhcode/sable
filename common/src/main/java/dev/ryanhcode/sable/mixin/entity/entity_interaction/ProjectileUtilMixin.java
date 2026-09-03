@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Optional;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.projectile.ProjectileUtil} so projectile hit detection accounts for sub-level position transforms.
+ */
 @Mixin(ProjectileUtil.class)
 public class ProjectileUtilMixin {
 

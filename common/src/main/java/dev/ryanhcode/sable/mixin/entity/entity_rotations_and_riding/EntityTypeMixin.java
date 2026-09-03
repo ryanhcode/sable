@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Function;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.EntityType} to fix entity positions when loading and riding with sub-level vehicles.
+ */
 @Mixin(EntityType.class)
 public class EntityTypeMixin {
 

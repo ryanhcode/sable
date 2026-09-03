@@ -19,6 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Supplier;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.fluids.hosePulley.HosePulleyFluidHandler} so the hose pulley can drain fluids from sub-levels.
+ */
+
 @Mixin(HosePulleyFluidHandler.class)
 public abstract class HosePulleyFluidHandlerMixin {
 
