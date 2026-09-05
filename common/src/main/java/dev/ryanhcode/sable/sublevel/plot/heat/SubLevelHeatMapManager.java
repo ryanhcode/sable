@@ -243,7 +243,7 @@ public class SubLevelHeatMapManager {
 
             // Protect against split sub-levels that have zero mass.
             if (subLevel.getSelfMassTracker().getCenterOfMass() == null || subLevel.getSelfMassTracker().getMass() <= 0.0) {
-                subLevel.getPlot().destroyAllBlocks();
+                subLevel.getPlot().destroyAllBlocks(true);
 
                 final SubLevelContainer container = Objects.requireNonNull(SubLevelContainer.getContainer(level));
                 container.removeSubLevel(subLevel, SubLevelRemovalReason.REMOVED);
