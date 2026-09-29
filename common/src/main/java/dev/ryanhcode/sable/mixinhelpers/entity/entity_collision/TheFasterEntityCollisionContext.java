@@ -26,7 +26,7 @@ public class TheFasterEntityCollisionContext extends EntityCollisionContext {
 
     @Override
     public boolean canStandOnFluid(final FluidState fluidState, final FluidState fluidState2) {
-        return this.entity instanceof final LivingEntity livingEntity && livingEntity.canStandOnFluid(fluidState) && !fluidState.getType().isSame(fluidState2.getType());
+        return this.entity instanceof final LivingEntity livingEntity && livingEntity.canStandOnFluid(fluidState2) && !fluidState.getType().isSame(fluidState2.getType());
     }
 
     @Override
