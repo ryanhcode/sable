@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import com.simibubi.create.content.contraptions.ContraptionHandlerClient;
+import net.minecraft.world.phys.BlockHitResult;
+
 @Mixin(value = ContraptionCollider.class, remap = false)
 public class ContraptionColliderMixin {
 
@@ -153,4 +156,105 @@ public class ContraptionColliderMixin {
         
         return instance.getContactPointMotion(globalContactPoint);
     }
+	
+	@Unique
+	private static double sable$getGlobalContraptionY(
+		final AbstractContraptionEntity instance) 
+		{
+			final SubLevel subLevel = Sable.HELPER.getContaining(instance);
+
+			if (subLevel != null) {
+				return subLevel.logicalPose()
+					.transformPosition(instance.position())
+					.y;
+			}
+
+			return instance.getY();
+		}
+
+	@Redirect(
+		method = {
+				"collideEntities",
+				"saveClientPlayerFromClipping",
+				"saveRemotePlayerFromClipping",
+				"savePlayerFromClipping"
+		},
+		at = @At(
+				value = "INVOKE",
+				target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;getY()D"
+		)
+	)
+	
+	private static double sable$globalContraptionY(
+			final AbstractContraptionEntity instance) 
+	{
+
+		return sable$getGlobalContraptionY(instance);
+	}
+	
+	@Redirect(
+    method = "savePlayerFromClipping",
+    at = @At(
+        value = "INVOKE",
+        target = "Lcom/simibubi/create/content/contraptions/ContraptionHandlerClient;rayTraceContraption(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;)Lnet/minecraft/world/phys/BlockHitResult;"
+		)
+	)
+	private static BlockHitResult sable$rayTraceContraption(
+		final Vec3 start,
+		final Vec3 end,
+		final AbstractContraptionEntity contraptionEntity
+		)
+	{
+		final SubLevel subLevel =
+			Sable.HELPER.getContaining(contraptionEntity);
+
+		if (subLevel != null) {
+			final Pose3d pose = subLevel.logicalPose();
+
+			final Vec3 localStart =
+				pose.transformPositionInverse(start);
+
+			final Vec3 localEnd =
+				pose.transformPositionInverse(end);
+
+			return ContraptionHandlerClient.rayTraceContraption(
+				localStart,
+				localEnd,
+				contraptionEntity
+			);
+		}
+
+		return ContraptionHandlerClient.rayTraceContraption(
+			start,
+			end,
+			contraptionEntity
+		);
+	}
+
+	@Redirect(
+		method = "savePlayerFromClipping",
+		at = @At(
+			value = "INVOKE",
+			target = "Lcom/simibubi/create/content/contraptions/AbstractContraptionEntity;toGlobalVector(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"
+		)
+	)
+	private static Vec3 sable$toActualGlobalVector(
+		final AbstractContraptionEntity instance,
+		final Vec3 localVec,
+		final float partialTicks
+		) 
+	{
+		final Vec3 subLevelGlobal =
+			instance.toGlobalVector(localVec, partialTicks);
+
+		final SubLevel subLevel =
+			Sable.HELPER.getContaining(instance);
+
+		if (subLevel != null) {
+			return subLevel.logicalPose()
+				.transformPosition(subLevelGlobal);
+		}
+
+		return subLevelGlobal;
+	}
 }
