@@ -23,13 +23,16 @@ public class SableUDPChannelHandlerClient extends SimpleChannelInboundHandler<Ad
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) throws Exception {
         super.exceptionCaught(ctx, cause);
-        Sable.LOGGER.error("UDP channel exception caught", cause);
+        Sable.LOGGER.error("UDP channel exception caught (local={}, remote={})",
+                ctx.channel().localAddress(), ctx.channel().remoteAddress(), cause);
     }
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         Sable.LOGGER.info("Client UDP channel active");
+        Sable.LOGGER.debug("[sable-udp] channel id={}, local={}, remote={}",
+                ctx.channel().id(), ctx.channel().localAddress(), ctx.channel().remoteAddress());
 
         this.channel = ctx.channel();
         ((ConnectionExtension) this.connection).sable$setUDPChannel(this.channel);
