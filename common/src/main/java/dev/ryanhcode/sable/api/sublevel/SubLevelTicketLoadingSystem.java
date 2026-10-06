@@ -42,7 +42,7 @@ public class SubLevelTicketLoadingSystem implements SubLevelObserver {
             if (info != null) {
                 info.setPointer(serverSubLevel.getLastSerializationPointer());
             }
-        } else if (reason == SubLevelRemovalReason.REMOVED) {
+        } else if (reason == SubLevelRemovalReason.REMOVED || reason == SubLevelRemovalReason.TRANSFERRED) {
             this.container.allTickets.remove(uuid);
             this.container.activeTickets.remove(serverSubLevel);
         }

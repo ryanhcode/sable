@@ -66,6 +66,15 @@ public record ClientboundStartTrackingSubLevelPacket(long plotCoordinate, UUID s
             return;
         }
 
+        Sable.LOGGER.debug(
+                "Receiving full sync for sub-level {}: clientDimension={}, pose={}, bounds={}, localPlot={},{}",
+                this.subLevelID,
+                level.dimension().location(),
+                this.pose,
+                this.bounds,
+                ChunkPos.getX(this.plotCoordinate),
+                ChunkPos.getZ(this.plotCoordinate));
+
         final ClientSubLevel subLevel = (ClientSubLevel) clientContainer.allocateSubLevel(this.subLevelID, ChunkPos.getX(this.plotCoordinate), ChunkPos.getZ(this.plotCoordinate), new Pose3d(this.lastPose));
 
         final SubLevelSnapshotInterpolator interpolator = subLevel.getInterpolator();
