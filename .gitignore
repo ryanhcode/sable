@@ -18,6 +18,9 @@
 
 # IntelliJ
 out/
+
+# Eclipse / VS Code Java language server build output
+bin/
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 

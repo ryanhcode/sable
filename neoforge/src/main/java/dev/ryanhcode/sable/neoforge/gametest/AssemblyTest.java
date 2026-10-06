@@ -24,11 +24,14 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -115,6 +118,81 @@ public final class AssemblyTest {
                         actualSize.y(),
                         actualSize.z()));
             }
+        });
+    }
+
+    /**
+     * Regression test: demolishing an invalidated (massless) plot must not drop anything — the weightless blocks
+     * left in the plot are duplicates of blocks the disassembly sweep has already moved back to the world.
+     */
+    @GameTest(template = "brittlebreak")
+    public static void testMasslessInvalidationDoesNotDrop(final GameTestHelper helper) {
+        final ServerLevel level = helper.getLevel();
+        final ServerSubLevelContainer plotContainer = SubLevelContainer.getContainer(level);
+        if (plotContainer == null) {
+            throw new IllegalStateException("Plot container not found in level");
+        }
+
+        final BlockPos min = helper.absolutePos(new BlockPos(0, 1, 0));
+        final BlockPos max = helper.absolutePos(new BlockPos(2, 3, 2));
+        final BoundingBox3i bounds = new BoundingBox3i(
+                min.getX(), min.getY(), min.getZ(),
+                max.getX(), max.getY(), max.getZ()
+        );
+
+        // A single stone with a zero-mass wall torch on each of its four sides (covering every facing).
+        final BlockPos stonePos = new BlockPos(1, 1, 1);
+
+        // Reset the template area — the floor layer included, or stray template decorations can drop during the
+        // run — so the test does not depend on template contents. Shape updates are suppressed (flag 16): clearing
+        // with normal flags would pop the template's adjacent redstone components and drop their items.
+        for (final BlockPos pos : BlockPos.betweenClosed(new BlockPos(0, 0, 0), new BlockPos(2, 3, 2))) {
+            level.setBlock(helper.absolutePos(pos), Blocks.AIR.defaultBlockState(),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        }
+        helper.setBlock(stonePos, Blocks.STONE.defaultBlockState());
+        for (final Direction direction : Direction.Plane.HORIZONTAL) {
+            helper.setBlock(stonePos.relative(direction),
+                    Blocks.WALL_TORCH.defaultBlockState().setValue(WallTorchBlock.FACING, direction));
+        }
+
+        final ServerSubLevel subLevel = SubLevelAssemblyHelper.assembleBlocks(level, min, BlockPos.betweenClosed(min, max), bounds);
+
+        helper.runAtTickTime(10, () -> {
+            final Level plot = subLevel.getLevel();
+            final BoundingBox3ic plotBounds = subLevel.getPlot().getBoundingBox();
+
+            // Remove the only mass-bearing block. Shape updates are suppressed (flag 16), matching silent
+            // disassembly sweeps, so the zero-mass torches are not popped first. This invalidates the mass
+            // tracker, and the physics system demolishes the plot through the real invalidation path.
+            for (final BlockPos pos : BlockPos.betweenClosed(plotBounds.minX(), plotBounds.minY(), plotBounds.minZ(),
+                    plotBounds.maxX(), plotBounds.maxY(), plotBounds.maxZ())) {
+                if (plot.getBlockState(pos).isAir() || plot.getBlockState(pos).getBlock() == Blocks.WALL_TORCH) {
+                    continue;
+                }
+                plot.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            }
+
+            // Fallback demolition in case the mass update hook did not fire; a no-op if the plot is already gone.
+            // Demolishing spawns the drops at the plot's position in the level, far away from the test structure,
+            // so the assertion has to cover the whole level. The template reset above keeps it free of stray items.
+            helper.runAtTickTime(20, () -> {
+                if (!subLevel.isRemoved()) {
+                    subLevel.getPlot().destroyAllBlocks(false);
+                }
+
+                helper.runAtTickTime(30, () -> {
+                    // Only the torches this test placed count as evidence: the shared plot grid can pop foreign
+                    // decorations from neighbouring grid content during assembly, which drops unrelated items.
+                    final List<? extends ItemEntity> droppedTorches = level.getEntities(EntityType.ITEM,
+                            itemEntity -> itemEntity.getItem().is(Blocks.WALL_TORCH.asItem()));
+                    if (!droppedTorches.isEmpty()) {
+                        helper.fail("Demolishing the invalidated plot dropped " + droppedTorches.size()
+                                + " zero-mass wall torch item(s)");
+                    }
+                    helper.succeed();
+                });
+            });
         });
     }
 

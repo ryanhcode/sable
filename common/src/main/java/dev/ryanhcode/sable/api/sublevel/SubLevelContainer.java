@@ -154,7 +154,7 @@ public abstract class SubLevelContainer {
         for (final SubLevel subLevel : this.allSubLevels) {
             if (subLevel instanceof final ServerSubLevel serverSubLevel) {
                 if (!serverSubLevel.isRemoved() && serverSubLevel.getMassTracker().isInvalid()) {
-                    serverSubLevel.getPlot().destroyAllBlocks();
+                    serverSubLevel.getPlot().destroyAllBlocks(false);
                     serverSubLevel.markRemoved();
                 }
             }

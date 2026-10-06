@@ -402,6 +402,11 @@ public class SubLevelAssemblyHelper {
                         container.setLootTable(null);
                     }
                     Clearable.tryClear(blockEntity);
+                    if (blockEntity != null && !(blockEntity instanceof Clearable)) {
+                        // The destination copy already owns the contents; leaving them in the source block entity
+                        // would make the destruction below drop (or void) a duplicate via onRemove(...).
+                        level.removeBlockEntity(block);
+                    }
                 }
 
                 final LevelChunk chunk = resultingAccelerator.getChunk(SectionPos.blockToSectionCoord(newPos.getX()), SectionPos.blockToSectionCoord(newPos.getZ()));
