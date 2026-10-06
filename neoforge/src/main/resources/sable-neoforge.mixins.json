@@ -136,6 +136,7 @@
     "compatibility.create.redstone_contacts.AllBlockEntityTypesMixin",
     "compatibility.create.redstone_contacts.RedstoneContactBlockMixin",
     "compatibility.create.redstone_links.RedstoneLinkNetworkHandlerMixin",
+    "compatibility.create.rotation_speed_controller.SubLevelAssemblyHelperMixin",
     "compatibility.create.sails_providing_lift.SailBlockMixin",
     "compatibility.create.saw.SawBlockEntityMixin",
     "compatibility.create.schematics.DeployToolMixin",
