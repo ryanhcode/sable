@@ -44,7 +44,7 @@ public class LevelRendererMixin {
                                         @Local(ordinal = 5) final LocalDoubleRef entityZ,
                                         @Share("renderPose") final LocalRef<Pose3dc> renderPoseShare) {
         // Render the entity on the data
-        final ClientSubLevel subLevel = (ClientSubLevel) Sable.HELPER.getContaining(entity);
+        final ClientSubLevel subLevel = Sable.HELPER.getContainingClient(entity.getX(), entity.getZ());
 
         if (subLevel == null) {
             // Tracking sub-levels
