@@ -93,6 +93,7 @@
     "compatibility.create.crushing_wheel.CrushingWheelBlockMixin",
     "compatibility.create.crushing_wheel_entity_processing.CrushingWheelControllerBlockEntityMixin",
     "compatibility.create.deployer.DeployerBlockEntityMixin",
+    "compatibility.create.deployer.DeployerFakePlayerMixin",
     "compatibility.create.display_link.ClickToLinkBlockItemMixin",
     "compatibility.create.display_link.DisplayLinkBlockEntityMixin",
     "compatibility.create.display_link.DisplayLinkBlockMixin",
