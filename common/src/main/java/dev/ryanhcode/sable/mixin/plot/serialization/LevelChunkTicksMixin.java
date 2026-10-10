@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Provides {@link LevelChunkTicks} with the ability to copy scheduled ticks, used for sub-level chunk serialization.
+ */
 @Mixin(LevelChunkTicks.class)
 public class LevelChunkTicksMixin<T> implements LevelChunkTicksExtension<T> {
 

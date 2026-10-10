@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.player.LocalPlayer} to send the position in sub-level local coordinates when the local player is tracking a sub-level.
+ */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin extends Entity {
 

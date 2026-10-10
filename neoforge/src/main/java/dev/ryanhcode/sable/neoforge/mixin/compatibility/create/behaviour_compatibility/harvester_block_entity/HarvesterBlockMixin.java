@@ -12,6 +12,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.actors.harvester.HarvesterBlock} to provide a custom client ticker for the harvester.
+ */
+
 @Mixin(HarvesterBlock.class)
 public abstract class HarvesterBlockMixin extends AttachedActorBlock implements IBE<HarvesterBlockEntity> {
     protected HarvesterBlockMixin(final Properties properties) {

@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.GameRenderer} to adjust the view as the sub-level rotates while the player stands on it.
+ */
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 

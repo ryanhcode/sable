@@ -15,6 +15,10 @@ import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.belt.BeltBlock} and {@link com.simibubi.create.content.kinetics.millstone.MillstoneBlock} to find block entities in sub-levels when entities land on them.
+ */
+
 @Mixin({ BeltBlock.class, MillstoneBlock.class })
 public class BeltMillstoneBlocksMixin extends Block {
 

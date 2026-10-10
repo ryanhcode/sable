@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.particle.AirParticle} so air particles can track target positions across sub-levels.
+ */
+
 @Mixin(AirParticle.class)
 public abstract class AirParticleMixin extends SimpleAnimatedParticle implements ParticleSubLevelKickable {
 

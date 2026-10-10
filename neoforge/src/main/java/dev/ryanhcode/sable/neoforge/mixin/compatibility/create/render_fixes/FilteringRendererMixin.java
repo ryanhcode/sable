@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringRenderer} so filter render distances account for sub-levels.
+ */
+
 @Mixin(FilteringRenderer.class)
 public class FilteringRendererMixin {
 

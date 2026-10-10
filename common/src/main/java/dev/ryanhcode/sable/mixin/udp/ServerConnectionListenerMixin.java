@@ -30,6 +30,9 @@ import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.server.network.ServerConnectionListener} to implement {@link dev.ryanhcode.sable.mixinterface.udp.ServerConnectionListenerExtension}, starting the UDP server channels alongside the TCP listener.
+ */
 @Mixin(ServerConnectionListener.class)
 public class ServerConnectionListenerMixin implements ServerConnectionListenerExtension {
 

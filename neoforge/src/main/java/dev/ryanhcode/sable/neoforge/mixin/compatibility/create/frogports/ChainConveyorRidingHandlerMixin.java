@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorRidingHandler} so riding chain conveyors compute position and orientation correctly in sub-levels.
+ */
+
 @Mixin(ChainConveyorRidingHandler.class)
 public class ChainConveyorRidingHandlerMixin {
 

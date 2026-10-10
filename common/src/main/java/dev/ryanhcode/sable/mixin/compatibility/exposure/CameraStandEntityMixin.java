@@ -13,6 +13,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Exposure compatibility: adapt the camera stand's eye position and interaction range checks to the sub-level coordinate system.
+ */
 @Mixin(CameraStandEntity.class)
 public abstract class CameraStandEntityMixin extends Entity {
 

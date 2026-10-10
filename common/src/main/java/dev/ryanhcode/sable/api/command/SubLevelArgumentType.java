@@ -33,6 +33,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+/**
+ * A Brigadier argument type that parses a {@link SubLevelTarget} from a command string. Supports {@code @} selectors,
+ * UUIDs, and an optional {@code static_world} target, with configurable single/multiple result and static-level
+ * permissions.
+ */
 public class SubLevelArgumentType implements ArgumentType<SubLevelTarget> {
 
     public static final Function<SuggestionsBuilder, SuggestionsBuilder> NO_SUGGESTIONS = b -> b;

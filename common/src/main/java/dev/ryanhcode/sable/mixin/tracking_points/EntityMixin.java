@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to restore a player's position from a saved tracking point on load, freezing them into the corresponding sub-level.
+ */
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 

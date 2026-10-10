@@ -24,6 +24,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.Camera} to correctly rotate and position the camera when riding sub-level machinery.
+ */
+
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 

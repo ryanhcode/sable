@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * ComputerCraft compatibility: make the wireless transmission distance calculation in {@link WirelessNetwork#tryTransmit} account for sub-levels.
+ */
 @Mixin(WirelessNetwork.class)
 public class WirelessNetworkMixin {
 

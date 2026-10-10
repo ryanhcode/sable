@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Optional;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.gameevent.vibrations.VibrationSystem.Ticker} to project vibration positions and destination sources into global space.
+ */
 @Mixin(VibrationSystem.Ticker.class)
 public interface VibrationSystemTickerMixin {
 

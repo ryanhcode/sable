@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.gameevent.GameEventDispatcher} to propagate game events into intersecting sub-levels with local-space positions and bounds.
+ */
 @Mixin(GameEventDispatcher.class)
 public class GameEventDispatcherMixin {
 

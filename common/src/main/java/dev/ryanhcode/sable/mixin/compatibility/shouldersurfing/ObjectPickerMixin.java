@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Shoulder Surfing compatibility: make the object picker distance calculation account for sub-levels.
+ */
 @Mixin(ObjectPicker.class)
 public class ObjectPickerMixin {
 

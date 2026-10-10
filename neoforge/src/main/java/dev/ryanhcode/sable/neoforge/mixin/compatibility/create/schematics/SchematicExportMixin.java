@@ -32,6 +32,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.nio.file.Path;
 import java.util.UUID;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.SchematicExport} to include sub-level data when exporting schematics.
+ */
+
 @Mixin(SchematicExport.class)
 public class SchematicExportMixin {
 

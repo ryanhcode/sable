@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.server.network.ServerGamePacketListenerImpl} to handle sub-level tracking in player movement packets and bypass the related speed checks.
+ */
 @Mixin(ServerGamePacketListenerImpl.class)
 public class ServerGamePacketListenerImplMixin {
 

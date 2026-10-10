@@ -27,6 +27,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.SchematicRenderer} to render sub-level blocks in the schematic preview.
+ */
+
 @Mixin(SchematicRenderer.class)
 public class SchematicRendererMixin {
 

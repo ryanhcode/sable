@@ -39,6 +39,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Iterator;
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to implement collision, tracking and inherited motion between entities and sub-levels.
+ */
 @Mixin(value = Entity.class, priority = 1100)
 public abstract class EntityMixin implements EntityMovementExtension {
 

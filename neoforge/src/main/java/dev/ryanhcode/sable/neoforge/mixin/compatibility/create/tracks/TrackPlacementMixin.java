@@ -12,6 +12,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.track.TrackPlacement} to account for sub-level orientation when connecting tracks.
+ */
+
 @Mixin(TrackPlacement.class)
 public class TrackPlacementMixin {
 

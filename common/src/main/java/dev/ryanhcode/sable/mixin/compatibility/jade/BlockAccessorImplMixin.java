@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import snownee.jade.impl.BlockAccessorImpl;
 
+/**
+ * Jade compatibility: make the validation distance calculation in block access requests account for sub-levels.
+ */
 @Mixin(BlockAccessorImpl.class)
 public class BlockAccessorImplMixin {
 

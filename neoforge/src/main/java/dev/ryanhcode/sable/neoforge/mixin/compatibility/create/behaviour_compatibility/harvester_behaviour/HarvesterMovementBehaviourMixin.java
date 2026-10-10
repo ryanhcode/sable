@@ -10,6 +10,10 @@ import dev.ryanhcode.sable.neoforge.mixinhelper.compatibility.create.behavior_co
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.actors.harvester.HarvesterMovementBehaviour} so harvesting can check target positions in sub-levels.
+ */
+
 @Mixin(HarvesterMovementBehaviour.class)
 public class HarvesterMovementBehaviourMixin {
 

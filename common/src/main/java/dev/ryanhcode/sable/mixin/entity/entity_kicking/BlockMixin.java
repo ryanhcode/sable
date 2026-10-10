@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Supplier;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.Block} to transform the item entity's initial velocity when dropping items from blocks inside sub-levels.
+ */
 @Mixin(Block.class)
 public abstract class BlockMixin {
 

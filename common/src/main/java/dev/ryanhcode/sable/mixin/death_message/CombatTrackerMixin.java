@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.damagesource.CombatTracker} to include the source sub-level name in fall death messages.
+ */
 @Mixin(CombatTracker.class)
 public class CombatTrackerMixin {
 

@@ -13,6 +13,10 @@ import org.joml.Vector3dc;
 
 import java.util.Map;
 
+/**
+ * A kinematic (position and orientation driven) moving structure that can be hosted on a sub-level. Provides access to
+ * the local bounds, block state, mass, pose, lift providers, and floating clusters of the contraption.
+ */
 public interface KinematicContraption {
 
     void sable$getLocalBounds(final BoundingBox3i bounds);

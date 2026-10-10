@@ -12,6 +12,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.displayLink.DisplayLinkBlockEntity} so display link distance checks account for sub-levels.
+ */
+
 @Mixin(DisplayLinkBlockEntity.class)
 public abstract class DisplayLinkBlockEntityMixin extends LinkWithBulbBlockEntity {
 

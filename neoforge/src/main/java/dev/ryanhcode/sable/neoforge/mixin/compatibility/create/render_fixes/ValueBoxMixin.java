@@ -10,6 +10,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.behaviour.ValueBox} to apply sub-level offsets when rendering value boxes.
+ */
+
 @Mixin(ValueBox.class)
 public abstract class ValueBoxMixin {
 

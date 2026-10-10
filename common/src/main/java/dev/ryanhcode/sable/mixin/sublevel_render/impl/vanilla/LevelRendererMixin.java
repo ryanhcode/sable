@@ -37,6 +37,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
+/**
+ * On the vanilla render path, wires sub-levels into chunk compilation, culling and chunk layer rendering.
+ */
 @Mixin(value = LevelRenderer.class, priority = 1002) // Higher priority to go after Flywheel
 public abstract class LevelRendererMixin {
 

@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Routes translucent chunk layer rendering through the water occlusion renderer to implement sub-level water occlusion.
+ */
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
 

@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.createmod.catnip.levelWrappers.SchematicLevel} to store sub-level templates in the schematic world.
+ */
+
 @Mixin(SchematicLevel.class)
 public class SchematicLevelMixin implements SchematicLevelExtension {
 

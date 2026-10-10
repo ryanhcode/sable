@@ -4,6 +4,10 @@ import com.simibubi.create.foundation.collision.Matrix3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.collision.Matrix3d} to expose matrix elements for sub-level transforms.
+ */
+
 @Mixin(Matrix3d.class)
 public interface Matrix3dAccessor {
     @Accessor("m00")

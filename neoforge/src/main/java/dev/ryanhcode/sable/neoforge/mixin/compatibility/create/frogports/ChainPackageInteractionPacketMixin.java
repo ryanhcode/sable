@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainPackageInteractionPacket} to initialise package world positions for sub-level distance checks.
+ */
+
 @Mixin(ChainPackageInteractionPacket.class)
 public class ChainPackageInteractionPacketMixin {
     @Shadow @Final private BlockPos selectedConnection;

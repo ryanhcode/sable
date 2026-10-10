@@ -28,6 +28,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate} to load and filter entities belonging to sub-levels.
+ */
+
 @Mixin(StructureTemplate.class)
 public abstract class StructureTemplateMixin implements StructureTemplateExtension {
 

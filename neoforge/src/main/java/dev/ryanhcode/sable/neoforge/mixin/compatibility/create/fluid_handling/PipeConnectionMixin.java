@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.fluids.PipeConnection} so pipe render distance checks account for sub-levels.
+ */
+
 @Mixin(PipeConnection.class)
 public class PipeConnectionMixin {
     @Redirect(method = "isRenderEntityWithinDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceTo(Lnet/minecraft/world/phys/Vec3;)D"))

@@ -26,6 +26,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.AirCurrent} so fan airflow correctly pushes entities in sub-levels.
+ */
+
 @Mixin(AirCurrent.class)
 public abstract class AirCurrentMixin {
 

@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.client.player.LocalPlayer} to freeze client ticking while frozen to a sub-level that is not yet finalized.
+ */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin extends Player implements PlayerFreezeExtension {
 

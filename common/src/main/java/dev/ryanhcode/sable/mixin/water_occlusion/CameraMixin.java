@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Makes the camera stop returning underwater fog types when inside a water-occluded area.
+ */
 @Mixin(Camera.class)
 public class CameraMixin implements CameraWaterOcclusionExtension {
 

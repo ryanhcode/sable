@@ -38,6 +38,9 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.Explosion} to propagate blast rays into sub-levels in local space and apply impulses to the physics system.
+ */
 @Mixin(Explosion.class)
 public class ExplosionMixin {
 

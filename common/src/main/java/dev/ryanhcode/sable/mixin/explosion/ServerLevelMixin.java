@@ -16,6 +16,9 @@ import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerLevel} to project explosion positions out of sub-level space before exploding.
+ */
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin {
 

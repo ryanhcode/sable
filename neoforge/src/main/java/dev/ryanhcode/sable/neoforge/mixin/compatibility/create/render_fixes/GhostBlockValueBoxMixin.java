@@ -9,6 +9,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into GhostBlockRenderer.TransparentGhostBlockRenderer to apply sub-level offsets when rendering ghost blocks.
+ */
+
 @Mixin(targets = "net.createmod.catnip.ghostblock.GhostBlockRenderer$TransparentGhostBlockRenderer")
 public abstract class GhostBlockValueBoxMixin {
 

@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Makes brightness queries inside plots use the plot's own light engine.
+ */
 @Mixin(BlockAndTintGetter.class)
 public interface BlockAndTintGetterMixin {
 

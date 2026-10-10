@@ -2,6 +2,9 @@ package dev.ryanhcode.sable;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+/**
+ * Common (server-agnostic) configuration options for Sable, defined as a NeoForge {@link ModConfigSpec}.
+ */
 public final class SableConfig {
 
     public static final ModConfigSpec SPEC;

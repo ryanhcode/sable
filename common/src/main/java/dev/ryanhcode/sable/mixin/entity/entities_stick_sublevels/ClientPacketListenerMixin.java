@@ -23,6 +23,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.client.multiplayer.ClientPacketListener} to handle custom position interpolation for entities moving or teleporting inside sub-levels.
+ */
 @Mixin(ClientPacketListener.class)
 public abstract class ClientPacketListenerMixin {
 

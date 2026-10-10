@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.entity.EntityRenderer} to correctly orient the name tags of entities inside sub-levels.
+ */
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
 

@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link com.simibubi.create.AllBlockEntityTypes} to register the redstone contact block entity type used by Sable.
+ */
+
 @Mixin(AllBlockEntityTypes.class)
 public class AllBlockEntityTypesMixin implements RedstoneContactBlockEntityTypeGetter {
 

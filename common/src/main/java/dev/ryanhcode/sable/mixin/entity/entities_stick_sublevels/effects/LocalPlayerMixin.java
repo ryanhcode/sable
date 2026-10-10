@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.player.LocalPlayer} to play sounds from the local player's feet position when it has a custom orientation.
+ */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin extends Entity {
 

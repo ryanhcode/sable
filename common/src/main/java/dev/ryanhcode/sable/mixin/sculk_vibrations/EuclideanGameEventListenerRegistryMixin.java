@@ -12,6 +12,9 @@ import net.minecraft.world.level.gameevent.EuclideanGameEventListenerRegistry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.gameevent.EuclideanGameEventListenerRegistry} to compute listener distances across sub-level poses.
+ */
 @Mixin(EuclideanGameEventListenerRegistry.class)
 public class EuclideanGameEventListenerRegistryMixin {
 

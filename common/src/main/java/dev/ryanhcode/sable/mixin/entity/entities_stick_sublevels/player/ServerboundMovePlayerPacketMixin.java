@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link net.minecraft.network.protocol.game.ServerboundMovePlayerPacket} to convert the player's movement packet position into sub-level local coordinates.
+ */
 @Mixin(ServerboundMovePlayerPacket.class)
 public class ServerboundMovePlayerPacketMixin implements ServerboundMovePlayerPacketExtension {
 

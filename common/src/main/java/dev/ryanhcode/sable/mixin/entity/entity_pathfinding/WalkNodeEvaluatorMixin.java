@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.pathfinder.WalkNodeEvaluator} so walking pathfinding computes the start node in local coordinates on sub-levels.
+ */
 @Mixin(WalkNodeEvaluator.class)
 public abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
 

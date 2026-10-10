@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.function.Function;
 
+/**
+ * Apply the sub-level orientation to the entity's view vector calculation.
+ */
 @Mixin(Entity.class)
 public abstract class EntityMixin  {
 

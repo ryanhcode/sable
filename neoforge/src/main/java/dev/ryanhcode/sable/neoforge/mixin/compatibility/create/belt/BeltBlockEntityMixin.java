@@ -13,6 +13,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.belt.BeltBlockEntity} to wake up physics objects when the belt speed changes.
+ */
+
 @Mixin(BeltBlockEntity.class)
 public abstract class BeltBlockEntityMixin extends KineticBlockEntity {
 

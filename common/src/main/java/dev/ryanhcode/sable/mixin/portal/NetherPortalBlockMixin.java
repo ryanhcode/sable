@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.NetherPortalBlock} to compute portal destinations from coordinates projected out of sub-level space.
+ */
 @Mixin(NetherPortalBlock.class)
 public class NetherPortalBlockMixin {
 

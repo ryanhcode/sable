@@ -10,6 +10,9 @@ import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.player.Player} to also check sub-level blocks when determining whether a player can stand up.
+ */
 @Mixin(Player.class)
 public class PlayerMixin {
 

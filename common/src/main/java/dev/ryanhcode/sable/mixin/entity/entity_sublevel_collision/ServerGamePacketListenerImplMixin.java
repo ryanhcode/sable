@@ -8,6 +8,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.server.network.ServerGamePacketListenerImpl} to disable the vanilla movement check for sub-level collision.
+ */
 @Mixin(ServerGamePacketListenerImpl.class)
 public class ServerGamePacketListenerImplMixin {
 

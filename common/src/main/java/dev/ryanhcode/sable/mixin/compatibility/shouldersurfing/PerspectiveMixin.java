@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Shoulder Surfing compatibility: register the sub-level perspectives and integrate them into its switching logic.
+ */
 @Mixin(Perspective.class)
 public class PerspectiveMixin {
 

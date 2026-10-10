@@ -17,6 +17,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.track.TrackTargetingClient} to render track targeting using sub-level poses.
+ */
+
 @Mixin(TrackTargetingClient.class)
 public class TrackTargetingClientMixin {
 

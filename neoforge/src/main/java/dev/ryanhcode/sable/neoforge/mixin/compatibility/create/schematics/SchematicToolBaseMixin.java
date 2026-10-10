@@ -21,6 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Predicate;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.tools.SchematicToolBase} so schematic tool rays and selection account for sub-levels.
+ */
+
 @Mixin(SchematicToolBase.class)
 public class SchematicToolBaseMixin {
 

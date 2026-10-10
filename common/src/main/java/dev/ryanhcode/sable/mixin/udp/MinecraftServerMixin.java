@@ -10,6 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BooleanSupplier;
 
+/**
+ * Mixin into {@link net.minecraft.server.MinecraftServer} to periodically send pings keeping the UDP sockets alive.
+ */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 

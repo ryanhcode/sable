@@ -6,6 +6,9 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.Level} to provide a pool of reusable JOML vectors for collision computation.
+ */
 @Mixin(Level.class)
 public class LevelMixin implements LevelExtension {
 

@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+/**
+ * Mixin into {@link net.minecraft.network.Connection} to implement {@link dev.ryanhcode.sable.mixinterface.udp.ConnectionExtension}, opening a UDP channel for sub-level packet streaming on connect and closing it on disconnect.
+ */
 @Mixin(Connection.class)
 public abstract class ConnectionMixin implements ConnectionExtension {
 

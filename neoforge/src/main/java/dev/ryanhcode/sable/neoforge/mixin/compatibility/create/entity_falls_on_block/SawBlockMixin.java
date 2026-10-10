@@ -7,6 +7,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.saw.SawBlock} to use the standing position when entities land on a saw in a sub-level.
+ */
+
 @Mixin(SawBlock.class)
 public class SawBlockMixin {
 

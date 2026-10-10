@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.item.ItemEntity} to force item entities tracking a sub-level to run physics updates more often.
+ */
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin extends Entity {
 

@@ -9,6 +9,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.processing.FanProcessingType} so fan processing can resolve blocks in sub-levels.
+ */
+
 @Mixin(FanProcessingType.class)
 public interface FanProcessingTypeMixin {
 	@WrapMethod(method = "getAt")
