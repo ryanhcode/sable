@@ -16,6 +16,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.mixinterface.plot.SubLevelContainerHolder;
 import dev.ryanhcode.sable.mixinterface.toast.SableToastableServer;
+import dev.ryanhcode.sable.physics.callback.FragileBlockCallback;
 import dev.ryanhcode.sable.physics.config.PhysicsConfigData;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
@@ -27,6 +28,8 @@ import dev.ryanhcode.sable.sublevel.plot.PlotChunkHolder;
 import dev.ryanhcode.sable.sublevel.plot.ServerLevelPlot;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import dev.ryanhcode.sable.sublevel.system.ticket.PhysicsChunkTicketManager;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -117,6 +120,11 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
      * Queued wake-ups for after the physics tick
      */
     private final Collection<ArbitraryPhysicsObject> queuedWakeUps = new ReferenceOpenHashSet<>();
+
+    /**
+     * Fragile block breaks queued during the physics step, keyed by block position
+     */
+    private final Long2ObjectLinkedOpenHashMap<BlockState> queuedFragileBlockBreaks = new Long2ObjectLinkedOpenHashMap<>();
 
     /**
      * Creates a new physics system.
@@ -278,6 +286,7 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
             IN_PHYSICS_STEP = true;
             this.pipeline.physicsTick(substepTimeStep);
             IN_PHYSICS_STEP = false;
+            this.breakQueuedFragileBlocks();
 
             // if any blocks were modified due to, say, fragile blocks breaking
             // sub-levels could have been removed during the physics tick
@@ -512,6 +521,35 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
                 }
             }
         }
+    }
+
+    /**
+     * Queues a fragile block to be broken once the current physics step has finished
+     *
+     * @param pos   the position of the block
+     * @param state the state of the block when it was hit
+     */
+    public void queueFragileBlockBreak(final BlockPos pos, final BlockState state) {
+        this.queuedFragileBlockBreaks.putIfAbsent(pos.asLong(), state);
+    }
+
+    /**
+     * Breaks the fragile blocks queued during the physics step
+     */
+    private void breakQueuedFragileBlocks() {
+        if (this.queuedFragileBlockBreaks.isEmpty())
+            return;
+
+        for (final Long2ObjectMap.Entry<BlockState> entry : this.queuedFragileBlockBreaks.long2ObjectEntrySet()) {
+            final BlockPos pos = BlockPos.of(entry.getLongKey());
+
+            // the block could have been changed since it was hit, e.g. by an earlier break
+            if (this.level.getBlockState(pos) == entry.getValue()) {
+                FragileBlockCallback.breakFragileBlock(this.level, pos, entry.getValue());
+            }
+        }
+
+        this.queuedFragileBlockBreaks.clear();
     }
 
     public void updateMassDataFromBlockChange(final SubLevel subLevel, final BlockPos globalBlockPos, final BlockState oldState, final BlockState newState, final boolean notifyPipeline) {
