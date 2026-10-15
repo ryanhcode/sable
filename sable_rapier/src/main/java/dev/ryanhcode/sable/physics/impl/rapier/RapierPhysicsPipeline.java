@@ -392,7 +392,7 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         for (final Direction dir : Direction.values()) {
             final BlockPos pos = globalBlockPos.relative(dir);
             final VoxelNeighborhoodState state = VoxelNeighborhoodState.getState(this.accelerator, pos, null);
-            final RapierVoxelColliderData colliderData = this.colliderBakery.getPhysicsDataForBlock(this.level.getBlockState(pos));
+            final RapierVoxelColliderData colliderData = this.colliderBakery.getPhysicsDataForBlock(this.accelerator.getBlockState(pos));
 
             final int colliderValue = colliderData == null ? 0 : colliderData.handle() + 1;
             Rapier3D.changeBlock(this.scene.handle(), pos.getX(), pos.getY(), pos.getZ(), packBlockState(state, colliderValue));

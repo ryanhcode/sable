@@ -456,7 +456,7 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
      * @param oldState   the old block state
      * @param newState   the new block state
      */
-    public void handleBlockChange(final SectionPos sectionPos, final LevelChunkSection section, final int localX, final int localY, final int localZ, final BlockState oldState, final BlockState newState) {
+    public synchronized void handleBlockChange(final SectionPos sectionPos, final LevelChunkSection section, final int localX, final int localY, final int localZ, final BlockState oldState, final BlockState newState) {
         final ChunkPos chunk = sectionPos.chunk();
         final LevelPlot plot = ((SubLevelContainerHolder) this.level).sable$getPlotContainer().getPlot(chunk);
         if (plot != null) {

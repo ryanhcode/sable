@@ -7,6 +7,7 @@ import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
+import dev.ryanhcode.sable.util.LevelAccelerator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertPosException;
@@ -17,10 +18,42 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import static dev.ryanhcode.sable.neoforge.gametest.SableTestHelper.*;
 
 @GameTestHolder(Sable.MOD_ID)
 public final class PhysicsTest {
+
+    @GameTest(template = "continuouscollision", timeoutTicks = 100)
+    public static void testUnloadedChunkReadsOffThread(final GameTestHelper helper) {
+        final ServerLevel level = helper.getLevel();
+        final BlockPos unloaded = helper.absolutePos(new BlockPos(16_384, 0, 16_384));
+        if (level.hasChunkAt(unloaded)) {
+            helper.fail("Test chunk was already loaded");
+            return;
+        }
+
+        CompletableFuture.supplyAsync(() -> {
+                    final LevelAccelerator accelerator = new LevelAccelerator(level);
+                    return accelerator.getBlockState(unloaded).isAir()
+                            && accelerator.getFluidState(unloaded).isEmpty()
+                            && accelerator.getBlockEntity(unloaded) == null;
+                })
+                .orTimeout(2, TimeUnit.SECONDS)
+                .whenComplete((safe, failure) -> level.getServer().execute(() -> {
+                    if (failure != null) {
+                        helper.fail("Off-thread unloaded chunk read blocked or failed: " + failure);
+                    } else if (level.hasChunkAt(unloaded)) {
+                        helper.fail("Off-thread read loaded the chunk");
+                    } else if (!safe) {
+                        helper.fail("Unloaded chunk did not read as empty");
+                    } else {
+                        helper.succeed();
+                    }
+                }));
+    }
 
     @GameTest(template = "continuouscollision")
     public static void testContinuousCollision(final GameTestHelper helper) {
