@@ -9,6 +9,7 @@ import dev.ryanhcode.sable.network.udp.handler.SableUDPChannelHandlerServer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalServerChannel;
@@ -75,7 +76,7 @@ public class ServerConnectionListenerMixin implements ServerConnectionListenerEx
                         }
                     })
                     .group(eventLoopGroup)
-                    .localAddress(inetAddress, port)
+                    .localAddress(inetAddress, SableUDPServer.getUDPPort(port))
                     .bind()
                     .syncUninterruptibly());
         }

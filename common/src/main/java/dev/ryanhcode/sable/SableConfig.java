@@ -18,6 +18,8 @@ public final class SableConfig {
     public static final ModConfigSpec.IntValue SUB_LEVEL_PUNCH_COOLDOWN_TICKS;
     public static final ModConfigSpec.BooleanValue DISABLE_UDP_PIPELINE;
     public static final ModConfigSpec.BooleanValue ATTEMPT_UDP_NETWORKING;
+    public static final ModConfigSpec.IntValue UDP_LISTEN_PORT;
+
     public static final ModConfigSpec.BooleanValue SUB_LEVEL_SAVING_LOG_MESSAGE;
     public static final ModConfigSpec.BooleanValue VERBOSE_SERIALIZATION_LOGGING;
 
@@ -62,6 +64,9 @@ public final class SableConfig {
         ATTEMPT_UDP_NETWORKING = builder
                 .comment("If Sable should attempt to authenticate with clients and send them sub-level movement data over UDP")
                 .define("attempt_udp_networking", true);
+        UDP_LISTEN_PORT = builder
+                .comment("The port Sable will use when sending data over UDP (-1 = The Minecraft Server Instance Port)")
+                .defineInRange("udp_listen_port", -1, -1, 65535);
         SUB_LEVEL_SAVING_LOG_MESSAGE = builder
                 .comment("If Sable should log when saving sub-levels for a dimension.")
                 .define("sub_level_saving_log_message", true);
