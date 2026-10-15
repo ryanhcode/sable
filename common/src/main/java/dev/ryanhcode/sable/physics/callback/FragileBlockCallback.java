@@ -52,6 +52,26 @@ public class FragileBlockCallback implements BlockSubLevelCollisionCallback {
     }
 
     public CollisionResult onHit(final ServerLevel level, final BlockPos pos, final BlockState state, final Vector3d hitPos) {
+        if (SubLevelPhysicsSystem.IN_PHYSICS_STEP) {
+            // Breaking the block here would run its neighbour updates inside the native physics step, which can call back
+            // into Rapier (e.g. building a collider for a block state it hasn't seen yet) and hang the server thread.
+            // Queue the break until the step has finished instead.
+            SubLevelPhysicsSystem.getCurrentlySteppingSystem().queueFragileBlockBreak(pos, state);
+        } else {
+            breakFragileBlock(level, pos, state);
+        }
+
+        return new CollisionResult(JOMLConversion.ZERO, true);
+    }
+
+    /**
+     * Breaks a fragile block, melting ice on destruction
+     *
+     * @param level the level the block is in
+     * @param pos the position of the block
+     * @param state the state of the block being broken
+     */
+    public static void breakFragileBlock(final ServerLevel level, final BlockPos pos, final BlockState state) {
         level.destroyBlock(pos, true);
 
         // Melt ice on destruction
@@ -62,7 +82,5 @@ public class FragileBlockCallback implements BlockSubLevelCollisionCallback {
                 level.setBlockAndUpdate(pos, IceBlock.meltsInto());
             }
         }
-
-        return new CollisionResult(JOMLConversion.ZERO, true);
     }
 }
