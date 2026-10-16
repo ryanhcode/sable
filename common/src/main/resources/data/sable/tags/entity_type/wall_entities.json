@@ -11,6 +11,7 @@
     { "id": "immersive_paintings:painting", "required": false },
     { "id": "immersive_paintings:glow_painting", "required": false },
     { "id": "immersive_paintings:graffiti", "required": false },
-    { "id": "immersive_paintings:glow_graffiti", "required": false }
+    { "id": "immersive_paintings:glow_graffiti", "required": false },
+    { "id": "quark:glass_frame", "required": false }
   ]
 }
