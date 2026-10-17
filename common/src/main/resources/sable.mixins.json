@@ -140,6 +140,7 @@
     "entity.entities_stick_sublevels.player.ServerPlayerMixin",
     "entity.entity_aabb_lookup.ServerLevelMixin",
     "entity.entity_ai.EatBlockGoalMixin",
+    "entity.entity_ai.LongJumpMixin",
     "entity.entity_collision.CollisionContextMixin",
     "entity.entity_collision.EntityMixin",
     "entity.entity_interaction.ProjectileUtilMixin",
