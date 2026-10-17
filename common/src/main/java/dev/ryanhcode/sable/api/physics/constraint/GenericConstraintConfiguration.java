@@ -23,8 +23,13 @@ public record GenericConstraintConfiguration(
         Vector3dc pos2,
         Quaterniondc orientation1,
         Quaterniondc orientation2,
-        Set<ConstraintJointAxis> lockedAxes
+        Set<ConstraintJointAxis> lockedAxes,
+        Set<ConstraintJointAxis> coupledAxes
 ) implements PhysicsConstraintConfiguration<GenericConstraintHandle> {
+
+    public GenericConstraintConfiguration(final Vector3dc pos1, final Vector3dc pos2, final Quaterniondc orientation1, final Quaterniondc orientation2, final Set<ConstraintJointAxis> lockedAxes) {
+        this(pos1, pos2, orientation1, orientation2, lockedAxes, EnumSet.noneOf(ConstraintJointAxis.class));
+    }
 
     public GenericConstraintConfiguration(final Vector3dc pos1, final Vector3dc pos2, final Quaterniondc orientation1, final Quaterniondc orientation2) {
         this(pos1, pos2, orientation1, orientation2, EnumSet.noneOf(ConstraintJointAxis.class));

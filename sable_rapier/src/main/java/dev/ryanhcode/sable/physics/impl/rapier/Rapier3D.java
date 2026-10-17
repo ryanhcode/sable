@@ -429,6 +429,7 @@ public final class Rapier3D {
      * @param localOrientationZB the local orientation Z of the second object
      * @param localOrientationWB the local orientation W of the second object
      * @param lockedAxesMask     bit mask of locked axes; bit {@code n} corresponds to {@link dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis#ordinal()}
+     * @param coupledAxesMask    bit mask of coupled axes; bit {@code n} corresponds to {@link dev.ryanhcode.sable.api.physics.constraint.ConstraintJointAxis#ordinal()}
      */
     @ApiStatus.Internal
     public static native long addGenericConstraint(final long sceneHandle,
@@ -448,7 +449,8 @@ public final class Rapier3D {
                                                    double localOrientationYB,
                                                    double localOrientationZB,
                                                    double localOrientationWB,
-                                                   int lockedAxesMask);
+                                                   int lockedAxesMask,
+                                                   int coupledAxesMask);
 
     /**
      * Sets the local frame on one side of a constraint.

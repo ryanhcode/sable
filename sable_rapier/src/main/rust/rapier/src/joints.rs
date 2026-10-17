@@ -594,6 +594,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
     local_q_z_b: jdouble,
     local_q_w_b: jdouble,
     locked_axes_mask: jint,
+    coupled_axes_mask: jint,
 ) -> SableJointHandle {
     with_handle(handle, |scene| {
         let mut sable_data = scene.sable_data.write().unwrap();
@@ -612,6 +613,7 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
         };
 
         let locked_axes = JointAxesMask::from_bits_truncate(locked_axes_mask as u8);
+        let coupled_axes = JointAxesMask::from_bits_truncate(coupled_axes_mask as u8);
 
         let rotation_a = Quat::from_xyzw(
             local_q_x_a as Real,
@@ -626,10 +628,12 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_add
             local_q_w_b as Real,
         );
 
-        let mut joint = GenericJointBuilder::new(locked_axes).softness(SpringCoefficients::new(
-            JOINT_SPRING_FREQUENCY,
-            JOINT_SPRING_DAMPING_RATIO,
-        ));
+        let mut joint = GenericJointBuilder::new(locked_axes)
+            .coupled_axes(coupled_axes)
+            .softness(SpringCoefficients::new(
+                JOINT_SPRING_FREQUENCY,
+                JOINT_SPRING_DAMPING_RATIO,
+            ));
         joint.0.local_frame1.rotation = rotation_a;
         joint.0.local_frame2.rotation = rotation_b;
 
