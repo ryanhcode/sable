@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,6 +54,13 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
     private UUID sable$respawnPoint = null;
     @Unique
     private Pair<UUID, Vector3d> sable$queuedFreeze = null;
+    @Unique
+    @Nullable
+    private UUID sable$respawnPointBefore = null;
+    @Unique
+    private @Nullable BlockPos sable$respawnPosBefore = null;
+    @Unique
+    private @Nullable ResourceKey<Level> sable$respawnDimBefore = null;
 
     @Shadow
     public static Optional<ServerPlayer.RespawnPosAngle> findRespawnAndUseSpawnBlock(final ServerLevel serverLevel, final BlockPos blockPos, final float f, final boolean bl, final boolean bl2) {
@@ -72,34 +80,67 @@ public abstract class ServerPlayerMixin implements ServerPlayerRespawnExtension 
 
     @Inject(method = "setRespawnPosition", at = @At("HEAD"), cancellable = true)
     private void sable$setRespawnPosition(final ResourceKey<Level> resourceKey, @Nullable final BlockPos blockPos, final float f, final boolean bl, final boolean sendMessage, final CallbackInfo ci) {
-        final ServerLevel level = this.serverLevel();
-        final SubLevelTrackingPointSavedData data = SubLevelTrackingPointSavedData.getOrLoad(level);
+        // Snapshot the state so a call that is ultimately a no-op (e.g. cancelled by another
+        // mod's PlayerSetSpawnEvent handler) does not destroy the tracked sub-level point.
+        this.sable$respawnPointBefore = this.sable$respawnPoint;
+        this.sable$respawnPosBefore = this.respawnPosition;
+        this.sable$respawnDimBefore = this.respawnDimension;
 
-        if (this.sable$respawnPoint != null) {
-            data.removeTrackingPoint(this.sable$respawnPoint);
+        if (blockPos == null) {
+            // Spawn is being reset; let vanilla/NeoForge handle it and reconcile at RETURN.
+            return;
+        }
+
+        final ServerLevel level = this.serverLevel();
+        final SubLevel trackingSubLevel = Sable.HELPER.getContaining(level, blockPos);
+
+        if (trackingSubLevel instanceof final ServerSubLevel serverSubLevel) {
+            final SubLevelTrackingPointSavedData data = SubLevelTrackingPointSavedData.getOrLoad(level);
+
+            if (this.sable$respawnPoint != null) {
+                data.removeTrackingPoint(this.sable$respawnPoint);
+                this.sable$respawnPoint = null;
+            }
+
+            this.sable$respawnPoint = data.generateTrackingPoint(Vec3.atCenterOf(blockPos), serverSubLevel);
+
+            if (this.sable$respawnPoint != null) {
+                final boolean theSame = blockPos.equals(this.respawnPosition) && resourceKey.equals(this.respawnDimension);
+                if (sendMessage && !theSame) {
+                    this.sendSystemMessage(Component.translatable("block.minecraft.set_spawn"));
+                }
+
+                this.respawnPosition = blockPos;
+                this.respawnDimension = resourceKey;
+                this.respawnAngle = f;
+                this.respawnForced = bl;
+                ci.cancel();
+            }
+        }
+    }
+
+    @Inject(method = "setRespawnPosition", at = @At("RETURN"))
+    private void sable$reconcileRespawnPoint(final ResourceKey<Level> resourceKey, @Nullable final BlockPos blockPos, final float f, final boolean bl, final boolean sendMessage, final CallbackInfo ci) {
+        final BlockPos posBefore = this.sable$respawnPosBefore;
+        final ResourceKey<Level> dimBefore = this.sable$respawnDimBefore;
+        this.sable$respawnPosBefore = null;
+        this.sable$respawnDimBefore = null;
+
+        final boolean changed = !Objects.equals(this.respawnPosition, posBefore)
+                || !Objects.equals(this.respawnDimension, dimBefore);
+
+        // Only drop the tracked point when this call actually committed a non-sub-level spawn (or
+        // a reset), and it is still the same point we entered the method with. A no-op call keeps
+        // the point intact; a freshly generated sub-level point is never clobbered.
+        if (changed
+                && this.sable$respawnPoint != null
+                && Objects.equals(this.sable$respawnPoint, this.sable$respawnPointBefore)) {
+            SubLevelTrackingPointSavedData.getOrLoad(this.serverLevel())
+                    .removeTrackingPoint(this.sable$respawnPoint);
             this.sable$respawnPoint = null;
         }
 
-        if (blockPos != null) {
-            final SubLevel trackingSubLevel = Sable.HELPER.getContaining(level, blockPos);
-
-            if (trackingSubLevel instanceof final ServerSubLevel serverSubLevel) {
-                this.sable$respawnPoint = data.generateTrackingPoint(Vec3.atCenterOf(blockPos), serverSubLevel);
-
-                if (this.sable$respawnPoint != null) {
-                    final boolean theSame = blockPos.equals(this.respawnPosition) && resourceKey.equals(this.respawnDimension);
-                    if (sendMessage && !theSame) {
-                        this.sendSystemMessage(Component.translatable("block.minecraft.set_spawn"));
-                    }
-
-                    this.respawnPosition = blockPos;
-                    this.respawnDimension = resourceKey;
-                    this.respawnAngle = f;
-                    this.respawnForced = bl;
-                    ci.cancel();
-                }
-            }
-        }
+        this.sable$respawnPointBefore = null;
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
