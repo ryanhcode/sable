@@ -114,6 +114,7 @@
     "compatibility.jade.BlockAccessorImplMixin",
     "compatibility.jade.RayTracingMixin",
     "compatibility.jadeaddons.CreatePluginMixin",
+    "compatibility.parcool.WorldUtilMixin",
     "compatibility.shouldersurfing.EntityHelperMixin",
     "compatibility.shouldersurfing.PerspectiveMixin",
     "compatibility.shouldersurfing.ShoulderSurfingCameraMixin",
