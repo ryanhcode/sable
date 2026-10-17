@@ -103,9 +103,11 @@ public abstract class ClientPacketListenerMixin {
             final SubLevel existingSubLevel = Sable.HELPER.getContaining(this.level, entity.position());
 
             if (subLevel != null && actuallyInSubLevel && existingSubLevel != subLevel) {
-                entity.setPos(subLevel.logicalPose().transformPositionInverse(entity.position()));
+                final Vec3 newPos = subLevel.logicalPose().transformPositionInverse(entity.position());
+                entity.moveTo(newPos.x, newPos.y, newPos.z);
             } else if (existingSubLevel != null && subLevel == null) {
-                entity.setPos(existingSubLevel.logicalPose().transformPosition(entity.position()));
+                final Vec3 newPos = existingSubLevel.logicalPose().transformPosition(entity.position());
+                entity.moveTo(newPos.x, newPos.y, newPos.z);
             }
 
             entity.lerpTo(pX, pY, pZ, pYRot, pXRot, pLerpSteps);

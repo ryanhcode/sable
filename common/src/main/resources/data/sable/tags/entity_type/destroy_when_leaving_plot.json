@@ -2,7 +2,6 @@
   "replace": false,
   "values": [
     { "id": "exposure:camera_stand", "required": false },
-    "minecraft:armor_stand",
     "minecraft:minecart",
     "minecraft:hopper_minecart",
     "minecraft:chest_minecart",
