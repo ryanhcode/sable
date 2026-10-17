@@ -179,8 +179,9 @@ public abstract class AbstractContraptionEntityMixin extends Entity implements K
             this.sable$massTracker = null;
             return;
         }
-
-        final Vector3d temp = this.sable$massTracker.getCenterOfMass().negate(new Vector3d()).add(0.5, 0.5, 0.5);
+        var centerOfMass = this.sable$massTracker.getCenterOfMass();
+        if (centerOfMass == null) return;
+        final Vector3d temp = centerOfMass.negate(new Vector3d()).add(0.5, 0.5, 0.5);
         for (final FloatingBlockCluster cluster : this.sable$floatingClusterContainer.clusters) {
             cluster.getBlockData().translateOrigin(temp);
         }
