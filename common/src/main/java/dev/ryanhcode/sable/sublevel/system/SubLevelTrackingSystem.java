@@ -106,6 +106,15 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
         final LevelPlot plot = subLevel.getPlot();
 
         final Collection<PlotChunkHolder> chunks = plot.getLoadedChunks();
+        dev.ryanhcode.sable.Sable.LOGGER.debug(
+                "Sending full sync for sub-level {} to player {}: dimension={}, pose={}, bounds={}, plot={}, chunks={}",
+                subLevel.getUniqueId(),
+                player.getGameProfile().getName(),
+                this.level.dimension().location(),
+                subLevel.logicalPose(),
+                subLevel.boundingBox(),
+                plot.plotPos,
+                chunks.size());
         final ObjectList<Packet<? super ClientGamePacketListener>> packets = new ObjectArrayList<>(3 + chunks.size());
 
         packets.add(new ClientboundCustomPayloadPacket(new ClientboundStartTrackingSubLevelPacket(l, subLevel.getUniqueId(), subLevel.lastPose(), subLevel.logicalPose(), plot.getBoundingBox(), subLevel.getName(), this.interpolationTick)));
@@ -136,6 +145,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
 
     @Override
     public void tick(final SubLevelContainer container) {
+        final Set<UUID> fullSyncPlayers = new ObjectOpenHashSet<>();
         for (final SubLevel subLevel : this.additionQueue) {
             // If the sub-level has been removed before we could even send it to clients, skip it
             if (subLevel.isRemoved()) {
@@ -170,6 +180,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
                 }
 
                 this.sendFullSync(player, serverSubLevel, extraPacket);
+                fullSyncPlayers.add(uuid);
             }
 
             serverSubLevel.clearSplitFrom();
@@ -216,13 +227,14 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
                 if (this.shouldLoad(player, entityPos) && !tracking.contains(uuid)) {
                     tracking.add(uuid);
                     this.sendFullSync(player, serverSubLevel, null);
+                    fullSyncPlayers.add(uuid);
                 }
             }
         }
 
         // send positional updates separately
         this.sendBoundsUpdates(container);
-        this.sendMovementUpdates(container);
+        this.sendMovementUpdates(container, fullSyncPlayers);
     }
 
     /**
@@ -258,7 +270,7 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
      *
      * @param container the sublevels to send updates for
      */
-    private void sendMovementUpdates(final SubLevelContainer container) {
+    private void sendMovementUpdates(final SubLevelContainer container, final Set<UUID> fullSyncPlayers) {
         // we want to batch updates we send to players, so we'll collect them here
         final Map<UUID, List<SubLevelUpdateTicket>> movementUpdates = new Object2ObjectOpenHashMap<>();
 
@@ -363,7 +375,9 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
             final int maxBatchSize = 16;
 
             final SableUDPServer udpServer = SableUDPServer.getServer(this.level.getServer());
-            if (udpServer != null && udpServer.isConnectedTo(player)) {
+            // Keep the first snapshot ordered after the TCP full-sync bundle. UDP, especially the local
+            // singleplayer event loop, can otherwise deliver movement before the client creates the sub-level.
+            if (udpServer != null && udpServer.isConnectedTo(player) && !fullSyncPlayers.contains(uuid)) {
                 final Iterator<ClientboundSableSnapshotDualPacket.Entry> iter = entries.iterator();
 
                 udpServer.sendUDPPacket(player, new ClientboundSableSnapshotInfoDualPacket(msSinceLastSend, this.interpolationTick, false), true);

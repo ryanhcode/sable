@@ -139,11 +139,37 @@ public class ServerSubLevelContainer extends SubLevelContainer {
 
         super.removeSubLevel(x, z, reason);
 
-        if (reason == SubLevelRemovalReason.REMOVED) {
+        if (reason.clearsOccupancy()) {
             final ServerLevel level = this.getLevel();
             SubLevelOccupancySavedData.getOrLoad(level).setDirty();
             this.holdingChunkMap.queueDeletion(subLevel);
         }
+    }
+
+    /**
+     * Moves loading-ticket ownership to a replacement sub-level in another container.
+     */
+    @ApiStatus.Internal
+    public void transferTicketsTo(
+            final ServerSubLevel source,
+            final ServerSubLevelContainer destinationContainer,
+            final ServerSubLevel destination) {
+        final UUID uuid = source.getUniqueId();
+        final SubLevelTicketInfo info = this.allTickets.remove(uuid);
+        this.activeTickets.remove(source);
+
+        if (info == null) {
+            return;
+        }
+
+        info.setPointer(null);
+        destinationContainer.allTickets.put(uuid, info);
+        if (!info.tickets().isEmpty()) {
+            destinationContainer.activeTickets.put(destination, new ObjectArraySet<>(info.tickets()));
+        }
+
+        SubLevelTicketsSavedData.getOrLoad(this.getLevel()).setDirty();
+        SubLevelTicketsSavedData.getOrLoad(destinationContainer.getLevel()).setDirty();
     }
 
     @Override
@@ -210,6 +236,40 @@ public class ServerSubLevelContainer extends SubLevelContainer {
         }
 
         return false;
+    }
+
+    /**
+     * Adds a force-loading ticket that only lasts for the current server session and is not written to saved data.
+     */
+    public <T> boolean addTransientForceLoadTicket(
+            final ServerSubLevel subLevel,
+            final SubLevelLoadingTicketType<T> ticketType,
+            final T key) {
+        final SubLevelLoadingTicket<T> ticket = new SubLevelLoadingTicket<>(
+                ticketType, subLevel.getUniqueId(), key);
+        return this.activeTickets
+                .computeIfAbsent(subLevel, ignored -> new ObjectArraySet<>())
+                .add(ticket);
+    }
+
+    /**
+     * Removes a force-loading ticket previously added with {@link #addTransientForceLoadTicket}.
+     */
+    public <T> boolean removeTransientForceLoadTicket(
+            final ServerSubLevel subLevel,
+            final SubLevelLoadingTicketType<T> ticketType,
+            final T key) {
+        final ObjectSet<SubLevelLoadingTicket<?>> tickets = this.activeTickets.get(subLevel);
+        if (tickets == null) {
+            return false;
+        }
+
+        final boolean removed = tickets.remove(new SubLevelLoadingTicket<>(
+                ticketType, subLevel.getUniqueId(), key));
+        if (tickets.isEmpty()) {
+            this.activeTickets.remove(subLevel);
+        }
+        return removed;
     }
 
     /**

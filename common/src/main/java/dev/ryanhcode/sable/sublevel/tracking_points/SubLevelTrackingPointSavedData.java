@@ -30,6 +30,7 @@ import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 public class SubLevelTrackingPointSavedData extends SavedData implements SubLevelObserver {
@@ -49,6 +50,35 @@ public class SubLevelTrackingPointSavedData extends SavedData implements SubLeve
                         null
                 ),
                 SubLevelTrackingPointSavedData.FILE_ID);
+    }
+
+    /**
+     * Moves tracking points owned by a transferred sub-level to the destination level data.
+     */
+    public static void transferSubLevelPoints(final ServerSubLevel source, final ServerSubLevel destination) {
+        final SubLevelTrackingPointSavedData sourceData = getOrLoad(source.getLevel());
+        final SubLevelTrackingPointSavedData destinationData = getOrLoad(destination.getLevel());
+        final List<UUID> transferred = new ObjectArrayList<>();
+
+        for (final Map.Entry<UUID, TrackingPoint> entry : sourceData.trackingPoints.entrySet()) {
+            final TrackingPoint point = entry.getValue();
+            if (point.inSubLevel() && source.getUniqueId().equals(point.subLevelID())) {
+                final Vector3d placeholder = destination.logicalPose().transformPosition(new Vector3d(point.point()));
+                destinationData.trackingPoints.put(entry.getKey(), new TrackingPoint(
+                        true,
+                        destination.getUniqueId(),
+                        null,
+                        new Vector3d(point.point()),
+                        placeholder));
+                transferred.add(entry.getKey());
+            }
+        }
+
+        if (!transferred.isEmpty()) {
+            transferred.forEach(sourceData.trackingPoints::remove);
+            sourceData.setDirty(true);
+            destinationData.setDirty(true);
+        }
     }
 
     private static SubLevelTrackingPointSavedData load(final ServerLevel level, final CompoundTag tag) {
