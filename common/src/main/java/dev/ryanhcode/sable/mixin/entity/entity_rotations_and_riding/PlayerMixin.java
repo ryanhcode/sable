@@ -3,10 +3,9 @@ package dev.ryanhcode.sable.mixin.entity.entity_rotations_and_riding;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
-import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -43,7 +42,7 @@ public abstract class PlayerMixin extends LivingEntity {
             return;
         }
 
-        final Vector3d dir = orientation.transform(new Vector3d(OrientedBoundingBox3d.UP));
+        final Vector3d dir = orientation.transform(new Vector3d(OrientedBoundingBox3d.UNIT_Y));
         upDir.set(new Vector3d(dir));
 
         final Vec3 deltaMovement = this.getDeltaMovement();

@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
@@ -107,7 +106,7 @@ public abstract class EntityMixin {
 
         final Quaterniondc orientation = EntitySubLevelUtil.getCustomEntityOrientation((Entity) (Object) this, 1.0f);
         if (orientation != null) {
-            final Vector3d upDirJOML = orientation.transform(OrientedBoundingBox3d.UP, new Vector3d());
+            final Vector3d upDirJOML = orientation.transform(OrientedBoundingBox3d.UNIT_Y, new Vector3d());
             upDir = JOMLConversion.toMojang(upDirJOML);
         }
 

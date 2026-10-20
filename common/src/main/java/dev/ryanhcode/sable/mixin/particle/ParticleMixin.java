@@ -3,7 +3,6 @@ package dev.ryanhcode.sable.mixin.particle;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.api.particle.ParticleSubLevelKickable;
 import dev.ryanhcode.sable.companion.math.*;
@@ -304,7 +303,7 @@ public abstract class ParticleMixin implements ParticleExtension {
 
                     final Vector3d nmtv = mtv.normalize(new Vector3d());
 
-                    Vector3dc upDirection = OrientedBoundingBox3d.UP;
+                    Vector3dc upDirection = OrientedBoundingBox3d.UNIT_Y;
                     if (this instanceof final ParticleSubLevelKickable kickable) {
                         upDirection = kickable.sable$getUpDirection();
                     }

@@ -101,6 +101,14 @@ public abstract class EntityMixin implements EntityMovementExtension {
 
     @WrapOperation(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;updateEntityAfterFallOn(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;)V"))
     public void updateEntityAfterFallOn(final Block instance, final BlockGetter arg, final Entity arg2, final Operation<Void> original) {
+        if (this.sable$collisionInfo.verticalCollisionBelow && this.getDeltaMovement().y > 0.0) {
+            return;
+        }
+
+        if (this.sable$collisionInfo.verticalCollision && !this.sable$collisionInfo.verticalCollisionBelow && this.getDeltaMovement().y < 0.0) {
+            return;
+        }
+
         if (this.verticalCollision) {
             original.call(instance, arg, arg2);
         }

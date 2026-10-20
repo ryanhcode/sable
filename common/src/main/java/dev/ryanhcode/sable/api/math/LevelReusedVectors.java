@@ -116,4 +116,10 @@ public class LevelReusedVectors {
     protected final Vector3d tempmin = new Vector3d();
     protected final Vector3d tempmax = new Vector3d();
     public final Vector3d entityUpDirection = new Vector3d();
+    public final Vector3d entityDownDirection = new Vector3d();
+
+    public final Vector3d hitNormal = new Vector3d();
+    public final Vector3d overlapNormal = new Vector3d();
+    public final Vector3d exitNormal = new Vector3d();
+    public final Vector3d relativePos = new Vector3d();
 }

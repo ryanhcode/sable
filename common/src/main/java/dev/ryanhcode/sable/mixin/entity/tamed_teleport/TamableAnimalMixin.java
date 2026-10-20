@@ -3,10 +3,8 @@ package dev.ryanhcode.sable.mixin.entity.tamed_teleport;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
-import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.TamableAnimal;
@@ -28,7 +26,7 @@ public class TamableAnimalMixin {
 		if(subLevel != null) {
 			final BlockPos pos = BlockPos.containing(subLevel.logicalPose().transformPositionInverse(blockPos.getCenter()));
 			if (original.call(instance, pos)) {
-				final double dot = subLevel.logicalPose().transformNormal(new Vector3d(0, 1, 0)).dot(OrientedBoundingBox3d.UP);
+				final double dot = subLevel.logicalPose().transformNormal(new Vector3d(0, 1, 0)).dot(OrientedBoundingBox3d.UNIT_Y);
 
 				if (dot > 0.85) {
 					return true;

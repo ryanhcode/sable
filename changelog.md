@@ -1,1 +1,2 @@
-- Fix an issue where assembling massless Create contraptions would crash the server
+- Fix an issue where Sable broke entities standing on fluids (like Striders)
+- Tweak some Sable fabric networking mixins to hopefully fix it up a bit
