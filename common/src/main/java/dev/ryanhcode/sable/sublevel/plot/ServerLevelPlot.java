@@ -406,8 +406,8 @@ public class ServerLevelPlot extends LevelPlot {
 
             chunkTag.put("heightmaps", heightMapsTag);
 
-            SablePlotPlatform.INSTANCE.writeLightData(tag, level.registryAccess(), chunk);
-            SablePlotPlatform.INSTANCE.writeChunkAttachments(tag, level.registryAccess(), chunk);
+            SablePlotPlatform.INSTANCE.writeLightData(chunkTag, level.registryAccess(), chunk);
+            SablePlotPlatform.INSTANCE.writeChunkAttachments(chunkTag, level.registryAccess(), chunk);
 
             chunks.put(String.valueOf(ChunkPos.asLong(local.x, local.z)), chunkTag);
         }
