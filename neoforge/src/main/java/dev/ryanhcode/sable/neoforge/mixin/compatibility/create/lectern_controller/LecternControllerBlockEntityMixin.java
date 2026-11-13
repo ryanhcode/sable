@@ -23,6 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.link.controller.LecternControllerBlockEntity} so controller drops and distance checks are correct across sub-levels.
+ */
+
 @Mixin(LecternControllerBlockEntity.class)
 public abstract class LecternControllerBlockEntityMixin extends SmartBlockEntity implements LecternControllerBlockEntityExtension {
 

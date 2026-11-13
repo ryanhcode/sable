@@ -10,6 +10,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.debug.ChunkBorderRenderer} to render the loaded chunk debug overlay when enabled.
+ */
 @Mixin(ChunkBorderRenderer.class)
 public class ChunkBorderRendererMixin {
 

@@ -27,6 +27,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour} so contraption block breaking can locate targets in sub-levels.
+ */
+
 @Mixin(BlockBreakingMovementBehaviour.class)
 public abstract class BlockBreakingMovementBehaviourMixin implements MovementBehaviour {
 

@@ -26,6 +26,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.client.player.LocalPlayer} to handle the local player's riding, dismounting and flight direction on sub-level vehicles.
+ */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin extends Player {
 

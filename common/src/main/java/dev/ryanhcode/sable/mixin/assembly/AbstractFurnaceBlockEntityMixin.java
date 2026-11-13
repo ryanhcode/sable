@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity} to also clear the recipes used map when the container is cleared.
+ */
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlockEntity implements Clearable {
 

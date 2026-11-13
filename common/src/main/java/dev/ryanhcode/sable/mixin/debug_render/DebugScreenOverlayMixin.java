@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.client.gui.components.DebugScreenOverlay} to append Sable debug information to the F3 screen.
+ */
 @Mixin(DebugScreenOverlay.class)
 public abstract class DebugScreenOverlayMixin {
 

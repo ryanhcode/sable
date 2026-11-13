@@ -7,6 +7,9 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.BitSet;
 
+/**
+ * Accessor and invoker interface exposing the private storage field and strip-rectangle methods of {@link net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape}.
+ */
 @Mixin(BitSetDiscreteVoxelShape.class)
 public interface BitSetDiscreteVoxelShapeAccessor extends DiscreteVoxelShapeAccessor {
 

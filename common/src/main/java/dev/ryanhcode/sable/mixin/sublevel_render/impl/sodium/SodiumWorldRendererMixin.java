@@ -35,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * On the Sodium render path, wires sub-levels into terrain building, culling and chunk layer rendering.
+ */
 @Mixin(value = SodiumWorldRenderer.class, remap = false)
 public abstract class SodiumWorldRendererMixin {
 

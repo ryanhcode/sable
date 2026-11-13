@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Iris compatibility: add a model matrix refresh method to {@link ExtendedShader} so sub-level render transforms take effect.
+ */
 @Mixin(ExtendedShader.class)
 public class ExtendedShaderMixin implements ExtendedShaderExtension {
 

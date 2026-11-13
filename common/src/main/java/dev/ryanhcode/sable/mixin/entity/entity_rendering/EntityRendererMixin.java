@@ -28,6 +28,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.entity.EntityRenderer} so entity light coordinates and culling checks account for sub-levels.
+ */
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin {
 

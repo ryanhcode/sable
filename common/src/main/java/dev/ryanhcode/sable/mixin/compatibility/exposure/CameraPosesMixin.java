@@ -9,6 +9,9 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Exposure compatibility: project the camera stand's eye position out of the sub-level so camera poses stay correct.
+ */
 @Mixin(CameraPoses.class)
 public class CameraPosesMixin {
 

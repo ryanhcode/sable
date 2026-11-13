@@ -8,6 +8,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Updates the water occlusion manager at the start of each frame render.
+ */
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 

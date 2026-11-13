@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.entity.LivingEntityRenderer} to rotate a sleeping entity's render pose into the sub-level orientation.
+ */
 @Mixin(LivingEntityRenderer.class)
 public class LivingEntityRendererMixin {
 

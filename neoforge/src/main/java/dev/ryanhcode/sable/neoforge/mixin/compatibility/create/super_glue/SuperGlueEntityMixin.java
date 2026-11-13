@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.glue.SuperGlueEntity} to avoid entering sub-levels when collecting super glue entities.
+ */
+
 @Mixin(value = SuperGlueEntity.class, remap = false)
 public class SuperGlueEntityMixin {
 

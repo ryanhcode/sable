@@ -2,6 +2,9 @@ package dev.ryanhcode.sable;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+/**
+ * Server-side configuration options for Sable's physics simulation, defined as a NeoForge {@link ModConfigSpec}.
+ */
 public final class SableServerConfig {
 
     public static final ModConfigSpec SPEC;

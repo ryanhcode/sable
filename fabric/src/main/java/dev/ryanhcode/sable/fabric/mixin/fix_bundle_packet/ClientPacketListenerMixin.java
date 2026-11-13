@@ -8,6 +8,10 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Fabric mixin into {@link ClientPacketListener} that disables the main-thread re-dispatch of bundle packets, as the
+ * sub-level packet handling already runs on the correct thread.
+ */
 @Mixin(ClientPacketListener.class)
 public class ClientPacketListenerMixin {
 

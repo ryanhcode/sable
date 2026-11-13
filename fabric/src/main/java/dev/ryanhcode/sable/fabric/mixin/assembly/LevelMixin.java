@@ -5,6 +5,10 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Fabric mixin into {@link Level} to add the {@link LevelExtension} interface, tracking whether {@code onPlace}
+ * events should be ignored while assembling sub-levels.
+ */
 @Mixin(Level.class)
 public class LevelMixin implements LevelExtension {
 

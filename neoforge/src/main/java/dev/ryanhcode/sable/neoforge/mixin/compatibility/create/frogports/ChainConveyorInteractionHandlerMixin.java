@@ -21,6 +21,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorInteractionHandler} so chain conveyors correctly interact and render in sub-levels.
+ */
+
 @Mixin(ChainConveyorInteractionHandler.class)
 public class ChainConveyorInteractionHandlerMixin {
 

@@ -2,6 +2,9 @@ package dev.ryanhcode.sable.platform;
 
 import java.util.ServiceLoader;
 
+/**
+ * Resolves the loader-specific implementation of a {@link SablePlatform} interface via {@link ServiceLoader}.
+ */
 public class SablePlatformUtil {
 	public static <T> T load(Class<T> clazz) {
 		return ServiceLoader.load(clazz, SablePlatformUtil.class.getClassLoader())

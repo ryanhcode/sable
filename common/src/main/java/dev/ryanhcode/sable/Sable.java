@@ -24,6 +24,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Common entry point for the Sable mod: mod constants, shared init, crash headers, and the default sub-level container
+ * initializer that wires up physics, tracking, and ticket-loading systems.
+ */
 public final class Sable {
 
     public static final String MOD_NAME = "Sable";

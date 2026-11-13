@@ -10,6 +10,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link dev.protomanly.pmweather.block.entity.AnemometerBlockEntity} (Protomanly's Weather) to query wind from sub-level positions.
+ */
+
 @Mixin(AnemometerBlockEntity.class)
 public class AnemometerBlockEntityMixin {
 

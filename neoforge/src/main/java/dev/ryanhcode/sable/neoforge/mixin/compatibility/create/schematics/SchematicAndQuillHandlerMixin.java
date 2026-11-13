@@ -27,6 +27,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.SchematicAndQuillHandler} so schematic selection works across sub-levels and highlights intersecting ones.
+ */
+
 @Mixin(SchematicAndQuillHandler.class)
 public abstract class SchematicAndQuillHandlerMixin {
 

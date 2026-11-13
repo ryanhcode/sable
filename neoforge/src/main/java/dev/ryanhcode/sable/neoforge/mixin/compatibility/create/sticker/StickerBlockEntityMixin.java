@@ -40,6 +40,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.chassis.StickerBlockEntity} so stickers can create fixed constraints between sub-levels.
+ */
+
 @Mixin(StickerBlockEntity.class)
 public abstract class StickerBlockEntityMixin extends SmartBlockEntity implements StickerBlockEntityExtension {
 

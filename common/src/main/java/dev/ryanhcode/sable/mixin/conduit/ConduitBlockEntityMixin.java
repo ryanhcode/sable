@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.block.entity.ConduitBlockEntity} to measure the conduit effect range across sub-level poses.
+ */
 @Mixin(ConduitBlockEntity.class)
 public class ConduitBlockEntityMixin {
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;closerThan(Lnet/minecraft/core/Vec3i;D)Z"))

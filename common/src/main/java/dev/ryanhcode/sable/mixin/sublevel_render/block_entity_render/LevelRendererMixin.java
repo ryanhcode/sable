@@ -39,6 +39,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.SortedSet;
 
+/**
+ * Renders block entities inside sub-levels with the sub-level transform when rendering the level.
+ */
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
 

@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.NozzleBlockEntity} to fix position calculations and particle direction checks in sub-levels.
+ */
+
 @Mixin(NozzleBlockEntity.class)
 public abstract class NozzleBEFixesMixin extends SmartBlockEntity {
 

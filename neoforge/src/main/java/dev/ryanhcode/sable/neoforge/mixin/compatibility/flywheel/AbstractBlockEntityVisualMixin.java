@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual} to scale lighting for block entity visuals in sub-levels.
+ */
+
 @Mixin(AbstractBlockEntityVisual.class)
 public class AbstractBlockEntityVisualMixin {
 

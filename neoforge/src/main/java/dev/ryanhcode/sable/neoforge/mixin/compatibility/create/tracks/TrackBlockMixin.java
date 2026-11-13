@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.track.TrackBlock} to account for sub-levels when computing placement orientation.
+ */
+
 @Mixin(TrackBlock.class)
 public class TrackBlockMixin {
 

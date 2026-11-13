@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.belt.BeltRenderer} so belt item render distances account for sub-levels.
+ */
+
 @Mixin(BeltRenderer.class)
 public class BeltRendererMixin {
 

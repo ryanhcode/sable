@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.function.Predicate;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.ClipContext} to add fields allowing raytraces to ignore or restrict sub-levels, implementing {@link dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension}.
+ */
 @Mixin(ClipContext.class)
 public class ClipContextMixin implements ClipContextExtension {
 

@@ -11,6 +11,10 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.displayLink.ClickToLinkBlockItem} so the click-to-link item's distance check accounts for sub-levels.
+ */
+
 @Mixin(ClickToLinkBlockItem.class)
 public class ClickToLinkBlockItemMixin {
 

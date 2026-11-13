@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.LevelRenderer} to make block entity render visibility checks account for sub-levels.
+ */
+
 @Mixin(value = LevelRenderer.class, priority = 2000)
 public class LevelRendererMixin {
 

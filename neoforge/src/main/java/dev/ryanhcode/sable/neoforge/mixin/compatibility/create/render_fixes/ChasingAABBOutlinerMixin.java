@@ -7,6 +7,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.createmod.catnip.outliner.ChasingAABBOutline} to avoid interpolating bounding boxes across sub-levels.
+ */
+
 @Mixin(ChasingAABBOutline.class)
 public class ChasingAABBOutlinerMixin {
 

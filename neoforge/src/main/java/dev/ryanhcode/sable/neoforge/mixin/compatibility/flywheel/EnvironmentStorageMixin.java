@@ -7,6 +7,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
+/**
+ * Mixin into {@link dev.engine_room.flywheel.backend.engine.embed.EnvironmentStorage} to enlarge element size to hold sub-level scene info.
+ */
+
 @Mixin(EnvironmentStorage.class)
 public class EnvironmentStorageMixin {
 

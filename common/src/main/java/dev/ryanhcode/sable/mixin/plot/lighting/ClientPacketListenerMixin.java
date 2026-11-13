@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Makes chunk light updates inside plots run immediately when their packets are received.
+ */
 @Mixin(ClientPacketListener.class)
 public class ClientPacketListenerMixin {
 

@@ -18,6 +18,10 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Map;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlockEntity} to account for sub-level distances when exporting packages to frogports.
+ */
+
 @Mixin(ChainConveyorBlockEntity.class)
 public abstract class ChainConveyorBlockEntityMixin extends SmartBlockEntity {
 

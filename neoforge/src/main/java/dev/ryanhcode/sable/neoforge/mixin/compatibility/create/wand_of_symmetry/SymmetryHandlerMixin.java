@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.equipment.symmetryWand.SymmetryHandler} to apply sub-level offsets when rendering the symmetry wand effect.
+ */
+
 @Mixin(SymmetryHandler.class)
 public class SymmetryHandlerMixin {
     @Redirect(method = "onRenderWorld", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V", ordinal = 0))

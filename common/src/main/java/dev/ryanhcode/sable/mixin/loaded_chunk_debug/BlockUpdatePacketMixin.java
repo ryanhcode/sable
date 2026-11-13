@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket} to mark the affected chunk as updated for the loaded chunk debug overlay.
+ */
 @Mixin(ClientboundBlockUpdatePacket.class)
 public class BlockUpdatePacketMixin {
 

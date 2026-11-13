@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer} so name plates render correctly in sub-levels.
+ */
+
 @Mixin(SmartBlockEntityRenderer.class)
 public class SmartBlockEntityRendererMixin<T extends SmartBlockEntity> {
 

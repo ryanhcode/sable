@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.server.players.PlayerList} to send the freeze packet on join and carry the frozen state across respawns.
+ */
 @Mixin(PlayerList.class)
 public class PlayerListMixin {
 

@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.function.Function;
 
+/**
+ * Mixin into {@link net.minecraft.server.commands.data.DataCommands} to register the sub-level data accessor provider.
+ */
 @Mixin(DataCommands.class)
 public class DataCommandsMixin {
 

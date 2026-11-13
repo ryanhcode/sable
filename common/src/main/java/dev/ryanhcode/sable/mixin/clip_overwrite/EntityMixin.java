@@ -7,6 +7,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to use an eye position that accounts for sub-level transforms during {@code pick()}.
+ */
 @Mixin(Entity.class)
 public class EntityMixin {
 

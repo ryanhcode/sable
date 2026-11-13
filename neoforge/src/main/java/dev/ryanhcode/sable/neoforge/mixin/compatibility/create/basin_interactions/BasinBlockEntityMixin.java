@@ -18,6 +18,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.processing.basin.BasinBlockEntity} so the basin can find heat sources in sub-levels.
+ */
+
 @Mixin(BasinBlockEntity.class)
 public class BasinBlockEntityMixin extends BlockEntity {
 

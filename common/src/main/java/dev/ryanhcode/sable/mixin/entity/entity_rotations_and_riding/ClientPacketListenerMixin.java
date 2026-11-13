@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.multiplayer.ClientPacketListener} to project the player position out of the sub-level when handling position correction packets.
+ */
 @Mixin(ClientPacketListener.class)
 public class ClientPacketListenerMixin {
 

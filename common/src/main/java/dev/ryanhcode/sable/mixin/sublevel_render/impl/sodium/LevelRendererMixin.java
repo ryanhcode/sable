@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * On the Sodium render path, makes the chunk compiled-state check apply to chunks inside sub-levels.
+ */
 @Mixin(value = LevelRenderer.class, priority = 1002)
 public class LevelRendererMixin {
 

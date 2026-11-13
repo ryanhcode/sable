@@ -15,6 +15,9 @@ import snownee.jade.overlay.RayTracing;
 
 import java.util.Optional;
 
+/**
+ * Jade compatibility: run entity ray tracing in the sub-level local coordinate system and compute the correct distance.
+ */
 @Mixin(RayTracing.class)
 public class RayTracingMixin {
 

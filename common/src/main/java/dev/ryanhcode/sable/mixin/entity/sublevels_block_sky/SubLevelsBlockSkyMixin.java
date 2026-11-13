@@ -11,6 +11,9 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Mob}, {@link net.minecraft.world.entity.ai.goal.FleeSunGoal} and {@link net.minecraft.world.entity.ai.navigation.GroundPathNavigation} to make sub-levels block the sky, affecting the relevant logic.
+ */
 @Mixin({Mob.class, FleeSunGoal.class, GroundPathNavigation.class})
 public class SubLevelsBlockSkyMixin {
     @WrapOperation(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;canSeeSky(Lnet/minecraft/core/BlockPos;)Z"))

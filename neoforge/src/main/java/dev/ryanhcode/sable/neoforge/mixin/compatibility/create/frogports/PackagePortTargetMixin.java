@@ -17,6 +17,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into PackagePortTarget.ChainConveyorFrogportTarget to account for sub-level distances when exporting from package ports.
+ */
+
 @Mixin(PackagePortTarget.ChainConveyorFrogportTarget.class)
 public class PackagePortTargetMixin {
 

@@ -17,6 +17,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.ContraptionCollider} so Create contraptions interact with sub-levels.
+ */
+
 @Mixin(value = ContraptionCollider.class, remap = false)
 public class ContraptionColliderMixin {
 

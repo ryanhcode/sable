@@ -31,6 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to correctly transform entity movement, riding and saving according to the sub-level's orientation and position.
+ */
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 

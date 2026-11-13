@@ -10,6 +10,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Shoulder Surfing compatibility: make the camera zoom distance calculation account for sub-levels.
+ */
 @Mixin(ShoulderSurfingCamera.class)
 public class ShoulderSurfingCameraMixin {
 

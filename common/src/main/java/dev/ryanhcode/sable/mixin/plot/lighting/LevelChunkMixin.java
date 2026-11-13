@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Makes block updates of chunks inside plots use the plot's light engine.
+ */
 @Mixin(LevelChunk.class)
 public class LevelChunkMixin {
 

@@ -24,6 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.entity.EntityRenderDispatcher} to render the hitbox of entities tracking sub-levels.
+ */
 @Mixin(EntityRenderDispatcher.class)
 public class EntityRenderDispatcherMixin {
 
