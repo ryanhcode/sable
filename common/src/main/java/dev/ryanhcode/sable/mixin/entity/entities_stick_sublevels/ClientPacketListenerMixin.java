@@ -105,7 +105,8 @@ public abstract class ClientPacketListenerMixin {
             if (subLevel != null && actuallyInSubLevel && existingSubLevel != subLevel) {
                 entity.setPos(subLevel.logicalPose().transformPositionInverse(entity.position()));
             } else if (existingSubLevel != null && subLevel == null) {
-                entity.setPos(existingSubLevel.logicalPose().transformPosition(entity.position()));
+                final Vec3 newPos = existingSubLevel.logicalPose().transformPosition(entity.position());
+                entity.moveTo(newPos.x, newPos.y, newPos.z);
             }
 
             entity.lerpTo(pX, pY, pZ, pYRot, pXRot, pLerpSteps);
