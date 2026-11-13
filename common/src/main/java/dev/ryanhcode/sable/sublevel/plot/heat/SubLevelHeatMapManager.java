@@ -233,6 +233,13 @@ public class SubLevelHeatMapManager {
         final Level level = this.subLevel.getLevel();
 
         for (final List<BlockPos> blocks : newSubLevelBlocks.values()) {
+            // assembling a previous split can leave this sub-level without mass, which destroys its remaining blocks
+            // and marks it removed. there is nothing left to split off then, and assembling from inside a removed
+            // sub-level's plot throws
+            if (this.subLevel.isRemoved()) {
+                break;
+            }
+
             final BoundingBox3i bounds = Objects.requireNonNull(BoundingBox3i.from(blocks)).expand(1, 1, 1);
 
             for (final SplitListener listener : LISTENERS) {
