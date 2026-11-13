@@ -177,7 +177,8 @@ processResources {
             'java_version'                 : java_version,
             'veil_version'                 : veil_version,
             'sodium_version'               : sodium_version,
-            'sable_companion_version'      : sable_companion_version
+            'sable_companion_version'      : sable_companion_version,
+            'shouldersurfing_version'      : shouldersurfing_version
     ]
 
     filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {

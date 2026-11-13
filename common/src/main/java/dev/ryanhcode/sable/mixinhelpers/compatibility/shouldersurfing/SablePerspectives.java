@@ -1,6 +1,6 @@
 package dev.ryanhcode.sable.mixinhelpers.compatibility.shouldersurfing;
 
-import com.github.exopandora.shouldersurfing.api.model.Perspective;
+import com.github.exopandora.shouldersurfing.api.client.Perspective;
 
 public class SablePerspectives {
 
