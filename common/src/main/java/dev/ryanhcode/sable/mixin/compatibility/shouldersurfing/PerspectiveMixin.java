@@ -1,8 +1,8 @@
 package dev.ryanhcode.sable.mixin.compatibility.shouldersurfing;
 
-import com.github.exopandora.shouldersurfing.api.client.IClientConfig;
-import com.github.exopandora.shouldersurfing.api.model.CrosshairVisibility;
-import com.github.exopandora.shouldersurfing.api.model.Perspective;
+import com.github.exopandora.shouldersurfing.api.client.CrosshairVisibility;
+import com.github.exopandora.shouldersurfing.api.client.Perspective;
+import com.github.exopandora.shouldersurfing.api.config.IPerspectiveConfig;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.lib.apache.commons.ArrayUtils;
@@ -45,8 +45,8 @@ public class PerspectiveMixin {
     }
 
     @SuppressWarnings("ConstantValue")
-    @WrapOperation(method = "next", at = @At(value = "INVOKE", target = "Lcom/github/exopandora/shouldersurfing/api/client/IClientConfig;replaceDefaultPerspective()Z"))
-    public boolean nextPerspective(final IClientConfig instance, final Operation<Boolean> original) {
+    @WrapOperation(method = "next", at = @At(value = "INVOKE", target = "Lcom/github/exopandora/shouldersurfing/api/config/IPerspectiveConfig;isThirdPersonReplaced()Z"))
+    public boolean nextPerspective(final IPerspectiveConfig instance, final Operation<Boolean> original) {
         if ((Object) this == SablePerspectives.SUB_LEVEL_VIEW || (Object) this == SablePerspectives.SUB_LEVEL_VIEW_UNLOCKED) {
             return false;
         }
@@ -54,8 +54,8 @@ public class PerspectiveMixin {
     }
 
     @ModifyVariable(method = "next", at = @At(value = "STORE"), name = "next")
-    public Perspective next(final Perspective next, @Local(argsOnly = true) final IClientConfig config) {
-        if (config.replaceDefaultPerspective()) {
+    public Perspective next(final Perspective next, @Local(argsOnly = true) final IPerspectiveConfig config) {
+        if (config.isThirdPersonReplaced()) {
             if ((Object) this == Perspective.SHOULDER_SURFING) {
                 return SablePerspectives.SUB_LEVEL_VIEW;
             }
