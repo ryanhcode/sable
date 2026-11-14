@@ -305,6 +305,7 @@ public class SubLevelEntityCollision {
                                     block.getZ() + center.z);
                             subLevelPose.transformPosition(cubeOBB.getPosition());
                             box.size(cubeOBB.getDimensions());
+                            cubeOBB.getDimensions().mul(subLevelPose.scale());
 
                             OrientedBoundingBox3d.sat(entityBoundsOBB, cubeOBB, mtv);
 
@@ -653,6 +654,7 @@ public class SubLevelEntityCollision {
                         block.getZ() + center.z);
                 subLevelPose.transformPosition(cubeOBB.getPosition());
                 box.size(cubeOBB.getDimensions());
+                cubeOBB.getDimensions().mul(subLevelPose.scale());
 
                 OrientedBoundingBox3d.sat(entityBoundsOBB, cubeOBB, mtv);
 
