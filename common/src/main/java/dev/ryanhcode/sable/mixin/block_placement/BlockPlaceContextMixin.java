@@ -2,10 +2,11 @@ package dev.ryanhcode.sable.mixin.block_placement;
 
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
-import dev.ryanhcode.sable.companion.math.BoundingBox3d;
-import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
 import dev.ryanhcode.sable.api.math.LevelReusedVectors;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
+import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
+import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -84,12 +85,14 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
         final Quaterniond placedBoxOrientation = new Quaterniond();
 
         final Vector3d placedBoxPosition = new Vector3d(clicked.getX() + 0.5, clicked.getY() + 0.5, clicked.getZ() + 0.5);
+        final Vector3d placedBoxScale = new Vector3d(1.0);
 
         if (subLevel != null) {
-            subLevel.logicalPose().transformPosition(placedBoxPosition);
-            placedBoxOrientation.set(subLevel.logicalPose().orientation());
-
-            placedBoxBoundingBox.transform(subLevel.logicalPose(), placedBoxBoundingBox);
+            final Pose3d pose = subLevel.logicalPose();
+            pose.transformPosition(placedBoxPosition);
+            placedBoxOrientation.set(pose.orientation());
+            placedBoxBoundingBox.transform(pose, placedBoxBoundingBox);
+            placedBoxScale.set(pose.scale());
         }
 
         final Iterable<SubLevel> subLevels = Sable.HELPER.getAllIntersecting(this.getLevel(), placedBoxBoundingBox);
@@ -99,16 +102,16 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
                 continue;
             }
 
-            final boolean cancelled = this.sable$intersectBlocks(cir, otherSubLevel, placedBoxBoundingBox, this.sable$sink, placedBoxPosition, placedBoxOrientation);
+            final boolean cancelled = this.sable$intersectBlocks(cir, otherSubLevel, placedBoxBoundingBox, this.sable$sink, placedBoxPosition, placedBoxScale, placedBoxOrientation);
             if (cancelled)
                 return;
         }
 
-        this.sable$intersectBlocks(cir, null, placedBoxBoundingBox, this.sable$sink, placedBoxPosition, placedBoxOrientation);
+        this.sable$intersectBlocks(cir, null, placedBoxBoundingBox, this.sable$sink, placedBoxPosition, placedBoxScale, placedBoxOrientation);
     }
 
     @Unique
-    private boolean sable$intersectBlocks(final CallbackInfoReturnable<Boolean> cir, @Nullable final SubLevel otherSubLevel, final BoundingBox3dc placedBoxBoundingBox, final LevelReusedVectors sink, final Vector3d placedBoxPosition, final Quaterniond placedBoxOrientation) {
+    private boolean sable$intersectBlocks(final CallbackInfoReturnable<Boolean> cir, @Nullable final SubLevel otherSubLevel, final BoundingBox3dc placedBoxBoundingBox, final LevelReusedVectors sink, final Vector3d placedBoxPosition, final Vector3d placedBoxScale, final Quaterniond placedBoxOrientation) {
         final BoundingBox3d localBase = placedBoxBoundingBox.expand(0.8660254038 - 0.5, new BoundingBox3d());
 
         if (otherSubLevel != null) {
@@ -124,21 +127,21 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
                 Mth.floor(localBase.maxZ()));
 
         for (final BlockPos position : stream) {
-            final boolean replaced = replaceClicked || this.getLevel().getBlockState(position).canBeReplaced((BlockPlaceContext) (Object) this);
+            final boolean replaced = this.replaceClicked || this.getLevel().getBlockState(position).canBeReplaced((BlockPlaceContext) (Object) this);
 
             Vector3d inWorldBoxPosition = new Vector3d(position.getX() + 0.5, position.getY() + 0.5, position.getZ() + 0.5);
             final Quaterniond inWorldBoxOrientation = new Quaterniond();
+            final Vector3d scale = new Vector3d(1.0, 1.0, 1.0);
 
             if (otherSubLevel != null) {
-                inWorldBoxPosition = otherSubLevel.logicalPose().transformPosition(inWorldBoxPosition);
-                inWorldBoxOrientation.set(otherSubLevel.logicalPose().orientation());
+                final Pose3d otherPose = otherSubLevel.logicalPose();
+                inWorldBoxPosition = otherPose.transformPosition(inWorldBoxPosition);
+                inWorldBoxOrientation.set(otherPose.orientation());
+                scale.set(otherPose.scale());
             }
 
-            final OrientedBoundingBox3d inWorldBox = new OrientedBoundingBox3d(
-                    inWorldBoxPosition,
-                    new Vector3d(1.0, 1.0, 1.0), inWorldBoxOrientation, sink);
-
-            final OrientedBoundingBox3d justPlacedBox = new OrientedBoundingBox3d(placedBoxPosition, new Vector3d(1.0, 1.0, 1.0), placedBoxOrientation, sink);
+            final OrientedBoundingBox3d inWorldBox = new OrientedBoundingBox3d(inWorldBoxPosition, scale, inWorldBoxOrientation, sink);
+            final OrientedBoundingBox3d justPlacedBox = new OrientedBoundingBox3d(placedBoxPosition, placedBoxScale, placedBoxOrientation, sink);
 
             if (!replaced && OrientedBoundingBox3d.sat(
                     inWorldBox, justPlacedBox

@@ -3,6 +3,7 @@ package dev.ryanhcode.sable;
 import dev.ryanhcode.sable.debug.SableClientGizmoHandler;
 import dev.ryanhcode.sable.network.client.SableClientNetworkEventLoop;
 import dev.ryanhcode.sable.render.dynamic_shade.SableDynamicDirectionalShadingPreProcessor;
+import dev.ryanhcode.sable.render.dynamic_shade.SableSubLevelFogPreProcessor;
 import dev.ryanhcode.sable.render.sky_light_shadow.SableDynamicSkyLightShadowPreProcessor;
 import dev.ryanhcode.sable.render.sky_light_shadow.SableSkyLightShadows;
 import dev.ryanhcode.sable.render.water_occlusion.SableWaterOcclusionPreProcessor;
@@ -31,6 +32,7 @@ public class SableClient {
 
         VeilEventPlatform.INSTANCE.onVeilAddShaderProcessors((provider, registry) -> {
             registry.addPreprocessor(new SableDynamicDirectionalShadingPreProcessor(), false);
+            registry.addPreprocessor(new SableSubLevelFogPreProcessor(), false);
             registry.addPreprocessor(new SableDynamicSkyLightShadowPreProcessor(), false);
             registry.addPreprocessor(new SableWaterOcclusionPreProcessor(), false);
             registry.addPreprocessor(new FancySubLevelShaderProcessor(), false);

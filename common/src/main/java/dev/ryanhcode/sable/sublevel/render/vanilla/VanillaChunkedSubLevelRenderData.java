@@ -317,10 +317,7 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
 
         final Matrix4f transform = TRANSFORM.identity();
 
-        // convert the camera pos to local to the origin / rotated
-        final Vector3d fogOffset = new Vector3d(camX, camY, camZ).sub(renderPos).mul(-1.0);
-
-        transform.translate((float) (renderPos.x() - camX - fogOffset.x), (float) (renderPos.y() - camY - fogOffset.y), (float) (renderPos.z() - camZ - fogOffset.z));
+        transform.translate((float) (renderPos.x() - camX), (float) (renderPos.y() - camY), (float) (renderPos.z() - camZ));
         transform.rotate(new Quaternionf(renderRot));
 
         if (!renderScale.equals(JOMLConversion.ONE)) {
@@ -339,7 +336,6 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
 
         // TODO: sorting
         final Uniform chunkOffsetUniform = shader.CHUNK_OFFSET;
-        final Vector3d fogOffsetRot = renderRot.transformInverse(fogOffset, new Vector3d()).div(renderScale.x(), renderScale.y(), renderScale.z());
 
         for (final SectionRenderDispatcher.RenderSection renderSection : this.allRenderSections) {
             if (renderSection.getCompiled().isEmpty(layer)) {
@@ -348,7 +344,7 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
 
             if (chunkOffsetUniform != null) {
                 final BlockPos pos = renderSection.getOrigin();
-                chunkOffsetUniform.set((float) (pos.getX() - this.origin.x() + fogOffsetRot.x), (float) (pos.getY() - this.origin.y() + fogOffsetRot.y), (float) (pos.getZ() - this.origin.z() + fogOffsetRot.z));
+                chunkOffsetUniform.set((float) (pos.getX() - this.origin.x()), (float) (pos.getY() - this.origin.y()), (float) (pos.getZ() - this.origin.z()));
                 chunkOffsetUniform.upload();
             }
 

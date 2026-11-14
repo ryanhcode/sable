@@ -50,14 +50,30 @@ public class VanillaSubLevelRenderDispatcher implements SubLevelRenderDispatcher
         this.singleBlockLayers = new LinkedHashSet<>();
     }
 
-    public static void setupDynamicEffects(final ShaderInstance shader, final boolean onSubLevel, final boolean upload) {
+    public static void setupDynamicEffects(final ShaderInstance shader, final boolean onSubLevel, final Matrix4f view, final boolean upload) {
         final Uniform sableEnableNormalLighting = shader.getUniform("SableEnableNormalLighting");
+        final Uniform sableEnableSubLevelFog = shader.getUniform("SableEnableSubLevelFog");
+        final Uniform sableFogMat = shader.getUniform("SableFogMat");
         final Uniform sableEnableSkyLightShadows = shader.getUniform(SableDynamicSkyLightShadowPreProcessor.ENABLE_UNIFORM);
 
         if (sableEnableNormalLighting != null) {
             sableEnableNormalLighting.set(onSubLevel ? 1.0F : 0.0F);
             if (upload) {
                 sableEnableNormalLighting.upload();
+            }
+        }
+
+        if (sableEnableSubLevelFog != null) {
+            sableEnableSubLevelFog.set(onSubLevel ? 1.0F : 0.0F);
+            if (upload) {
+                sableEnableSubLevelFog.upload();
+            }
+        }
+
+        if (sableFogMat != null && view != null) {
+            sableFogMat.set(view);
+            if (upload) {
+                sableFogMat.upload();
             }
         }
 
@@ -141,7 +157,8 @@ public class VanillaSubLevelRenderDispatcher implements SubLevelRenderDispatcher
             shader.FOG_SHAPE.upload();
         }
 
-        VanillaSubLevelRenderDispatcher.setupDynamicEffects(shader, true, true);
+        final Matrix4f view = new Matrix4f(modelView).setTranslation(0.0f, 0.0f, 0.0f).invert();
+        VanillaSubLevelRenderDispatcher.setupDynamicEffects(shader, true, view, true);
 
         final VeilRenderProfiler profiler = VeilRenderProfiler.get();
         profiler.push("sublevel_render", RenderProfilerCounter.STANDARD_GEOMETRY);
@@ -162,7 +179,7 @@ public class VanillaSubLevelRenderDispatcher implements SubLevelRenderDispatcher
             shader.FOG_SHAPE.set(fogShape.getIndex());
         }
 
-        VanillaSubLevelRenderDispatcher.setupDynamicEffects(shader, false, false);
+        VanillaSubLevelRenderDispatcher.setupDynamicEffects(shader, false, view, false);
     }
 
     @Override
@@ -173,6 +190,8 @@ public class VanillaSubLevelRenderDispatcher implements SubLevelRenderDispatcher
 
         final ModelBlockRendererCacheExtension ext = (ModelBlockRendererCacheExtension) ModelBlockRenderer.CACHE.get();
         ext.sable$setOnSubLevel(true);
+
+        final Matrix4f view = new Matrix4f(modelView).setTranslation(0.0f, 0.0f, 0.0f).invert();
 
         final VeilRenderProfiler profiler = VeilRenderProfiler.get();
         profiler.push("sublevel_render_single", RenderProfilerCounter.STANDARD_GEOMETRY);
@@ -197,14 +216,14 @@ public class VanillaSubLevelRenderDispatcher implements SubLevelRenderDispatcher
                 final ShaderInstance shader = Objects.requireNonNull(RenderSystem.getShader());
                 shader.setDefaultUniforms(VertexFormat.Mode.QUADS, modelView, projection, Minecraft.getInstance().getWindow());
                 shader.apply();
-                setupDynamicEffects(shader, true, true);
+                setupDynamicEffects(shader, true, view, true);
 
                 layer.draw(meshData);
 
                 // Match every setup with a clear
                 layer.clearRenderState();
 
-                setupDynamicEffects(shader, false, false);
+                setupDynamicEffects(shader, false, null, false);
                 shader.clear();
             }
         }
