@@ -168,6 +168,7 @@
     "compatibility.pmweather.AnemometerBlockMixin",
     "compatibility.pmweather.PMWeatherMixin",
     "entities_stick_sublevels.effects.LivingEntityMixin",
+    "entity.entity_collisions.EntityMixin",
     "entity.entity_swimming.EntityMixin"
   ],
   "injectors": {
