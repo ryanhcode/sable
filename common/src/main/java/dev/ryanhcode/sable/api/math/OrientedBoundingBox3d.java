@@ -11,9 +11,13 @@ import java.util.Objects;
  * The box is expected to be centered on the position.
  */
 public class OrientedBoundingBox3d {
-    public static final Vector3dc RIGHT = new Vector3d(1, 0, 0);
-    public static final Vector3dc UP = new Vector3d(0, 1, 0);
-    public static final Vector3dc FORWARD = new Vector3d(0, 0, 1);
+    public static final Vector3dc UNIT_X = new Vector3d(1, 0, 0);
+    public static final Vector3dc UNIT_Y = new Vector3d(0, 1, 0);
+    public static final Vector3dc UNIT_Z = new Vector3d(0, 0, 1);
+
+    public static final Vector3dc RIGHT = UNIT_X;
+    public static final Vector3dc UP = UNIT_Y;
+    public static final Vector3dc FORWARD = UNIT_Z;
 
     private final Vector3d position = new Vector3d();
     private final Vector3d dimensions = new Vector3d();
@@ -170,13 +174,13 @@ public class OrientedBoundingBox3d {
 
         final Vector3d checker = obbA.position.sub(obbB.position, obbA.sink.checker).normalize();
 
-        final Vector3d aRight = obbA.rotate(context.obbARight.set(OrientedBoundingBox3d.RIGHT));
-        final Vector3d aUp = obbA.rotate(context.obbAUp.set(OrientedBoundingBox3d.UP));
-        final Vector3d aForward = obbA.rotate(context.obbAForward.set(OrientedBoundingBox3d.FORWARD));
+        final Vector3d aRight = obbA.rotate(context.obbARight.set(OrientedBoundingBox3d.UNIT_X));
+        final Vector3d aUp = obbA.rotate(context.obbAUp.set(OrientedBoundingBox3d.UNIT_Y));
+        final Vector3d aForward = obbA.rotate(context.obbAForward.set(OrientedBoundingBox3d.UNIT_Z));
 
-        final Vector3d bRight = obbB.rotate(context.obbBRight.set(OrientedBoundingBox3d.RIGHT));
-        final Vector3d bUp = obbB.rotate(context.obbBUp.set(OrientedBoundingBox3d.UP));
-        final Vector3d bForward = obbB.rotate(context.obbBForward.set(OrientedBoundingBox3d.FORWARD));
+        final Vector3d bRight = obbB.rotate(context.obbBRight.set(OrientedBoundingBox3d.UNIT_X));
+        final Vector3d bUp = obbB.rotate(context.obbBUp.set(OrientedBoundingBox3d.UNIT_Y));
+        final Vector3d bForward = obbB.rotate(context.obbBForward.set(OrientedBoundingBox3d.UNIT_Z));
 
         final Vector3d mtv = dest.set(Double.MAX_VALUE);
 
@@ -219,6 +223,113 @@ public class OrientedBoundingBox3d {
         return mtv;
     }
 
+    public static @NotNull SweepResult sweep(@NotNull final OrientedBoundingBox3d obbA, @NotNull final OrientedBoundingBox3d obbB, @NotNull final Vector3d sweep, @NotNull final SweepResult dest) {
+        final LevelReusedVectors context = obbA.sink;
+
+        final Vector3d aX = obbA.rotate(context.obbARight.set(OrientedBoundingBox3d.UNIT_X));
+        final Vector3d aY = obbA.rotate(context.obbAUp.set(OrientedBoundingBox3d.UNIT_Y));
+        final Vector3d aZ = obbA.rotate(context.obbAForward.set(OrientedBoundingBox3d.UNIT_Z));
+
+        final Vector3d bX = obbB.rotate(context.obbBRight.set(OrientedBoundingBox3d.UNIT_X));
+        final Vector3d bY = obbB.rotate(context.obbBUp.set(OrientedBoundingBox3d.UNIT_Y));
+        final Vector3d bZ = obbB.rotate(context.obbBForward.set(OrientedBoundingBox3d.UNIT_Z));
+
+        OrientedBoundingBox3d.genChecks(aX, aY, aZ, bX, bY, bZ, context.checks);
+
+        double tFirst = 0.0;
+        double tLast = Double.POSITIVE_INFINITY;
+        double minOverlap = Double.POSITIVE_INFINITY;
+
+        final Vector3d hitNormal = context.hitNormal.zero();
+        final Vector3d exitNormal = context.exitNormal.zero();
+        final Vector3d overlapNormal = context.overlapNormal.zero();
+
+        final Vector3d relativePos = context.relativePos.set(obbB.position).sub(obbA.position);
+
+        final double epsilon = 1e-5;
+        for (final Vector3d check : context.checks) {
+            if (check.lengthSquared() < epsilon) {
+                continue;
+            }
+
+            check.normalize();
+
+            final double rA = 0.5 * obbA.dimensions.x * Math.abs(aX.dot(check)) +
+                    0.5 * obbA.dimensions.y * Math.abs(aY.dot(check)) +
+                    0.5 * obbA.dimensions.z * Math.abs(aZ.dot(check));
+
+            final double rB = 0.5 * obbB.dimensions.x * Math.abs(bX.dot(check)) +
+                    0.5 * obbB.dimensions.y * Math.abs(bY.dot(check)) +
+                    0.5 * obbB.dimensions.z * Math.abs(bZ.dot(check));
+
+            final double r = rA + rB;
+            final double distance = relativePos.dot(check);
+            final double speed = sweep.dot(check);
+
+            final double overlap = r - Math.abs(distance);
+            if (overlap >= 0 && overlap < minOverlap) {
+                minOverlap = overlap;
+                overlapNormal.set(check);
+
+                if (distance > 0) {
+                    overlapNormal.negate();
+                }
+            }
+
+            if (Math.abs(speed) < epsilon) {
+                if (Math.abs(distance) > r) {
+                    dest.reset();
+                    return dest;
+                }
+
+                continue;
+            }
+
+            final double t1 = (distance - r) / speed;
+            final double t2 = (distance + r) / speed;
+            final double tNear = Math.min(t1, t2);
+            final double tFar = Math.max(t1, t2);
+
+            if (tNear > tFirst) {
+                tFirst = tNear;
+                hitNormal.set(check);
+                if (distance > 0) {
+                    hitNormal.negate();
+                }
+            }
+            if (tFar < tLast) {
+                tLast = tFar;
+                exitNormal.set(check);
+
+                if (speed <= 0) {
+                    exitNormal.negate();
+                }
+            }
+
+            if (tFirst > tLast) {
+                dest.reset();
+                return dest;
+            }
+        }
+
+        if (!(tFirst <= tLast) || tFirst > 1.0) {
+            dest.reset();
+            return dest;
+        }
+
+        if (hitNormal.lengthSquared() <= 0 && minOverlap != Double.POSITIVE_INFINITY) {
+            hitNormal.set(overlapNormal);
+        }
+
+        dest.reset();
+        dest.hit = true;
+        dest.entryT = tFirst;
+        dest.exitT = tLast;
+        dest.exitNormal.set(exitNormal);
+        dest.normal.set(hitNormal);
+        return dest;
+    }
+
     public static Vector3d[] genChecks(final Vector3d aRight, final Vector3d aUp, final Vector3d aForward, final Vector3d bRight, final Vector3d bUp, final Vector3d bForward, final Vector3d[] checks) {
         checks[0].set(aRight);
         checks[1].set(aUp);
@@ -237,70 +348,6 @@ public class OrientedBoundingBox3d {
         aForward.cross(bForward, checks[14]);
 
         return checks;
-    }
-
-    public static Vector3dc satToleranced(final OrientedBoundingBox3d entityOBB, final OrientedBoundingBox3d obbB, final double tolerance) {
-        Objects.requireNonNull(entityOBB, "entityOBB");
-        Objects.requireNonNull(obbB, "obbB");
-
-        final LevelReusedVectors context = entityOBB.sink;
-
-        final Vector3d[] verticesA = entityOBB.vertices(context.a);
-        final Vector3d[] verticesB = obbB.vertices(context.b);
-
-        final Vector3d checker = entityOBB.position.sub(obbB.position, new Vector3d()).normalize();
-
-        final Vector3d aRight = entityOBB.rotate(context.obbARight.set(OrientedBoundingBox3d.RIGHT));
-        final Vector3d aUp = entityOBB.rotate(context.obbAUp.set(OrientedBoundingBox3d.UP));
-        final Vector3d aForward = entityOBB.rotate(context.obbAForward.set(OrientedBoundingBox3d.FORWARD));
-
-        final Vector3d bRight = obbB.rotate(context.obbBRight.set(OrientedBoundingBox3d.RIGHT));
-        final Vector3d bUp = obbB.rotate(context.obbBUp.set(OrientedBoundingBox3d.UP));
-        final Vector3d bForward = obbB.rotate(context.obbBForward.set(OrientedBoundingBox3d.FORWARD));
-
-        Vector3d mtv = new Vector3d(Double.MAX_VALUE);
-
-        OrientedBoundingBox3d.genChecks(aRight, aUp, aForward, bRight, bUp, bForward, context.checks);
-
-        double minOverlap = Double.MAX_VALUE;
-
-
-        int i = 0;
-        for (final Vector3d check : context.checks) {
-            if (check.lengthSquared() <= 0) {
-                continue;
-            }
-
-            check.normalize();
-
-            OrientedBoundingBox3d.checkSeparation(verticesA, check, context.proj1);
-            OrientedBoundingBox3d.checkSeparation(verticesB, check, context.proj2);
-
-            if (check.dot(checker) > 0) {
-                check.mul(-1.0);
-            }
-
-            final double overlap = OrientedBoundingBox3d.getOverlap(context.proj1, context.proj2);
-
-            if (overlap == 0.f) { // shapes are not overlapping
-                return context.zero;
-            } else {
-                if (overlap - (i == 14 ? 0.1 : 0.0) < minOverlap) {
-                    minOverlap = overlap;
-                    mtv = check.mul(minOverlap);
-                }
-            }
-            i++;
-        }
-
-
-        final boolean facingOpposite = entityOBB.position.sub(obbB.position, context.oppo).dot(mtv) < 0;
-
-        if (facingOpposite) {
-            mtv.mul(-1);
-        }
-
-        return mtv;
     }
 
     /**
@@ -323,5 +370,21 @@ public class OrientedBoundingBox3d {
         }
 
         return result.set(min, max);
+    }
+
+    public static class SweepResult {
+        public boolean hit = false;
+        public double entryT;
+        public double exitT;
+        public final Vector3d exitNormal = new Vector3d();
+        public final Vector3d normal = new Vector3d();
+
+        public void reset() {
+            this.hit = false;
+            this.exitNormal.zero();
+            this.normal.zero();
+            this.entryT = 0.0;
+            this.exitT = 0.0;
+        }
     }
 }

@@ -244,7 +244,7 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
             }
         }
 
-        for (final SubLevelHoldingChunk holdingChunk : this.loadedHoldingChunks.values()) {
+        for (final SubLevelHoldingChunk holdingChunk : new ObjectArrayList<>(this.loadedHoldingChunks.values())) {
             final ChunkPos holdingChunkPos = holdingChunk.getChunkPos();
 
             for (final HoldingSubLevel holdingSubLevel : holdingChunk.getLoadedHoldingSubLevels()) {
@@ -478,6 +478,10 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
                     continue;
                 }
 
+                if (this.container.getSubLevel(subLevelData.uuid()) != null || this.allHoldingSubLevels.containsKey(subLevelData.uuid())) {
+                    continue;
+                }
+
                 final GlobalSavedSubLevelPointer globalPointer = new GlobalSavedSubLevelPointer(chunkPos, pointer.storageIndex(), pointer.subLevelIndex());
 
                 final HoldingSubLevel holdingSubLevel = new HoldingSubLevel(subLevelData, globalPointer);
@@ -639,6 +643,8 @@ public class SubLevelHoldingChunkMap implements AutoCloseable {
             final SubLevelHoldingChunk holdingChunk = this.getOrLoadHoldingChunk(chunkPos, false);
 
             if (holdingChunk != null) {
+                this.allHoldingSubLevels.remove(subLevel.getUniqueId());
+                holdingChunk.removeHoldingSubLevel(subLevel.getUniqueId());
                 holdingChunk.getSubLevelPointers().remove(pointer.local());
                 this.setDirty(chunkPos);
             }

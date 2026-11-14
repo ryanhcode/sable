@@ -84,7 +84,7 @@ public class SubLevelEntityCollision {
         final LevelAccelerator accel = new LevelAccelerator(level);
 
         Quaterniondc customEntityOrientation = EntitySubLevelUtil.getCustomEntityOrientation(entity, 0.0f);
-        sink.entityUpDirection.set(OrientedBoundingBox3d.UP);
+        sink.entityUpDirection.set(OrientedBoundingBox3d.UNIT_Y);
 
         final BoundingBox3d considerationBounds = sink.considerationBounds.set(fullContextBounds);
 
@@ -115,7 +115,7 @@ public class SubLevelEntityCollision {
         final BoundingBox3d localBounds = sink.localBounds;
         final BoundingBox3d localBounds2 = sink.localBounds2;
 
-        int substeps = Math.min(10, Math.max(1, (int) (collisionMotion.length() / (0.25 / 16.0))));
+        int substeps = Math.clamp((int) (collisionMotion.length() / (0.25 / 16.0)), 1, 10);
 
         if (entity instanceof final Player player && player.isLocalPlayer()) {
             substeps = 8;
@@ -139,6 +139,7 @@ public class SubLevelEntityCollision {
                 sink);
 
         final OrientedBoundingBox3d cubeOBB = new OrientedBoundingBox3d(sink);
+        final OrientedBoundingBox3d maxCubeOBB = new OrientedBoundingBox3d(sink);
 
         final Pose3d lastPose = sink.lastPose;
         final Pose3d lastSubLevelPose = sink.lastSubLevelPose;
@@ -181,12 +182,15 @@ public class SubLevelEntityCollision {
                 entityBoundsCenter.fma(entity.getEyeHeight() - entity.getBoundingBox().getYsize() / 2.0, entityUp);
                 customEntityOrientation = EntitySubLevelUtil.getCustomEntityOrientation(entity, (float) i / substeps);
 
-                entityUp.set(OrientedBoundingBox3d.UP);
+                entityUp.set(OrientedBoundingBox3d.UNIT_Y);
                 transformEntityBoundingBox(customEntityOrientation, sink.entityBoxOrientation, entityUp);
                 entityBoundsCenter.fma(-(entity.getEyeHeight() - entity.getBoundingBox().getYsize() / 2.0), entityUp);
             } else {
-                entityUp.set(OrientedBoundingBox3d.UP);
+                entityUp.set(OrientedBoundingBox3d.UNIT_Y);
             }
+
+            final Vector3d entityDown = sink.entityDownDirection.set(sink.entityUpDirection).negate();
+
             entityBoundsOBB.setOrientation(sink.entityBoxOrientation);
 
             entityBoundsCenter.add(collisionMotion, entityBoundsOBB.getPosition());
@@ -196,6 +200,7 @@ public class SubLevelEntityCollision {
                 if (Sable.HELPER.getVehicleSubLevel(entity) == subLevel) {
                     continue;
                 }
+
 
                 final Pose3d logicalPose = subLevel.logicalPose();
 
@@ -232,6 +237,7 @@ public class SubLevelEntityCollision {
                 final Iterable<BlockPos> blocks = BlockPos.betweenClosed(sink.minPos.set(localBounds.minX, localBounds.minY - 1, localBounds.minZ), sink.maxPos.set(localBounds.maxX, localBounds.maxY, localBounds.maxZ));
 
                 cubeOBB.getOrientation().set(subLevelPose.orientation());
+                maxCubeOBB.getOrientation().set(subLevelPose.orientation());
 
                 if (collisionInfo.trackingSubLevel == subLevel) {
                     // Subtract, then add so the vector can be re-used
@@ -255,6 +261,22 @@ public class SubLevelEntityCollision {
 
                     if (!anySurroundingBlocksSolid) {
                         stopTrackingAtEnd = true;
+                    }
+                }
+
+                final OrientedBoundingBox3d obbA = new OrientedBoundingBox3d(entityBoundsOBB.getPosition(), entityBoundsOBB.getDimensions(), entityBoundsOBB.getOrientation(), sink);
+                obbA.getPosition().sub(steppingMotion);
+                final OrientedBoundingBox3d.SweepResult sweepA = sweep(accel, sink, obbA, blocks, subLevelPose, entityDown, cubeOBB);
+                if (sweepA != null && sweepA.entryT < 0.01 && steppingMotion.dot(entityDown) > 0.0) {
+                    final double dot = sweepA.normal.dot(entityUp);
+                    final boolean verticalCollision = Math.abs(dot) > SubLevelCollisionConstants.VERTICAL_COLLISION_MIN_DOT;
+
+                    if (verticalCollision) {
+                        final double amount = -steppingMotion.dot(sweepA.normal) / dot;
+                        if (amount < 0.0) {
+                            collisionMotion.fma(amount, entityUp);
+                            entityBoundsCenter.add(collisionMotion, entityBoundsOBB.getPosition());
+                        }
                     }
                 }
 
@@ -291,6 +313,8 @@ public class SubLevelEntityCollision {
                                 if (lengthMtv > maxMTVLength) {
                                     maxMTVLength = lengthMtv;
                                     maxMTV.set(mtv);
+                                    maxCubeOBB.getPosition().set(cubeOBB.getPosition());
+                                    maxCubeOBB.getDimensions().set(cubeOBB.getDimensions());
 
                                     box.move(block.getX(), block.getY(), block.getZ(), maxAABB);
                                     maxBlockPos.set(block);
@@ -366,7 +390,7 @@ public class SubLevelEntityCollision {
                         maxMTV.normalize(normalizedMtv);
                         final double dot = normalizedMtv.dot(entityUp);
 
-                        final boolean verticalCollision = Math.abs(dot) > 0.6;
+                        final boolean verticalCollision = Math.abs(dot) > SubLevelCollisionConstants.VERTICAL_COLLISION_MIN_DOT;
 
                         // record the first collision w/ the sub-level
                         final BlockState collidedBlockState = maxBlockState;
@@ -393,37 +417,39 @@ public class SubLevelEntityCollision {
 //                                    collisionInfo.trackingLocalUpDirection = subLevelPose.transformNormalInverse(new Vector3d(0.0, 1.0, 0.0));
                                 }
                             }
-                            if (dot > 0.8) {
+                            if (dot > SubLevelCollisionConstants.WALKABLE_SLOPE_MIN_DOT) {
                                 final double preLength = maxMTV.length();
                                 entityUp.mul(maxMTV.dot(entityUp), maxMTV).normalize(preLength);
                             }
                         } else {
-                            collisionInfo.subLevelHorizontalCollision |= !tryStepUp(entity,
+                            final boolean didStepUp = tryStepUp(entity,
                                     accel,
                                     sink,
                                     subLevelPose,
-                                    blocks,
-                                    entityBoundsCenter,
-                                    entityBounds,
                                     entityBoundsOBB,
                                     cubeOBB,
-                                    maxMTV,
+                                    maxCubeOBB,
                                     normalizedMtv,
                                     collisionMotion);
+                            collisionInfo.subLevelHorizontalCollision |= !didStepUp;
 
-                            if (collisionInfo.subLevelHorizontalCollision) {
-                                // TODO: We really should be going through the vanilla horizontal collision / minor horizontal collision
+                            if (!didStepUp) {
+                                // TODO: We really should be going through the vanilla horizontal collision / minor horizontal collision, but it carries a lot of baggage with it :(
                                 JOMLConversion.toJOML(entity.getDeltaMovement(), existingDeltaMovement);
-                                final Vector3d deltaMovementLoss = normalizedMtv.mul(normalizedMtv.dot(existingDeltaMovement));
+
+                                final double mtvDotDeltaMovement = normalizedMtv.dot(existingDeltaMovement);
+                                final Vector3dc deltaMovementLoss =
+                                        mtvDotDeltaMovement > 0.0 ? JOMLConversion.ZERO :
+                                                normalizedMtv.mul(mtvDotDeltaMovement);
 
                                 if (deltaMovementLoss.length() > existingDeltaMovement.length() * 0.1) {
                                     entity.setSprinting(false);
                                 }
 
                                 // TODO: Vanilla has friction values for these. We should be using those
+                                // literally hand tuned these to try and match LOL
                                 final double friction = 0.995;
                                 final Vector3d newDeltaMovement = existingDeltaMovement.sub(deltaMovementLoss);
-
 
                                 final double upVelocity = entityUp.dot(newDeltaMovement);
                                 newDeltaMovement.fma(-upVelocity, entityUp).mul(friction).fma(upVelocity, entityUp);
@@ -481,7 +507,7 @@ public class SubLevelEntityCollision {
         final Quaterniond snapped = SableMathUtils.clampQuaternionToGrid(subLevelOrientation, SableMathUtils.GridQuats.REAL, new Quaterniond());
         final Quaterniond relativeOrientation = subLevelOrientation.div(snapped, snapped);
 
-        final double dot = OrientedBoundingBox3d.UP.dot(new Vector3d(relativeOrientation.x(), relativeOrientation.y(), relativeOrientation.z()));
+        final double dot = OrientedBoundingBox3d.UNIT_Y.dot(new Vector3d(relativeOrientation.x(), relativeOrientation.y(), relativeOrientation.z()));
 
         return -2.0 * Math.atan2(-dot, relativeOrientation.w());
     }
@@ -510,56 +536,102 @@ public class SubLevelEntityCollision {
                                      final LevelAccelerator accel,
                                      final LevelReusedVectors sink,
                                      final Pose3dc subLevelPose,
-                                     final Iterable<BlockPos> blocks,
-                                     final Vector3dc entityBoundsCenter,
-                                     final AABB entityBounds,
                                      final OrientedBoundingBox3d entityBoundsOBB,
                                      final OrientedBoundingBox3d cubeOBB,
-                                     final Vector3dc maxMTV,
-                                     final Vector3dc normalizedMTV,
+                                     final OrientedBoundingBox3d maxCubeOBB,
+                                     final Vector3dc collisionNormal,
                                      final Vector3d collisionMotion) {
         if (!entity.onGround()) return false;
-        if (collisionMotion.dot(normalizedMTV) > 0.0) return true;
-
-        final double checkIncrement = 1.0 / 16.0;
         final double maxStepHeight = entity.maxUpStep();
-        double currentStepUp;
 
-        final Vector3d lastStepTestMTV = sink.lastStepTestMTV.zero();
-        int collidingCount = 0;
-        int freeCount = 0;
+        final Vector3dc up = sink.entityUpDirection;
+        final Vector3d stepUpDirection = up.fma(-collisionNormal.dot(up), collisionNormal, new Vector3d());
+        stepUpDirection.normalize();
 
-        final double inflation = 0.1;
-        entityBoundsOBB.getDimensions().set(entityBounds.getXsize(), entityBounds.getYsize(), entityBounds.getZsize())
-                .add(inflation, inflation, inflation);
+        final OrientedBoundingBox3d.SweepResult result = new OrientedBoundingBox3d.SweepResult();
+        final Vector3d sweep = sink.stepHeightEntityBoundsCenter.zero().fma(maxStepHeight, stepUpDirection);
 
-        for (currentStepUp = 0; currentStepUp <= maxStepHeight; currentStepUp += checkIncrement) {
-            final Vector3d boundsCenter = sink.stepHeightEntityBoundsCenter;
+        OrientedBoundingBox3d.sweep(entityBoundsOBB, maxCubeOBB, sweep, result);
 
-            boundsCenter.set(entityBoundsCenter).fma(currentStepUp, sink.entityUpDirection).fma(-2.0 / 16.0, normalizedMTV);
+        if (result.hit && result.exitT < 1.0 && result.exitNormal.dot(stepUpDirection) > SubLevelCollisionConstants.WALKABLE_SLOPE_MIN_DOT) {
+            final Vector3d inwardsNudge = new Vector3d(collisionNormal).fma(-up.dot(collisionNormal), up);
+            sweep.mul(result.exitT + 0.01).fma(-0.01, inwardsNudge);
 
-            if (hasCollision(accel, sink, subLevelPose, blocks, entityBoundsOBB, cubeOBB, boundsCenter)) {
-                lastStepTestMTV.set(sink.mtv);
-                collidingCount++;
-            } else {
-                freeCount++;
-                break;
+            final OrientedBoundingBox3d testOBB = new OrientedBoundingBox3d(entityBoundsOBB.getPosition(), entityBoundsOBB.getDimensions(), entityBoundsOBB.getOrientation(), sink);
+            final Vector3d testPosition = testOBB.getPosition();
+            testPosition.add(sweep);
+
+            final Vector3d dimensions = testOBB.getDimensions();
+            final BoundingBox3d globalBoundingBox = new BoundingBox3d(-dimensions.x * 0.5, -dimensions.y * 0.5, -dimensions.z * 0.5, dimensions.x * 0.5, dimensions.y * 0.5, dimensions.z * 0.5);
+            globalBoundingBox.transform(new Matrix4d().rotate(testOBB.getOrientation()));
+            globalBoundingBox.move(testPosition.x, testPosition.y, testPosition.z);
+            globalBoundingBox.transformInverse(subLevelPose);
+            globalBoundingBox.expandTo(new BoundingBox3d(globalBoundingBox).move(sweep.x, sweep.y, sweep.z));
+
+            final Iterable<BlockPos> blocks = BlockPos.betweenClosed(new BlockPos.MutableBlockPos(globalBoundingBox.minX, globalBoundingBox.minY - 1, globalBoundingBox.minZ), new BlockPos.MutableBlockPos(globalBoundingBox.maxX, globalBoundingBox.maxY, globalBoundingBox.maxZ));
+            if (shouldStopStepUp(accel, sink, subLevelPose, blocks, testOBB, cubeOBB)) {
+                return false;
             }
-        }
 
-        entityBoundsOBB.getDimensions().set(entityBounds.getXsize(), entityBounds.getYsize(), entityBounds.getZsize());
-
-        if (freeCount > 0 && collidingCount > 0 && lastStepTestMTV.normalize().dot(sink.entityUpDirection) > 0.8) {
-            collisionMotion.fma(currentStepUp, sink.entityUpDirection).fma(-1.0 / 16.0, normalizedMTV);
+            collisionMotion.add(sweep);
             return true;
         }
 
         return false;
     }
 
-    private static boolean hasCollision(final LevelAccelerator accel, final LevelReusedVectors sink, final Pose3dc subLevelPose, final Iterable<BlockPos> blocks, final OrientedBoundingBox3d entityBoundsOBB, final OrientedBoundingBox3d cubeOBB, final Vector3d boundsCenter) {
-        entityBoundsOBB.setPosition(boundsCenter);
+    private static OrientedBoundingBox3d.SweepResult sweep(final LevelAccelerator accel,
+                                                           final LevelReusedVectors sink,
+                                                           final OrientedBoundingBox3d entityBoundsOBB,
+                                                           final Iterable<BlockPos> blocks,
+                                                           final Pose3dc subLevelPose,
+                                                           final Vector3d sweep,
+                                                           final OrientedBoundingBox3d cubeOBB) {
+        double minSweepResult = Double.MAX_VALUE;
+        OrientedBoundingBox3d.SweepResult outSweepResult = null;
 
+        // iterate through all blocks
+        for (final BlockPos block : blocks) {
+            final BlockState state = accel.getBlockState(block);
+            final VoxelShape voxelShape = state.getCollisionShape(accel, block);
+
+            if (state.isAir()) {
+                continue;
+            }
+
+            final Iterator<BoundingBox3dc> iterator = ((FastVoxelShapeIterable) voxelShape).sable$allBoxes();
+            final Vector3d center = sink.center;
+            final Vector3d mtv = sink.mtv;
+
+            while (iterator.hasNext()) {
+                final BoundingBox3dc box = iterator.next();
+                box.center(center);
+                cubeOBB.getPosition().set(block.getX() + center.x,
+                        block.getY() + center.y,
+                        block.getZ() + center.z);
+                subLevelPose.transformPosition(cubeOBB.getPosition());
+                box.size(cubeOBB.getDimensions());
+
+                final OrientedBoundingBox3d.SweepResult sweepResult = OrientedBoundingBox3d.sweep(entityBoundsOBB, cubeOBB, sweep, new OrientedBoundingBox3d.SweepResult());
+
+                if (sweepResult.hit && sweepResult.entryT < minSweepResult) {
+                    minSweepResult = sweepResult.entryT;
+                    outSweepResult = sweepResult;
+
+                    if (sweepResult.entryT <= 0.0) break;
+                }
+            }
+        }
+
+        return outSweepResult;
+    }
+
+    private static boolean shouldStopStepUp(final LevelAccelerator accel,
+                                            final LevelReusedVectors sink,
+                                            final Pose3dc subLevelPose,
+                                            final Iterable<BlockPos> blocks,
+                                            final OrientedBoundingBox3d entityBoundsOBB,
+                                            final OrientedBoundingBox3d cubeOBB) {
         // iterate through all blocks
         for (final BlockPos block : blocks) {
             final BlockState state = accel.getBlockState(block);
@@ -612,7 +684,6 @@ public class SubLevelEntityCollision {
         public Vec3 motion;
         public SubLevel trackingSubLevel;
         public Map<SubLevel, FirstCollisionInfo> firstCollisions;
-//        public Vector3d trackingLocalUpDirection = null;
     }
 
 }

@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.sublevel.plot;
 
 import dev.ryanhcode.sable.api.block.BlockEntitySubLevelActor;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.platform.SableChunkEventPlatform;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -49,6 +50,7 @@ public class ClientLevelPlot extends LevelPlot {
 
     @Override
     protected void onRemoveChunkHolder(final LevelChunk levelChunk) {
+        SableChunkEventPlatform.INSTANCE.unloadClientChunk(levelChunk);
         ((ClientLevel) levelChunk.getLevel()).unload(levelChunk);
     }
 

@@ -9,7 +9,7 @@ public interface SableChunkEventPlatform {
 
     void onClientChunkPacketReplaced(final LevelChunk chunk);
 
-    void onOldChunkInvalid(final LevelChunk chunk);
+    void unloadClientChunk(final LevelChunk chunk);
 
     void onPlotChunkLoaded(final LevelChunk chunk);
 

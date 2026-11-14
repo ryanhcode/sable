@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -38,6 +39,10 @@ public class SubLevelHoldingChunk {
 
     public Iterable<HoldingSubLevel> getLoadedHoldingSubLevels() {
         return this.loadedHoldingSubLevels.values();
+    }
+
+    public void removeHoldingSubLevel(@NotNull final UUID uniqueId) {
+        this.loadedHoldingSubLevels.remove(uniqueId);
     }
 
     /**

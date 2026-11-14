@@ -17,6 +17,6 @@ public interface ParticleSubLevelKickable {
     boolean sable$shouldCollideWithTrackingSubLevel();
 
     default Vector3dc sable$getUpDirection() {
-        return OrientedBoundingBox3d.UP;
+        return OrientedBoundingBox3d.UNIT_Y;
     }
 }

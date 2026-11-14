@@ -1,7 +1,6 @@
 package dev.ryanhcode.sable.mixin.entity.entity_sublevel_collision;
 
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinhelpers.CanFallAtleastHelper;
 import dev.ryanhcode.sable.sublevel.SubLevel;

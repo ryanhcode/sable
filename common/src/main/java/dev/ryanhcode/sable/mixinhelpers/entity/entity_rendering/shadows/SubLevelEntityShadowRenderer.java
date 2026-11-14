@@ -3,7 +3,6 @@ package dev.ryanhcode.sable.mixinhelpers.entity.entity_rendering.shadows;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.entity.EntitySubLevelUtil;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
@@ -68,7 +67,7 @@ public class SubLevelEntityShadowRenderer {
         final Quaterniondc customOrientation = EntitySubLevelUtil.getCustomEntityOrientation(entity, partialTick);
         final Vec3 entityOrigin = entity.getPosition(partialTick);
         Vec3 entityFeet = entityOrigin;
-        Vector3dc upDir = OrientedBoundingBox3d.UP;
+        Vector3dc upDir = OrientedBoundingBox3d.UNIT_Y;
 
         final Vec3 eyePos = entity.getEyePosition(partialTick);
         if (customOrientation != null) {

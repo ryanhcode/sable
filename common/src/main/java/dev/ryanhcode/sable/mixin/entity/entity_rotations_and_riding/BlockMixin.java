@@ -23,7 +23,7 @@ public class BlockMixin {
             return instance.multiply(x, y, z);
         }
 
-        final Vector3d up = orientation.transform(OrientedBoundingBox3d.UP, new Vector3d());
+        final Vector3d up = orientation.transform(OrientedBoundingBox3d.UNIT_Y, new Vector3d());
         final double dot = up.dot(instance.x, instance.y, instance.z);
         return instance.subtract(up.x * dot, up.y * dot, up.z * dot);
     }
