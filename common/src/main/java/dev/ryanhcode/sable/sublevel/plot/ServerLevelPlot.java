@@ -291,8 +291,12 @@ public class ServerLevelPlot extends LevelPlot {
 
     /**
      * Destroys all blocks within the plot
+     *
+     * @param dropItems whether the destroyed blocks should drop their items. Mass invalidation must pass
+     *                  {@code false}: at that point the plot only ever contains air and zero-mass blocks, which the
+     *                  disassembly sweep has already moved back to the world.
      */
-    public void destroyAllBlocks() {
+    public void destroyAllBlocks(boolean dropItems) {
         if (this.localBounds == null || this.localBounds == BoundingBox3i.EMPTY) {
             return;
         }
@@ -305,7 +309,20 @@ public class ServerLevelPlot extends LevelPlot {
                 for (int z = bounds.minZ(); z <= bounds.maxZ(); z++) {
                     final BlockPos pos = new BlockPos(x, y, z);
 
-                    level.destroyBlock(pos, true);
+                    if (dropItems) {
+                        level.destroyBlock(pos, true);
+                    } else {
+                        final BlockState state = level.getBlockState(pos);
+                        if (state.isAir()) {
+                            continue;
+                        }
+                        // Detach the block entity first so onRemove(...) cannot spill container contents. Neighbor
+                        // updates are suppressed as well: nothing needs to react to a wholesale plot deletion, and
+                        // updates can pop foreign blocks living in adjacent plot grid cells (dropping them).
+                        level.removeBlockEntity(pos);
+                        level.setBlock(pos, state.getFluidState().createLegacyBlock(),
+                                Block.UPDATE_CLIENTS | Block.UPDATE_MOVE_BY_PISTON);
+                    }
                 }
             }
         }

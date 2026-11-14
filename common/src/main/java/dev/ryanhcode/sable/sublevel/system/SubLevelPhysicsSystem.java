@@ -531,7 +531,7 @@ public class SubLevelPhysicsSystem implements SubLevelObserver {
                 if (oldMass != 0.0) massTracker.addBlockMass(level, oldState, globalBlockPos, -oldMass, oldInertia);
 
                 if (!subLevel.isRemoved() && massTracker.isInvalid()) {
-                    serverSubLevel.getPlot().destroyAllBlocks();
+                    serverSubLevel.getPlot().destroyAllBlocks(false);
                     serverSubLevel.markRemoved();
                     return;
                 }
