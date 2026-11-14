@@ -48,7 +48,6 @@
   "breaks": {
     "sodium": "<${sodium_version}",
     "scalablelux": "*",
-    "sablecompanion": "<${sable_companion_version}",
-    "shouldersurfing": "<${shouldersurfing_companion_version}"
+    "sablecompanion": "<${sable_companion_version}"
   }
 }
