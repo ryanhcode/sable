@@ -89,6 +89,7 @@ public class SubLevelSnapshotInterpolator {
 
     public void setFirstPoses(final Pose3dc poseA, final Pose3dc poseB) {
         this.runningSnapshot.rotationPoint().set(poseA.rotationPoint());
+        this.runningSnapshot.scale().set(poseA.scale());
         this.runningSnapshot.position().set(poseB.position());
     }
 
@@ -108,6 +109,7 @@ public class SubLevelSnapshotInterpolator {
 
             madeUpPastPose.orientation().set(containingPose.orientation());
             containingPose.transformPosition(madeUpPastPose.position());
+            madeUpPastPose.scale().mul(containingPose.scale());
 
             this.buffer.add(new Snapshot(otherSnapshot.gameTick, madeUpPastPose));
         }

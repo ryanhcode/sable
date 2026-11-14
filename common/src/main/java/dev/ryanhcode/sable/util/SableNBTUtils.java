@@ -18,6 +18,7 @@ public class SableNBTUtils {
         tag.put("position", writeVector3d(pose.position()));
         tag.put("orientation", writeQuaternion(pose.orientation()));
         tag.put("rotation_point", writeVector3d(pose.rotationPoint()));
+        tag.put("scale", writeVector3d(pose.scale()));
 
         return tag;
     }
@@ -27,7 +28,7 @@ public class SableNBTUtils {
                 readVector3d(tag.getCompound("position")),
                 readQuaternion(tag.getCompound("orientation")),
                 readVector3d(tag.getCompound("rotation_point")),
-                new Vector3d(1.0)
+                tag.contains("scale") ? readVector3d(tag.getCompound("scale")) : new Vector3d(1.0)
         );
     }
 

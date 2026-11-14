@@ -2,7 +2,6 @@ package dev.ryanhcode.sable.util;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -31,8 +30,8 @@ public class SublevelRenderOffsetHelper {
 
             ps.translate(pos.x() - camera.x, pos.y() - camera.y, pos.z() - camera.z);
             ps.mulPose(new Quaternionf(orientation));
-            ps.translate(camera.x, camera.y, camera.z);
             ps.scale((float) scale.x(), (float) scale.y(), (float) scale.z());
+            ps.translate(camera.x, camera.y, camera.z);
         }
     }
 

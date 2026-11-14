@@ -78,12 +78,12 @@ public abstract class LevelRendererMixin {
                 (float) (position.z() - realCameraPosition.z)
         );
         poseStack.mulPose(this.sable$orientationStorage.set(orientation));
+        poseStack.scale((float) scale.x(), (float) scale.y(), (float) scale.z());
         poseStack.translate(
                 (float) -(rotationPoint.x() - cameraPosition.x),
                 (float) -(rotationPoint.y() - cameraPosition.y),
                 (float) -(rotationPoint.z() - cameraPosition.z)
         );
-        poseStack.scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
         drawnRef.set(true);
         return original.call(context, this.sable$sublevelCamera, target, deltaTracker, poseStack, bufferSource);

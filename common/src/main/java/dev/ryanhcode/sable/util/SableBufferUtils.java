@@ -49,12 +49,14 @@ public class SableBufferUtils {
         SableBufferUtils.write(buf, pose.position());
         SableBufferUtils.write(buf, pose.orientation());
         SableBufferUtils.write(buf, pose.rotationPoint());
+        SableBufferUtils.write(buf, pose.scale());
     }
 
     public static Pose3d read(final ByteBuf buf, final Pose3d pose) {
         SableBufferUtils.read(buf, pose.position());
         SableBufferUtils.read(buf, pose.orientation());
         SableBufferUtils.read(buf, pose.rotationPoint());
+        SableBufferUtils.read(buf, pose.scale());
         return pose;
     }
 

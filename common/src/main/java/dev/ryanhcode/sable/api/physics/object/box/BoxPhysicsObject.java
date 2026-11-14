@@ -139,6 +139,11 @@ public class BoxPhysicsObject implements ArbitraryPhysicsObject, PhysicsPipeline
     }
 
     @Override
+    public Vector3dc getScale() {
+        return JOMLConversion.ONE;
+    }
+
+    @Override
     public boolean isRemoved() {
         return !this.active;
     }

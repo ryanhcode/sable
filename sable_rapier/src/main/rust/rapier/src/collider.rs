@@ -13,7 +13,9 @@ const WORLD_SIZE: Real = 30_000_000.0;
 pub struct LevelCollider {
     pub id: Option<LevelColliderID>,
     pub is_static: bool,
+    #[allow(unused)]
     pub cached_aabb: Option<Aabb>,
+    pub cached_aabb_scaled: Option<Aabb>,
 }
 
 impl LevelCollider {
@@ -23,6 +25,7 @@ impl LevelCollider {
             id,
             is_static,
             cached_aabb: None,
+            cached_aabb_scaled: None,
         }
     }
 
@@ -52,6 +55,7 @@ pub fn update_collider_aabb(sim: &mut SimulationSceneData, info: &ActiveLevelCol
     let existing = *collider.shape().as_shape::<LevelCollider>().unwrap();
     collider.set_shape(SharedShape::new(LevelCollider {
         cached_aabb: Some(new_aabb),
+        cached_aabb_scaled: Some(new_aabb.scaled(info.scale.as_vec3())),
         ..existing
     }));
 }
@@ -92,7 +96,7 @@ impl Shape for LevelCollider {
                 Vec3::new(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE),
             )
         } else {
-            self.cached_aabb
+            self.cached_aabb_scaled
                 .expect("compute_local_aabb called before bounds were set")
         }
     }

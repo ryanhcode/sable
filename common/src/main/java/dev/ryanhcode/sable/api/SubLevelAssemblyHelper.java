@@ -161,14 +161,15 @@ public class SubLevelAssemblyHelper {
                                                    final Vector3d containingAngularVelocity,
                                                    final Pose3d containingPose,
                                                    @Nullable final SubLevel containingSubLevel) {
-        final Pose3d originalPose = new Pose3d(subLevel.logicalPose());
-
+        final Pose3d pose = subLevel.logicalPose();
+        final Pose3d originalPose = new Pose3d(pose);
 
         // re-transform after center of mass is fixed
         // we don't need to set the orientation again as it couldn't have changed
-        containingPose.transformPosition(subLevel.logicalPose().position());
+        containingPose.transformPosition(pose.position());
+        pose.scale().mul(containingPose.scale());
 
-        final Vector3d localPos = subLevel.logicalPose().position().sub(containingPose.position(), new Vector3d());
+        final Vector3d localPos = pose.position().sub(containingPose.position(), new Vector3d());
         if (!subLevel.isRemoved()) {
             pipeline.addLinearAndAngularVelocity(subLevel, containingAngularVelocity.cross(localPos, localPos).add(containingLinearVelocity), containingAngularVelocity);
         }

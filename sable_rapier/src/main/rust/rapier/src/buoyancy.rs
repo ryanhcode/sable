@@ -44,6 +44,8 @@ pub fn compute_buoyancy(scene: &PhysicsScene) {
             info,
             None,
             body.position(),
+            Vec3::ONE,
+            info.scale.as_vec3(),
             0.0,
             DEFAULT_COLLISION_PARALLEL_CUTOFF,
             true,
@@ -66,10 +68,24 @@ pub fn compute_buoyancy(scene: &PhysicsScene) {
                         local_pos.y + y as Real * 0.25,
                         local_pos.z + z as Real * 0.25,
                     );
-                    do_drag(body, &vels, static_pos, &local_pos, 0.25, 1.0);
+                    do_drag(
+                        body,
+                        &vels,
+                        static_pos,
+                        &(local_pos * info.scale.as_vec3()),
+                        0.25,
+                        1.0,
+                    );
                 }
             } else {
-                do_drag(body, &vels, static_pos, &local_pos, 0.5, 1.0);
+                do_drag(
+                    body,
+                    &vels,
+                    static_pos,
+                    &(local_pos * info.scale.as_vec3()),
+                    0.5,
+                    1.0,
+                );
             }
         }
         for (static_pos, dynamic_pos) in pairs.iter() {
@@ -122,7 +138,7 @@ pub fn compute_buoyancy(scene: &PhysicsScene) {
                     do_float(
                         body,
                         static_pos,
-                        &local_pos,
+                        &(local_pos * info.scale.as_vec3()),
                         0.25,
                         voxel_collider_data.volume,
                     );
@@ -131,7 +147,7 @@ pub fn compute_buoyancy(scene: &PhysicsScene) {
                 do_float(
                     body,
                     static_pos,
-                    &local_pos,
+                    &(local_pos * info.scale.as_vec3()),
                     0.5,
                     voxel_collider_data.volume,
                 );

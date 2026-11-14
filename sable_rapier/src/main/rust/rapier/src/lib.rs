@@ -53,6 +53,7 @@ use scene::{LevelColliderID, PhysicsScene, ReportedCollisionBuffer};
 #[derive(Debug)]
 pub struct ActiveLevelColliderInfo {
     pub collider: ColliderHandle,
+    pub scale: DVec3,
     pub static_mount: Option<RigidBodyHandle>,
     pub fake_velocities: Option<RigidBodyVelocity<Real>>,
     pub local_bounds_min: Option<IVec3>,
@@ -84,6 +85,7 @@ impl ActiveLevelColliderInfo {
     pub fn new(collider: ColliderHandle) -> Self {
         Self {
             collider,
+            scale: DVec3::ONE,
             static_mount: None,
             fake_velocities: None,
             chunk_map: None,
@@ -1106,6 +1108,31 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_cha
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setScale<'local>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+    id: jint,
+    scale_x: jdouble,
+    scale_y: jdouble,
+    scale_z: jdouble,
+) {
+    with_handle(handle, |scene| {
+        let mut sable_data = scene.sable_data.write().unwrap();
+
+        let info = sable_data
+            .level_colliders
+            .get_mut(&(id as LevelColliderID))
+            .unwrap();
+
+        info.scale = DVec3::new(scale_x as f64, scale_y as f64, scale_z as f64);
+
+        let mut sim_data = scene.sim_data.write().unwrap();
+        update_collider_aabb(&mut sim_data, info);
+    })
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_setMassProperties<
     'local,
 >(
@@ -1146,7 +1173,6 @@ pub extern "system" fn Java_dev_ryanhcode_sable_physics_impl_rapier_Rapier3D_set
     with_handle(handle, |scene| {
         let sable_data = scene.sable_data.read().unwrap();
         let mut sim_data = scene.sim_data.write().unwrap();
-
         let rb = &mut sim_data.rigid_body_set[sable_data.rigid_bodies[&(id as LevelColliderID)]];
 
         rb.set_additional_mass_properties(

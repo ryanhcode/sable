@@ -15,12 +15,12 @@ fn setup_dummy_sable_handle_a() -> ActiveLevelColliderInfo {
     ActiveLevelColliderInfo {
         static_mount: None,
         collider: ColliderHandle::default(),
+        scale: DVec3::ONE,
         local_bounds_min: Some(IVec3::new(0, 0, 0)),
         local_bounds_max: Some(IVec3::new(128, 128, 128)),
         center_of_mass: Some(DVec3::new(62.5, 62.5, 62.5)),
         octree: Some(octree),
         chunk_map: None,
-        scene_id: 0,
         fake_velocities: None,
     }
 }
@@ -31,13 +31,13 @@ fn setup_dummy_sable_handle_b() -> ActiveLevelColliderInfo {
 
     ActiveLevelColliderInfo {
         static_mount: None,
+        scale: DVec3::ONE,
         collider: ColliderHandle::default(),
         local_bounds_min: Some(IVec3::new(128, 0, 0)),
         local_bounds_max: Some(IVec3::new(256, 128, 128)),
         center_of_mass: Some(DVec3::new(128.0 + 64.5, 64.5, 64.5)),
         octree: Some(octree),
         chunk_map: None,
-        scene_id: 0,
         fake_velocities: None,
     }
 }

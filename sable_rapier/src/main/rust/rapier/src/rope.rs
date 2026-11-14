@@ -54,13 +54,15 @@ pub fn tick(scene: &PhysicsScene) {
             if !sim.impulse_joint_set.contains(attachment.joint) {
                 dead_start_attachments.push(id.clone());
             } else {
-                let local_anchor = attachment.location
-                    - if let Some(id_b) = attachment.sub_level_id {
-                        let rb_b = &sable_data.level_colliders[&id_b];
-                        rb_b.center_of_mass.unwrap()
-                    } else {
-                        DVec3::ZERO
-                    };
+                let local_anchor;
+
+                if let Some(id_b) = attachment.sub_level_id {
+                    let rb_b = &sable_data.level_colliders[&id_b];
+                    local_anchor =
+                        (attachment.location - rb_b.center_of_mass.unwrap()) * rb_b.scale;
+                } else {
+                    local_anchor = attachment.location
+                };
 
                 let impulse_joint = sim
                     .impulse_joint_set
@@ -74,13 +76,14 @@ pub fn tick(scene: &PhysicsScene) {
             if !sim.impulse_joint_set.contains(attachment.joint) {
                 dead_end_attachments.push(id.clone());
             } else {
-                let local_anchor = attachment.location
-                    - if let Some(id_b) = attachment.sub_level_id {
-                        let rb_b = &sable_data.level_colliders[&id_b];
-                        rb_b.center_of_mass.unwrap()
-                    } else {
-                        DVec3::ZERO
-                    };
+                let local_anchor;
+                if let Some(id_b) = attachment.sub_level_id {
+                    let rb_b = &sable_data.level_colliders[&id_b];
+                    local_anchor =
+                        (attachment.location - rb_b.center_of_mass.unwrap()) * rb_b.scale;
+                } else {
+                    local_anchor = attachment.location
+                };
 
                 let impulse_joint = sim
                     .impulse_joint_set

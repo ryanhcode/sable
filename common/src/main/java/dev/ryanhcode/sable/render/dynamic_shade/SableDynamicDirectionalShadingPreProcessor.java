@@ -55,7 +55,7 @@ public class SableDynamicDirectionalShadingPreProcessor implements ShaderPreProc
         }
 
         final List<GlslNode> body = tree.mainFunction().orElseThrow().getBody();
-        body.add(GlslParser.parseExpression("vertexColor.rgb *= mix(vec3(1.0), vec3(block_brightness(inverse(NormalMat) * (ModelViewMat * vec4(Normal, 0.0)).xyz)), SableEnableNormalLighting);"));
+        body.add(GlslParser.parseExpression("vertexColor.rgb *= mix(vec3(1.0), vec3(block_brightness(inverse(NormalMat) * normalize(ModelViewMat * vec4(Normal, 0.0)).xyz)), SableEnableNormalLighting);"));
 
         final GlslNodeList mainFunctionBody = tree.mainFunction().orElseThrow().getBody();
         assert mainFunctionBody != null;

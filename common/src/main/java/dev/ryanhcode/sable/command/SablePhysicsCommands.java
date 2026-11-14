@@ -73,6 +73,13 @@ public class SablePhysicsCommands {
                                 .then(wrapRotationWithMode(false))
                         ))
 
+                .then(Commands.literal("scale")
+                        .then(Commands.argument("sub_level", SubLevelArgumentType.subLevels())
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("scale", Vec3Argument.vec3(false))
+                                                .executes(SablePhysicsCommands::executeSetScaleCommand)))
+                        )
+                )
                 .then(Commands.literal("translation")
                         .then(Commands.argument("sub_level", SubLevelArgumentType.subLevels())
 
@@ -277,6 +284,22 @@ public class SablePhysicsCommands {
         }
 
         SableCommandHelper.sendSuccessDescribingSubLevels("commands.sable.physics.translation.set.success", ctx, subLevels, translation.x + ", " + translation.y + ", " + translation.z);
+        return 0;
+    }
+
+    private static int executeSetScaleCommand(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final Collection<ServerSubLevel> subLevels = SubLevelArgumentType.getSubLevels(ctx, "sub_level");
+
+        if (subLevels.isEmpty()) {
+            throw SableCommandHelper.ERROR_NO_SUB_LEVELS_FOUND.create();
+        }
+
+        final Vector3d scale = JOMLConversion.toJOML(Vec3Argument.getVec3(ctx, "scale"));
+        for (final ServerSubLevel subLevel : subLevels) {
+            subLevel.logicalPose().scale().set(scale.x, scale.y, scale.z);
+        }
+
+        SableCommandHelper.sendSuccessDescribingSubLevels("commands.sable.physics.scale.set.success", ctx, subLevels, scale.x + ", " + scale.y + ", " + scale.z);
         return 0;
     }
 

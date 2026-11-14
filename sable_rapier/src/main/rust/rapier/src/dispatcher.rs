@@ -447,6 +447,8 @@ impl SableDispatcher {
         let collider_info_2 = &sable_data.level_colliders[&(g2.id.unwrap() as LevelColliderID)];
         let center_of_mass_1 = collider_info_1.map_or(DVec3::ZERO, |b| b.center_of_mass.unwrap());
         let center_of_mass_2 = collider_info_2.center_of_mass.unwrap();
+        let scale_1 = collider_info_1.map_or(DVec3::ONE, |b| b.scale);
+        let scale_2 = collider_info_2.scale;
 
         let chunk_access_1: &dyn ChunkAccess = if let Some(info) = collider_info_1
             && info.has_own_chunks()
@@ -462,16 +464,14 @@ impl SableDispatcher {
             &*sable_data
         };
 
-        // let local_aabb = g2.compute_aabb(&pos12);
-        // let local_aabb = Self::adjust_aabb_for_body(local_aabb, body_1, center_of_mass_1, prediction);
-        // let (local_min, local_max) = Self::calculate_local_bounds(local_aabb, center_of_mass_1, prediction);
-
         let mut manifold_index = 0;
 
         let pairs = find_collision_pairs(
             collider_info_2,
             collider_info_1,
             pos12,
+            scale_2.as_vec3(),
+            scale_1.as_vec3(),
             prediction,
             256,
             false,
@@ -514,19 +514,21 @@ impl SableDispatcher {
                     manifolds.push(ContactManifold::new());
                 }
 
-                let center = DVec3::new(
+                let center = (DVec3::new(
                     ((min_x + max_x) / 2.0) as f64,
                     ((min_y + max_y) / 2.0) as f64,
                     ((min_z + max_z) / 2.0) as f64,
                 ) + DVec3::new(static_x as f64, static_y as f64, static_z as f64)
-                    - center_of_mass_1;
-                let center = Vec3::new(center.x as Real, center.y as Real, center.z as Real);
+                    - center_of_mass_1)
+                    * scale_1;
+
+                let center = center.as_vec3();
 
                 let half_extents = Vec3::new(
                     (max_x - min_x) / 2.0,
                     (max_y - min_y) / 2.0,
                     (max_z - min_z) / 2.0,
-                );
+                ) * scale_1.as_vec3();
 
                 // Translate to match the center of the current block
                 let mut block_isometry = *pos12;
@@ -573,23 +575,20 @@ impl SableDispatcher {
                     }
 
                     let other_center =
-                        DVec3::new(
+                        (DVec3::new(
                             ((other_min_x + other_max_x) / 2.0) as f64,
                             ((other_min_y + other_max_y) / 2.0) as f64,
                             ((other_min_z + other_max_z) / 2.0) as f64,
                         ) + DVec3::new(other_bx as f64, other_by as f64, other_bz as f64)
-                            - center_of_mass_2;
-                    let other_center = Vec3::new(
-                        other_center.x as Real,
-                        other_center.y as Real,
-                        other_center.z as Real,
-                    );
+                            - center_of_mass_2)
+                            * scale_2;
+                    let other_center = other_center.as_vec3();
 
                     let other_half_extents = Vec3::new(
                         (other_max_x - other_min_x) / 2.0,
                         (other_max_y - other_min_y) / 2.0,
                         (other_max_z - other_min_z) / 2.0,
-                    );
+                    ) * scale_2.as_vec3();
 
                     // combine block isometries
                     let mut combined_block_isometry = block_isometry;
@@ -619,6 +618,8 @@ impl SableDispatcher {
                         other_center,
                         center_of_mass_1,
                         center_of_mass_2,
+                        scale_1,
+                        scale_2,
                         &mut new_manifold,
                     ) {
                         let index = self
@@ -761,6 +762,8 @@ fn is_interior_collision<ManifoldData: Default + Clone, ContactData: Default + C
     other_center: Vec3,
     center_of_mass_1: DVec3,
     center_of_mass_2: DVec3,
+    scale_1: DVec3,
+    scale_2: DVec3,
     manifold: &mut ContactManifold<ManifoldData, ContactData>,
 ) -> bool {
     let physics_state = crate::get_physics_state();
@@ -770,7 +773,8 @@ fn is_interior_collision<ManifoldData: Default + Clone, ContactData: Default + C
             || (collider_info_1.unwrap().local_bounds_min.unwrap()
                 != collider_info_1.unwrap().local_bounds_max.unwrap())
         {
-            let world_p1 = (point.local_p1 * 0.997 + center).as_dvec3() + center_of_mass_1;
+            let world_p1 =
+                (point.local_p1 * 0.997 + center).as_dvec3() / scale_1 + center_of_mass_1;
             let normal1 = manifold.local_n1.as_dvec3();
 
             let displaced_p1 = world_p1 + normal1 * 0.01;
@@ -786,6 +790,7 @@ fn is_interior_collision<ManifoldData: Default + Clone, ContactData: Default + C
             // we have to "pull in the points" a tiny bit incase they're outside of the block slightly off-normal
             let world_p2 = (point.local_p2 * INTERIOR_COLLISION_SCALE_FACTOR + other_center)
                 .as_dvec3()
+                / scale_2
                 + center_of_mass_2;
 
             let displaced_p2 = world_p2 + normal2 * INTERIOR_COLLISION_CHECK_DISTANCE;

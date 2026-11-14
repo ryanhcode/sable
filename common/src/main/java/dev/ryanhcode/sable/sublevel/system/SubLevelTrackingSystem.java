@@ -270,7 +270,8 @@ public class SubLevelTrackingSystem implements SubLevelObserver {
             final Collection<UUID> tracking = serverSubLevel.getTrackingPlayers();
             SubLevelUpdateTicket.UpdateTicketType type = SubLevelUpdateTicket.UpdateTicketType.MOVE;
 
-            if (!serverSubLevel.logicalPose().withinTolerance(serverSubLevel.lastNetworkedPose(), 0.015 / 16.0, Math.toRadians(0.015))) {
+            if (!serverSubLevel.logicalPose().withinTolerance(serverSubLevel.lastNetworkedPose(), 0.015 / 16.0, Math.toRadians(0.015)) ||
+                    !serverSubLevel.logicalPose().equals(serverSubLevel.lastNetworkedPose())) {
                 serverSubLevel.lastNetworkedPose().set(serverSubLevel.logicalPose());
                 serverSubLevel.setLastNetworkedStopped(false);
             } else {

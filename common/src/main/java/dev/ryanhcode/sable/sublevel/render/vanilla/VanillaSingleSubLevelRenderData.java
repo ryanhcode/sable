@@ -114,6 +114,7 @@ public class VanillaSingleSubLevelRenderData implements SubLevelRenderData {
         final BakedModel bakedModel = client.getBlockRenderer().getBlockModel(this.singleBlockState);
         final Pose3dc renderPose = this.subLevel.renderPose();
         final Vector3dc renderPos = renderPose.position();
+        final Vector3dc renderScale = renderPose.scale();
         LEVEL_WRAPPER.setup(this.subLevel.getLevel(), renderPos.x(), renderPos.y(), renderPos.z(), this.singleBlockPos, this.singleBlockState);
 
         RANDOM.setSeed(this.singleBlockSeed);
@@ -140,6 +141,7 @@ public class VanillaSingleSubLevelRenderData implements SubLevelRenderData {
             // convert the camera pos to local to the origin / rotated
             transform.translate((float) (renderCOR.x() - camX), (float) (renderCOR.y() - camY), (float) (renderCOR.z() - camZ));
             transform.rotate(new Quaternionf(renderRot));
+            transform.scaleAround((float) renderScale.x(), (float) renderScale.y(), (float) renderScale.z(), 0.5f, 0.5f, 0.5f);
 
             stack.last().pose().mul(modelView).mul(transform);
             transform.normal(stack.last().normal());

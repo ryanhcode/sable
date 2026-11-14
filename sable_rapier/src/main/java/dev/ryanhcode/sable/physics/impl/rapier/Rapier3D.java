@@ -206,6 +206,17 @@ public final class Rapier3D {
     static native void setCenterOfMass(final long sceneHandle, int id, double x, double y, double z);
 
     /**
+     * Sets the scale of an object.
+     *
+     * @param id   the object ID
+     * @param xScale the local x scale
+     * @param yScale the local y scale
+     * @param zScale the local z scale
+     */
+    @ApiStatus.Internal
+    static native void setScale(final long sceneHandle, int id, double xScale, double yScale, double zScale);
+
+    /**
      * Sets the local block bounds of an object.
      *
      * @param id   the object ID

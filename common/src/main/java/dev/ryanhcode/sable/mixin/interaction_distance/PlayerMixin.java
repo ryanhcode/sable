@@ -2,6 +2,8 @@ package dev.ryanhcode.sable.mixin.interaction_distance;
 
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.companion.math.JOMLConversion;
+import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
@@ -35,7 +37,12 @@ public abstract class PlayerMixin extends LivingEntity {
 
         if (subLevel != null) {
             final double rangeWithSlop = this.blockInteractionRange() + slop;
-            final Vec3 eyePos = subLevel.logicalPose().transformPositionInverse(this.getEyePosition());
+            final Pose3d pose = subLevel.logicalPose();
+            Vec3 eyePos = pose.transformPositionInverse(this.getEyePosition());
+
+            if (!pose.scale().equals(JOMLConversion.ONE)) {
+                eyePos = eyePos.subtract(pos.getCenter()).multiply(pose.scale().x, pose.scale().y, pose.scale().z).add(pos.getCenter());
+            }
 
             final boolean closeEnough = (new AABB(pos)).distanceToSqr(eyePos) < rangeWithSlop * rangeWithSlop;
 
@@ -50,7 +57,12 @@ public abstract class PlayerMixin extends LivingEntity {
 
         if (subLevel != null) {
             final double rangeWithSlop = this.blockInteractionRange() + slop;
-            final Vec3 eyePos = subLevel.logicalPose().transformPositionInverse(this.getEyePosition());
+            final Pose3d pose = subLevel.logicalPose();
+            Vec3 eyePos = subLevel.logicalPose().transformPositionInverse(this.getEyePosition());
+
+            if (!pose.scale().equals(JOMLConversion.ONE)) {
+                eyePos = eyePos.subtract(aabb.getCenter()).multiply(pose.scale().x, pose.scale().y, pose.scale().z).add(aabb.getCenter());
+            }
 
             final boolean closeEnough = aabb.distanceToSqr(eyePos) < rangeWithSlop * rangeWithSlop;
 

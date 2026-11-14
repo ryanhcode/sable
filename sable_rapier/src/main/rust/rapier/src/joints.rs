@@ -65,15 +65,20 @@ pub fn tick(scene: &PhysicsScene) {
             impulse_joint.data.set_local_axis1(joint.normal_a.as_vec3());
         }
 
-        let center_of_mass_1 = if let Some(id_a) = joint.id_a
+        let center_of_mass_1;
+        let scale_1;
+
+        if let Some(id_a) = joint.id_a
             && let Some(rb_a) = sable_data.level_colliders.get(&id_a)
         {
-            rb_a.center_of_mass.unwrap()
+            center_of_mass_1 = rb_a.center_of_mass.unwrap();
+            scale_1 = rb_a.scale;
         } else {
-            DVec3::ZERO
+            center_of_mass_1 = DVec3::ZERO;
+            scale_1 = DVec3::ONE;
         };
 
-        let local_anchor_1 = joint.pos_a - center_of_mass_1;
+        let local_anchor_1 = (joint.pos_a - center_of_mass_1) * scale_1;
         impulse_joint
             .data
             .set_local_anchor1(local_anchor_1.as_vec3());
@@ -81,15 +86,20 @@ pub fn tick(scene: &PhysicsScene) {
             impulse_joint.data.set_local_axis2(joint.normal_b.as_vec3());
         }
 
-        let center_of_mass_2 = if let Some(id_b) = joint.id_b
+        let center_of_mass_2;
+        let scale_2;
+
+        if let Some(id_b) = joint.id_b
             && let Some(rb_b) = sable_data.level_colliders.get(&id_b)
         {
-            rb_b.center_of_mass.unwrap()
+            center_of_mass_2 = rb_b.center_of_mass.unwrap();
+            scale_2 = rb_b.scale;
         } else {
-            DVec3::ZERO
+            center_of_mass_2 = DVec3::ZERO;
+            scale_2 = DVec3::ONE;
         };
 
-        let local_anchor_2 = joint.pos_b - center_of_mass_2;
+        let local_anchor_2 = (joint.pos_b - center_of_mass_2) * scale_2;
         impulse_joint
             .data
             .set_local_anchor2(local_anchor_2.as_vec3());

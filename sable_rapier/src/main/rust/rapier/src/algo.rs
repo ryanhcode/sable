@@ -18,6 +18,8 @@ pub fn find_collision_pairs(
     sable_body: &ActiveLevelColliderInfo,
     other_sable_body: Option<&ActiveLevelColliderInfo>,
     isometry: &Pose3,
+    scale_a: Vec3,
+    scale_b: Vec3,
     prediction: Real,
     cutoff: usize,
     liquid: bool,
@@ -34,17 +36,18 @@ pub fn find_collision_pairs(
     };
 
     let local_bounds_min = sable_body.local_bounds_min.unwrap();
-
     let center_of_mass = sable_body.center_of_mass.unwrap();
+
+    let radius_scale_a = scale_a.max_element();
 
     let offset = DVec3::new(
         local_bounds_min.x as f64 - center_of_mass.x,
         local_bounds_min.y as f64 - center_of_mass.y,
         local_bounds_min.z as f64 - center_of_mass.z,
-    );
-    let offset = Vec3::new(offset.x as Real, offset.y as Real, offset.z as Real);
+    )
+    .as_vec3();
 
-    let offset = isometry.rotation.mul_vec3(offset.into());
+    let offset = isometry.rotation.mul_vec3(offset * scale_a);
     let translation = isometry.translation + offset;
 
     // start with the root node
@@ -64,6 +67,7 @@ pub fn find_collision_pairs(
     });
 
     let mut pairs = Vec::with_capacity(16);
+
     // process nodes level by level to maintain some structure while parallelizing
     while !current_level.is_empty() {
         type LevelData = (Option<Vec<StackObject>>, Option<Vec<(IVec3, IVec3)>>);
@@ -77,14 +81,20 @@ pub fn find_collision_pairs(
 
             // Calculate the center and radius for this node
             let node_center = entry.min.as_vec3() + node_size as f32 / 2.0;
-            let transformed_center = isometry.rotation.mul_vec3(node_center) + translation;
-            let radius = node_size as Real / 2.0 * 1.7321 + prediction;
+            let transformed_center =
+                (isometry.rotation.mul_vec3(node_center * scale_a) + translation) / scale_b;
+
+            let diagonal = node_size as Real / 2.0 * 1.732;
+            let radius = diagonal + prediction;
+            let radius_scaled = diagonal * (radius_scale_a / scale_b.min_element())
+                + prediction / scale_b.min_element();
 
             let (has_any_intersections, blocks_opt) = get_overlapping_nodes(
                 other_sable_body,
                 com_offset,
                 transformed_center.into(),
                 radius,
+                radius_scaled,
                 sable_data,
                 node >= 0,
                 liquid,
@@ -150,6 +160,7 @@ fn get_overlapping_nodes(
     com_offset: DVec3,
     pos: Vec3,
     dist: Real,
+    dist_scaled: Real,
     sable_data: &SableSceneData,
     cancel_early: bool,
     liquid: bool,
@@ -166,8 +177,12 @@ fn get_overlapping_nodes(
         min(log2, OCTREE_CHUNK_SHIFT)
     };
 
-    let min_block_pos = ((pos - dist).as_dvec3() + com_offset).floor().as_ivec3();
-    let max_block_pos = ((pos + dist).as_dvec3() + com_offset).floor().as_ivec3();
+    let min_block_pos = ((pos - dist_scaled).as_dvec3() + com_offset)
+        .floor()
+        .as_ivec3();
+    let max_block_pos = ((pos + dist_scaled).as_dvec3() + com_offset)
+        .floor()
+        .as_ivec3();
 
     if let Some(other_handle) = other_handle {
         let other_min = other_handle.local_bounds_min.unwrap();

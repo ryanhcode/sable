@@ -287,6 +287,7 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
         final Pose3dc renderPose = this.subLevel.renderPose();
         final Vector3d renderPos = new Vector3d(renderPose.position());
         final Quaterniondc renderRot = renderPose.orientation();
+        final Vector3dc renderScale = renderPose.scale();
         final Vector3d renderCOR = renderRot.transform(new Vector3d(renderPose.rotationPoint()).sub(this.origin));
 
         float[] oldFogColor = null;
@@ -322,6 +323,11 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
         transform.translate((float) (renderPos.x() - camX - fogOffset.x), (float) (renderPos.y() - camY - fogOffset.y), (float) (renderPos.z() - camZ - fogOffset.z));
         transform.rotate(new Quaternionf(renderRot));
 
+        if (!renderScale.equals(JOMLConversion.ONE)) {
+            final Vector3d scaleCenter = new Vector3d(renderPose.rotationPoint()).sub(this.origin);
+            transform.scaleAround((float) renderScale.x(), (float) renderScale.y(), (float) renderScale.z(), (float) scaleCenter.x, (float) scaleCenter.y, (float) scaleCenter.z);
+        }
+
         if (shader.MODEL_VIEW_MATRIX != null) {
             shader.MODEL_VIEW_MATRIX.set(modelView.mul(transform, MODEL_MATRIX));
             shader.MODEL_VIEW_MATRIX.upload();
@@ -333,6 +339,7 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
 
         // TODO: sorting
         final Uniform chunkOffsetUniform = shader.CHUNK_OFFSET;
+        final Vector3d fogOffsetRot = renderRot.transformInverse(fogOffset, new Vector3d()).div(renderScale.x(), renderScale.y(), renderScale.z());
 
         for (final SectionRenderDispatcher.RenderSection renderSection : this.allRenderSections) {
             if (renderSection.getCompiled().isEmpty(layer)) {
@@ -341,7 +348,6 @@ public class VanillaChunkedSubLevelRenderData implements SubLevelRenderData {
 
             if (chunkOffsetUniform != null) {
                 final BlockPos pos = renderSection.getOrigin();
-                final Vector3d fogOffsetRot = renderRot.transformInverse(fogOffset, new Vector3d());
                 chunkOffsetUniform.set((float) (pos.getX() - this.origin.x() + fogOffsetRot.x), (float) (pos.getY() - this.origin.y() + fogOffsetRot.y), (float) (pos.getZ() - this.origin.z() + fogOffsetRot.z));
                 chunkOffsetUniform.upload();
             }

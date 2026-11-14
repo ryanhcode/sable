@@ -158,7 +158,7 @@ impl SablePhysicsHooks {
     ) -> (Vec3, bool, Real, Real) {
         let state = crate::get_physics_state();
 
-        let (tangent_velo, center_of_mass, skip_contact_events) = {
+        let (tangent_velo, center_of_mass, scale, skip_contact_events) = {
             let sable_data = self.sable_data.read().unwrap();
             let collider_info =
                 level_collider.and_then(|lc| lc.id.map(|id| &sable_data.level_colliders[&(id)]));
@@ -171,10 +171,12 @@ impl SablePhysicsHooks {
                 ));
             }
 
-            let center_of_mass = collider_info.map_or(DVec3::ZERO, |b| b.center_of_mass.unwrap());
+            let center_of_mass =
+                collider_info.map_or(DVec3::ZERO, |info| info.center_of_mass.unwrap());
             let skip_contact_events = collider_info.is_some_and(|info| info.has_own_chunks());
+            let scale = collider_info.map_or(DVec3::ONE, |info| info.scale);
 
-            (tangent_velo, center_of_mass, skip_contact_events)
+            (tangent_velo, center_of_mass, scale, skip_contact_events)
         };
 
         let Some(manifold_info) = self.manifold_info_map.list.get(&manifold_index) else {
@@ -198,7 +200,7 @@ impl SablePhysicsHooks {
         };
 
         let local = isometry.inverse_transform_point(*global_point);
-        let block_coord_d: DVec3 = local.as_dvec3() + center_of_mass;
+        let block_coord_d: DVec3 = local.as_dvec3() / scale + center_of_mass;
 
         if block_id == 0 {
             return (tangent_velo, false, 1.0, 0.0);

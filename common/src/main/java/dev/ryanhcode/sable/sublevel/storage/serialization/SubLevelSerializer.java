@@ -33,11 +33,6 @@ import java.util.UUID;
  */
 public class SubLevelSerializer {
 
-    /**
-     * For when absolutely everything is broken, and I need to step through the state management.
-     */
-    public static final boolean SUPER_DEBUG_MODE = false;
-
     private static @NotNull CompoundTag serialize(final ServerSubLevel subLevel, final List<UUID> dependencies) {
         final CompoundTag tag = new CompoundTag();
         final ServerLevelPlot plot = subLevel.getPlot();

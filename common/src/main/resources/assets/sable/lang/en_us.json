@@ -19,6 +19,7 @@
   "commands.sable.physics.rotation.set.success": "Set rotation of %s to %s",
   "commands.sable.physics.translation.add.success": "Added %s translation to %s of %s",
   "commands.sable.physics.translation.set.success": "Set translation of %s to %s",
+  "commands.sable.physics.scale.set.success": "Set scale of %s to %s",
 
   "commands.sable.joint.missing_sublevel_target": "Failed to find sub-level for joint",
   "commands.sable.joint.success": "Successfully created joint",

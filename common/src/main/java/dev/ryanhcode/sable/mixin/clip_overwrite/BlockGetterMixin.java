@@ -2,7 +2,6 @@ package dev.ryanhcode.sable.mixin.clip_overwrite;
 
 import dev.ryanhcode.sable.ActiveSableCompanion;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
@@ -12,6 +11,7 @@ import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipBlockStateContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,6 +39,9 @@ public interface BlockGetterMixin {
 
     @Shadow
     BlockState getBlockState(BlockPos blockPos);
+
+    @Shadow
+    BlockHitResult isBlockInLine(ClipBlockStateContext context);
 
     /**
      * @author RyanH
@@ -97,8 +100,7 @@ public interface BlockGetterMixin {
             minDistance = minResult.getLocation().distanceTo(clipContext.getFrom());
         }
 
-
-        final BoundingBox3d bounds = new BoundingBox3d(clipContext.getFrom(), clipContext.getTo());
+        final BoundingBox3d bounds = new BoundingBox3d(clipContext.getFrom().x, clipContext.getFrom().y, clipContext.getFrom().z, clipContext.getTo().x, clipContext.getTo().y, clipContext.getTo().z);
         final Iterable<SubLevel> subLevels = helper.getAllIntersecting(level, bounds);
 
         for (final SubLevel subLevel : subLevels) {
@@ -108,6 +110,7 @@ public interface BlockGetterMixin {
 
             // Do the raycast within the data
             Pose3dc pose = subLevel.logicalPose();
+            final Vector3dc scale = pose.scale();
 
             if (level instanceof final LevelPoseProviderExtension extension) {
                 pose = extension.sable$getPose(subLevel);
@@ -119,13 +122,13 @@ public interface BlockGetterMixin {
             if (helper.getContaining(level, from) != subLevel)
                 continue; // we projected the ray inward, but the start is not in the plot. something is weird.
 
-
             final ClipContext subClipContext = new ClipContext(JOMLConversion.toMojang(from), JOMLConversion.toMojang(to), clipContext.block, clipContext.fluid, clipContext.collisionContext);
-            final BlockHitResult subResult = originalClip(subLevel.getLevel(), subClipContext);
-            final double distance = subResult.getLocation().distanceTo(subClipContext.getFrom());
+            final BlockHitResult localResult = originalClip(subLevel.getLevel(), subClipContext);
+            final double distance = localResult.getLocation().multiply(scale.x(), scale.y(), scale.z())
+                    .distanceTo(subClipContext.getFrom().multiply(scale.x(), scale.y(), scale.z()));
 
-            if ((distance < minDistance || minResult.getType() == HitResult.Type.MISS) && subResult.getType() != HitResult.Type.MISS) {
-                minResult = subResult;
+            if ((distance < minDistance || minResult.getType() == HitResult.Type.MISS) && localResult.getType() != HitResult.Type.MISS) {
+                minResult = localResult;
                 minDistance = distance;
             }
         }

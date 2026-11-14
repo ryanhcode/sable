@@ -39,6 +39,7 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 import java.util.*;
 
@@ -488,6 +489,14 @@ public class ServerSubLevel extends SubLevel implements PhysicsPipelineBody {
     @Override
     public MassData getMassTracker() {
         return this.massTracker;
+    }
+
+    /**
+     * @return the scale, if any scale should be used to divide positions before applying their force
+     */
+    @Override
+    public Vector3dc getScale() {
+        return this.logicalPose().scale();
     }
 
     @ApiStatus.Internal

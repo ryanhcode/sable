@@ -419,6 +419,9 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
             Rapier3D.setMassPropertiesFrom(this.scene.handle(), id, subLevel.getMassTracker());
         }
 
+        final Vector3d scale = subLevel.logicalPose().scale();
+        Rapier3D.setScale(this.scene.handle(), id, scale.x, scale.y, scale.z);
+
         Rapier3D.setLocalBounds(this.scene.handle(), id, plotBounds.minX(), plotBounds.minY(), plotBounds.minZ(), plotBounds.maxX(), plotBounds.maxY(), plotBounds.maxZ());
     }
 
@@ -452,7 +455,8 @@ public class RapierPhysicsPipeline implements PhysicsPipeline {
         this.assertBodyValid(body);
 
         final Vector3dc centerOfMass = body.getMassTracker().getCenterOfMass();
-        Rapier3D.applyForce(this.scene.handle(), Rapier3D.getID(body), position.x() - centerOfMass.x(), position.y() - centerOfMass.y(), position.z() - centerOfMass.z(), force.x(), force.y(), force.z(), true);
+        final Vector3dc scale = body.getScale();
+        Rapier3D.applyForce(this.scene.handle(), Rapier3D.getID(body), (position.x() - centerOfMass.x()) / scale.x(), (position.y() - centerOfMass.y()) / scale.y(), (position.z() - centerOfMass.z()) / scale.z(), force.x(), force.y(), force.z(), true);
     }
 
     /**

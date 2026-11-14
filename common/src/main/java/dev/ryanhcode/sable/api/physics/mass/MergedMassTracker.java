@@ -3,6 +3,7 @@ package dev.ryanhcode.sable.api.physics.mass;
 import dev.ryanhcode.sable.api.sublevel.KinematicContraption;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
@@ -41,10 +42,15 @@ public class MergedMassTracker implements MassData {
      * The merged center of mass of the sub-level, including contraptions [m]
      */
     private @Nullable Vector3d centerOfMass;
+    /**
+     * The local scale multiplier
+     */
+    private final Vector3d scale = new Vector3d(1.0);
 
     private double lastMass;
     private @Nullable Vector3d lastCenterOfMass;
     private @Nullable Matrix3d lastInertiaTensor;
+    private final Vector3d lastScale = new Vector3d(1.0);
 
     public MergedMassTracker(@NotNull final ServerSubLevel subLevel, final MassTracker selfTracker) {
         this.subLevel = subLevel;
@@ -97,6 +103,21 @@ public class MergedMassTracker implements MassData {
             this.inertiaTensor.add(localInertiaTensor);
         }
 
+        this.scale.set(this.subLevel.logicalPose().scale());
+
+        if (!this.scale.equals(JOMLConversion.ONE)) {
+            final double massScale = this.scale.x() * this.scale.y() * this.scale.z();
+            final Matrix3d c = new Matrix3d()
+                    .scale(0.5 * (this.inertiaTensor.m00 + this.inertiaTensor.m11 + this.inertiaTensor.m22))
+                    .sub(this.inertiaTensor)
+                    .scaleLocal(this.scale.x(), this.scale.y(), this.scale.z()) // S * M
+                    .scale(this.scale.x(), this.scale.y(), this.scale.z()) // M * S
+                    .scale(massScale); // account for difference in mass
+
+            this.inertiaTensor.identity().scale(c.m00 + c.m11 + c.m22).sub(c);
+            this.mass *= massScale;
+        }
+
         this.inverseMass = 1.0 / this.mass;
         this.inertiaTensor.invert(this.inverseInertiaTensor);
 
@@ -107,11 +128,14 @@ public class MergedMassTracker implements MassData {
     private void uploadData() {
         if (this.centerOfMass != null && (this.mass != this.lastMass ||
                 !Objects.equals(this.lastCenterOfMass, this.centerOfMass) ||
-                !Objects.equals(this.lastInertiaTensor, this.inertiaTensor))) {
+                !Objects.equals(this.lastInertiaTensor, this.inertiaTensor) ||
+                !this.scale.equals(this.lastScale))) {
             if (this.lastCenterOfMass == null || this.lastInertiaTensor == null) {
                 this.lastCenterOfMass = new Vector3d(this.centerOfMass);
                 this.lastInertiaTensor = new Matrix3d(this.inertiaTensor);
             }
+
+            this.lastScale.set(this.scale);
 
             final ServerLevel level = this.subLevel.getLevel();
             final ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
@@ -121,7 +145,7 @@ public class MergedMassTracker implements MassData {
 
             physicsSystem.updatePose(this.subLevel);
             final Pose3d pose = this.subLevel.logicalPose();
-            physicsSystem.getPipeline().teleport(this.subLevel, pose.position().add(pose.orientation().transform(movement)), pose.orientation());
+            physicsSystem.getPipeline().teleport(this.subLevel, pose.position().add(pose.orientation().transform(movement.mul(pose.scale()))), pose.orientation());
             pose.rotationPoint().set(this.centerOfMass);
             physicsSystem.getPipeline().onStatsChanged(this.subLevel);
         }
