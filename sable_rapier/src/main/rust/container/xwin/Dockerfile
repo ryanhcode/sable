@@ -1,5 +1,5 @@
 # Build container versions pinned on 04-18-26
-FROM messense/cargo-xwin@sha256:f3e680c963eff35f77908c78d97ac095d4bef1f69e4fe200447576b34cd251cb
+FROM messense/cargo-xwin@sha256:9856b895265d4966f212228ba64802cf89337e2a2a537aa2533c1b8784cbc81b
 
 ARG RUST_VERSION
 RUN rustup default ${RUST_VERSION}
