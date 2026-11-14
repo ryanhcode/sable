@@ -147,6 +147,7 @@ public abstract class BlockEntityStorageMixin extends Storage<BlockEntity> imple
 
         transformation.setTranslation((float) (position.x() - parentOrigin.getX()), (float) (position.y() - parentOrigin.getY()), (float) (position.z() - parentOrigin.getZ()));
         transformation.rotate(this.sable$orientationStorage.set(renderPose.orientation()));
+        transformation.scale((float) renderPose.scale().x(), (float) renderPose.scale().y(), (float) renderPose.scale().z());
 
         final Vec3i localOrigin = embedding.renderOrigin();
         final Vector3d localOffset = rotationPoint.sub(localOrigin.getX(), localOrigin.getY(), localOrigin.getZ(), this.sable$localOffsetStorage);

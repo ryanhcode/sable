@@ -87,6 +87,7 @@ public abstract class ContraptionVisualMixin extends AbstractEntityVisual<Abstra
         this.contraptionMatrix.setIdentity();
         this.contraptionMatrix.translate(pos.x, pos.y, pos.z);
         this.contraptionMatrix.mulPose(new Quaternionf(renderPose.orientation()));
+        this.contraptionMatrix.scale((float) renderPose.scale().x(), (float) renderPose.scale().y(), (float) renderPose.scale().z());
         this.entity.applyLocalTransforms(this.contraptionMatrix, partialTick);
         this.embedding.transforms(this.contraptionMatrix.last().pose(), this.contraptionMatrix.last().normal());
 

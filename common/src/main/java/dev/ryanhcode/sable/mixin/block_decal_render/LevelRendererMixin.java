@@ -57,6 +57,7 @@ public abstract class LevelRendererMixin {
 
         ps.translate(projectedPos.x - cameraPos.x, projectedPos.y - cameraPos.y, projectedPos.z - cameraPos.z);
         ps.mulPose(this.sable$orientationStorage.set(renderPose.orientation()));
+        ps.scale((float) renderPose.scale().x(), (float) renderPose.scale().y(), (float) renderPose.scale().z());
     }
 
     @ModifyConstant(method = "renderLevel", constant = @Constant(doubleValue = 1024.0, ordinal = 0))
