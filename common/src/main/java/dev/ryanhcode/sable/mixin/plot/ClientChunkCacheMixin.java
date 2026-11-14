@@ -115,7 +115,7 @@ public abstract class ClientChunkCacheMixin implements DebugChunkProviderAttachm
             LevelChunk levelChunk = container.getChunk(chunkPos);
             if (!isValidChunk(levelChunk, x, z)) {
                 if (levelChunk != null) {
-                    SableChunkEventPlatform.INSTANCE.onOldChunkInvalid(levelChunk);
+                    SableChunkEventPlatform.INSTANCE.unloadClientChunk(levelChunk);
                     this.level.unload(levelChunk);
                 }
                 levelChunk = new LevelChunk(this.level, chunkPos);

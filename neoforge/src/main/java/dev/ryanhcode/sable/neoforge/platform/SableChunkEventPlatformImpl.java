@@ -15,7 +15,7 @@ public class SableChunkEventPlatformImpl implements SableChunkEventPlatform {
     }
 
     @Override
-    public void onOldChunkInvalid(final LevelChunk chunk) {
+    public void unloadClientChunk(final LevelChunk chunk) {
         // no-op
     }
 
