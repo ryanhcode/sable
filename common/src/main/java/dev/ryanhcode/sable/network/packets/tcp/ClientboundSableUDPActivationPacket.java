@@ -49,7 +49,16 @@ public record ClientboundSableUDPActivationPacket(UUID uuid) implements SableTCP
         final ConnectionExtension connectionExtension = (ConnectionExtension) connection;
         final Channel channel = connectionExtension.sable$getUDPChannel();
 
-        final InetSocketAddress baseAddress = ((InetSocketAddress) connection.getRemoteAddress());
+        if (channel == null) {
+            Sable.LOGGER.warn("[sable-udp] Received UDP activation packet but no UDP channel is available on this connection; remaining on TCP-only");
+            return;
+        }
+
+        if (!(connection.getRemoteAddress() instanceof final InetSocketAddress baseAddress)) {
+            Sable.LOGGER.warn("[sable-udp] Received UDP activation packet but remote address is not an InetSocketAddress ({}); skipping UDP auth", connection.getRemoteAddress());
+            return;
+        }
+
         final InetSocketAddress remoteAddress = new InetSocketAddress(baseAddress.getAddress(), baseAddress.getPort());
 
         Sable.LOGGER.info("Received UDP authentication request, sending response over UDP to {}", remoteAddress);
@@ -60,7 +69,12 @@ public record ClientboundSableUDPActivationPacket(UUID uuid) implements SableTCP
             final AddressedSableUDPPacket envelope = new AddressedSableUDPPacket(packet, remoteAddress);
             final ChannelFuture writeFuture = channel.writeAndFlush(envelope);
 
-            writeFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+            writeFuture.addListener((ChannelFutureListener) f -> {
+                if (!f.isSuccess()) {
+                    Sable.LOGGER.warn("[sable-udp] Failed to send UDP auth response to {}: {}",
+                            remoteAddress, f.cause() != null ? f.cause().toString() : "<no cause>");
+                }
+            });
         });
     }
 }
