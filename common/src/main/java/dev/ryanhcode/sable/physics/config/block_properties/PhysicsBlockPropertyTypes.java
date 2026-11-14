@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 public class PhysicsBlockPropertyTypes {
     public static final ResourceKey<Registry<PhysicsBlockPropertyType<?>>> REGISTRY_KEY = ResourceKey.createRegistryKey(Sable.sablePath("physics_block_properties"));
     private static final RegistrationProvider<PhysicsBlockPropertyType<?>> VANILLA_PROVIDER;
-    private static final Registry<PhysicsBlockPropertyType<?>> REGISTRY;
+    protected static final Registry<PhysicsBlockPropertyType<?>> REGISTRY;
 
     static {
         VANILLA_PROVIDER = RegistrationProvider.get(REGISTRY_KEY, Sable.MOD_ID);

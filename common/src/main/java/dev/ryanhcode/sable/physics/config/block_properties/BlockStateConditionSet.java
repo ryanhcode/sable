@@ -66,4 +66,27 @@ public record BlockStateConditionSet(List<BlockStateCondition> blockStateConditi
         }
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        List<BlockStateCondition> conditions = new ArrayList<>();
+
+        public Builder expect(String property, String value) {
+            this.conditions.add(new BlockStateCondition(property, value));
+            return this;
+        }
+
+        public <T extends Comparable<T>> Builder expect(Property<T> property, T value) {
+            return this.expect(property.getName(), property.getName(value));
+        }
+
+        public BlockStateConditionSet build() {
+            if (this.conditions.isEmpty()) {
+                throw new IllegalStateException("conditions must not be empty");
+            }
+            return new BlockStateConditionSet(this.conditions);
+        }
+    }
 }

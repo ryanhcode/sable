@@ -90,4 +90,21 @@ public class BezierResourceFunction {
                 BezierPoint::new
         );
     }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        List<BezierPoint> points = new ArrayList<>();
+
+        public Builder addPoint(double altitude, double value, double slope) {
+            this.points.add(new BezierPoint(altitude, value, slope));
+            return this;
+        }
+
+        public BezierResourceFunction build() {
+            return new BezierResourceFunction(this.points);
+        }
+    }
 }
