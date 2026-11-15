@@ -13,6 +13,9 @@ import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.gameevent.vibrations.VibrationSystem.Listener} to project vibration positions into global space and check occlusion across sub-levels.
+ */
 @Mixin(VibrationSystem.Listener.class)
 public class VibrationSystemListenerMixin {
 

@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.animal.Parrot} to make parrot distance checks account for sub-levels.
+ */
 @Mixin(Parrot.class)
 public abstract class ParrotMixin extends ShoulderRidingEntity {
 

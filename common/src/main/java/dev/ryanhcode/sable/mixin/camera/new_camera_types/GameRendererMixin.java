@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Fall back to first-person view when rendering the level if the sub-level view is invalid.
+ */
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 

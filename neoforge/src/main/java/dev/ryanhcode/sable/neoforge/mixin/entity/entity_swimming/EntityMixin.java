@@ -36,6 +36,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} so swimming and fluid height calculations account for fluid in sub-levels.
+ */
+
 @Mixin(value = Entity.class, priority = 500)
 public abstract class EntityMixin implements IEntityExtension {
 

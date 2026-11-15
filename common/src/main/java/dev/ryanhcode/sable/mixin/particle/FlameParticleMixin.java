@@ -13,6 +13,9 @@ import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link net.minecraft.client.particle.FlameParticle} to make flame particles move along with their tracked sub-level.
+ */
 @Mixin(FlameParticle.class)
 public abstract class FlameParticleMixin extends Particle implements ParticleExtension {
 

@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Fabric mixin into {@link Camera} to rotate the player camera with the sub-level they are riding or standing on.
+ */
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 

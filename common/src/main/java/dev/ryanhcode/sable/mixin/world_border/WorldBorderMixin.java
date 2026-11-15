@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.border.WorldBorder} to implement {@link dev.ryanhcode.sable.mixinterface.world_border.WorldBorderExtension}, treating sub-level plots as within bounds.
+ */
 @Mixin(WorldBorder.class)
 public class WorldBorderMixin implements WorldBorderExtension {
 

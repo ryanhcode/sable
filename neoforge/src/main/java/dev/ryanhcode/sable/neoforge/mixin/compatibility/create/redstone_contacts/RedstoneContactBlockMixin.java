@@ -14,6 +14,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.contact.RedstoneContactBlock} so the redstone contact block uses Sable's custom block entity.
+ */
+
 @Mixin(RedstoneContactBlock.class)
 public class RedstoneContactBlockMixin extends WrenchableDirectionalBlock implements IBE<RedstoneContactBlockEntity> {
 

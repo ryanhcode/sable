@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Supplier;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.Level} to bind the level to its world border extension for sub-level-aware border checks.
+ */
 @Mixin(Level.class)
 public class LevelMixin {
 

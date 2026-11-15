@@ -9,6 +9,10 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.equipment.blueprint.BlueprintEntity} (Create < 6.0.11) to use the sub-level aware Player#canInteractWithEntity check.
+ */
+
 @MixinModVersionConstraint("(,6.0.11)")
 @Mixin(BlueprintEntity.class)
 public abstract class BlueprintEntityMixin extends Entity {

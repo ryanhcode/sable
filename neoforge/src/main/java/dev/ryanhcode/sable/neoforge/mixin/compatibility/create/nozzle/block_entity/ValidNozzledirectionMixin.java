@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.EnumSet;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.NozzleBlockEntity} to maintain the set of valid output directions for the nozzle.
+ */
+
 @Mixin(NozzleBlockEntity.class)
 public abstract class ValidNozzledirectionMixin extends SmartBlockEntity implements NozzleBlockEntityExtension {
 

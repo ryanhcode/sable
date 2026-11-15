@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.pathfinder.PathfindingContext} to convert the mob's position in the pathfinding context into sub-level local coordinates.
+ */
 @Mixin(PathfindingContext.class)
 public class PathfindingContextMixin {
 

@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.createmod.catnip.outliner.ChasingAABBOutline} to apply sub-level offsets when rendering chasing outlines.
+ */
+
 @Mixin(value = ChasingAABBOutline.class, remap = false)
 public abstract class ChasingAABBOutlineMixin extends AABBOutline {
 

@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.commands.synchronization.ArgumentTypeInfos} to register Sable's custom command argument types.
+ */
 @Mixin(ArgumentTypeInfos.class)
 public abstract class ArgumentTypeInfosMixin {
 

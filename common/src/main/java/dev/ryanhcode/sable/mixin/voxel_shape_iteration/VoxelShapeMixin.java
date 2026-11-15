@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Iterator;
 
+/**
+ * Mixin into {@link net.minecraft.world.phys.shapes.VoxelShape} to implement {@link dev.ryanhcode.sable.mixinterface.voxel_shape_iteration.FastVoxelShapeIterable}, providing a fast per-thread iterator over the shape's bounding boxes.
+ */
 @Mixin(VoxelShape.class)
 public abstract class VoxelShapeMixin implements FastVoxelShapeIterable {
 

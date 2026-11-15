@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.createmod.catnip.outliner.BlockClusterOutline} so block cluster outlines render correctly in sub-levels.
+ */
+
 @Mixin(BlockClusterOutline.class)
 public class BlockClusterOutlineMixin {
 

@@ -12,6 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3dc;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.bearing.SailBlock} to provide lift and a custom center of mass for sub-levels.
+ */
+
 @Mixin(SailBlock.class)
 public class SailBlockMixin implements BlockSubLevelLiftProvider, BlockSubLevelCustomCenterOfMass {
     @Override

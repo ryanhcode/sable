@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.pathfinder.Path} to project path node positions on sub-levels back into global coordinates.
+ */
 @Mixin(Path.class)
 public class PathMixin implements PathExtension {
 

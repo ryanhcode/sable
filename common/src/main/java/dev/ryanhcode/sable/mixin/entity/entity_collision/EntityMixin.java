@@ -6,6 +6,9 @@ import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.Entity} to provide entities with a pre-allocated, efficient collision context.
+ */
 @Mixin(Entity.class)
 public class EntityMixin implements EntityExtension {
 

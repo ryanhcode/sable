@@ -17,6 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerPlayer} to keep frozen players tracked to their sub-level and teleport them once it becomes available.
+ */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin extends Player implements PlayerFreezeExtension {
 

@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour} to find behaviours on block entities in sub-levels.
+ */
+
 @Mixin(BlockEntityBehaviour.class)
 public abstract class BlockEntityBehaviourMixin {
 

@@ -18,6 +18,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.belt.transport.BeltMovementHandler} so belts correctly transport entities in sub-levels.
+ */
+
 @Mixin(BeltMovementHandler.class)
 public class BeltMovementHandlerMixin {
 

@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+/**
+ * Makes the chunk map use a concurrent unload queue and syncs chunk status changes to the sub-level storage.
+ */
 @Mixin(ChunkMap.class)
 public class ChunkMapMixin {
 

@@ -9,6 +9,10 @@ import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 
+/**
+ * An interface for {@link net.minecraft.world.level.block.entity.BlockEntity} sub-classes that apply thrust to a
+ * sub-level via a {@link BlockEntityPropeller}. Forces are applied on each physics tick while the propeller is active.
+ */
 public interface BlockEntitySubLevelPropellerActor extends BlockEntitySubLevelActor {
 
     Vector3d THRUST_VECTOR = new Vector3d();

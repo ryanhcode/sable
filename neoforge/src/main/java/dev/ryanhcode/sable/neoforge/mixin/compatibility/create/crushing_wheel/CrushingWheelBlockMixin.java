@@ -15,6 +15,10 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.crusher.CrushingWheelBlock} so crushing wheels correctly push entities in sub-levels.
+ */
+
 @Mixin(CrushingWheelBlock.class)
 public abstract class CrushingWheelBlockMixin extends RotatedPillarKineticBlock implements IBE<CrushingWheelBlockEntity> {
 

@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ChunkMap} to keep chunks inside plots within entity ticking range at all times.
+ */
 @Mixin(ChunkMap.class)
 public class ChunkMapMixin {
 

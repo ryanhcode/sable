@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.redstone.link.LinkRenderer} so link render distances account for sub-levels.
+ */
+
 @Mixin(LinkRenderer.class)
 public class LinkRendererMixin {
     @Redirect(method = "renderOnBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))

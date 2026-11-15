@@ -11,6 +11,9 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerLevel} to keep chunks inside plots within entity ticking range at all times.
+ */
 @Mixin(ServerLevel.class)
 public class ServerLevelMixin {
 

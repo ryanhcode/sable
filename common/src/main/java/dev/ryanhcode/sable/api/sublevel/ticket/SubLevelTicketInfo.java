@@ -6,6 +6,9 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Internal holder of the loading tickets and (optional) saved-world pointer associated with a single sub-level.
+ */
 @ApiStatus.Internal
 public class SubLevelTicketInfo {
     private final ObjectSet<SubLevelLoadingTicket<?>> tickets = new ObjectArraySet<>();

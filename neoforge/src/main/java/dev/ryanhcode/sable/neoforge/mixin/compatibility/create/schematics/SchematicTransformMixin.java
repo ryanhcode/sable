@@ -16,6 +16,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.SchematicTransformation} to apply sub-level offsets when rendering schematic transformations.
+ */
+
 @Mixin(SchematicTransformation.class)
 public abstract class SchematicTransformMixin {
 

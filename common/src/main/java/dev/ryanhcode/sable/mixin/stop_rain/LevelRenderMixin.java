@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.LevelRenderer} to include sub-level blocks when computing the height used for rain and splash rendering.
+ */
 @Mixin(LevelRenderer.class)
 public class LevelRenderMixin {
 

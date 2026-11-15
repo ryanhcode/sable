@@ -17,6 +17,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.behaviour.inventory.CapManipulationBehaviourBase} so inventory capability lookups account for sub-levels.
+ */
+
 @Mixin(CapManipulationBehaviourBase.class)
 public class CapManipulationBehaviourBaseMixin {
 

@@ -21,6 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Iterator;
 
+/**
+ * Mixin into {@link net.minecraft.client.sounds.SoundEngine} to wrap sounds inside sub-levels in a moving delegate that follows the sub-level's motion.
+ */
 @Mixin(SoundEngine.class)
 public class SoundEngineMixin {
 

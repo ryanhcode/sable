@@ -13,6 +13,10 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.schematics.client.tools.DeployTool} so the deploy tool outline renders correctly in sub-levels.
+ */
+
 @Mixin(DeployTool.class)
 public abstract class DeployToolMixin extends SchematicToolBase {
 

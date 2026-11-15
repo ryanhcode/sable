@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.LevelRenderer} to render sub-level bounding boxes and poses when hitboxes are shown.
+ */
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
 

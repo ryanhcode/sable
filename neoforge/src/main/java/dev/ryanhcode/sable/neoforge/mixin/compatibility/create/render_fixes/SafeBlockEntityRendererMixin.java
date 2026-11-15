@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+/**
+ * Mixin into {@link com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer} so item culling checks work correctly across sub-levels.
+ */
+
 @Mixin(SafeBlockEntityRenderer.class)
 public class SafeBlockEntityRendererMixin {
 

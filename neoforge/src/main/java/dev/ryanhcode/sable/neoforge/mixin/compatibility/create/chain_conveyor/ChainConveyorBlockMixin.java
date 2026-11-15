@@ -8,6 +8,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlock} to re-validate connections on connected conveyors after moving into a sub-level.
+ */
+
 @Mixin(ChainConveyorBlock.class)
 public class ChainConveyorBlockMixin implements BlockSubLevelAssemblyListener {
 

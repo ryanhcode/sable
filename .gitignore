@@ -138,3 +138,93 @@ runs/
 macos/*.dmg
 
 **/.intentionally-empty-file.o
+# AI agents and assistants
+#
+# Some common agent instruction and project configuration files are listed
+# below as commented-out examples. They are often intentionally committed and
+# shared with a team, so only uncomment them if they are local-only in your
+# project.
+
+# GEMINI.md
+# WARP.md
+# CRUSH.md
+# QWEN.md
+
+# OpenAI Codex
+AGENTS.md
+.codex/
+
+# Aider
+.aider.input.history
+.aider.chat.history.md
+.aider.llm.history
+.aider.tags.cache.v*
+# .aiderignore
+
+# Claude Code
+.claude/*.local.json
+.claude/**/*.log
+CLAUDE.local.md
+# .claude/
+
+# Gemini CLI
+gemini-debug.log
+.gemini-clipboard/
+# .gemini/
+
+# Cursor AI
+# .cursorrules
+# .cursor/
+# .cursor.json
+# .cursor-settings.yaml
+
+# Continue
+# .continue/
+# .continuerc.json
+
+# Cline
+# .cline/
+# .clinerules
+# cline.json
+
+# Other agent/editor project config
+# .warp/
+# .crush/
+# .codeium/
+# .deepseek/
+# .amazon-codewhisperer/
+# .tabnineignore
+# .tabnine/
+
+# GitHub Copilot
+# .github/copilot-instructions.md
+
+# Windsurf Editor
+# .windsurfrules
+# .windsurf/
+
+# Replit AI Development
+# .replit
+# replit.nix
+
+# Vim and Neovim
+# Swap
+[._]*.s[a-v][a-z]
+# comment out the next line if you don't need vector files
+!*.svg
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Session
+Session.vim
+Sessionx.vim
+
+# Temporary
+.netrwhist
+*~
+# Auto-generated tag files
+tags
+# Persistent undo
+[._]*.un~

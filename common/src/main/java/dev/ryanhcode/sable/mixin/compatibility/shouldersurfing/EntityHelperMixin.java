@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+/**
+ * Shoulder Surfing compatibility: project the look target position out of the sub-level.
+ */
 @Mixin(EntityHelper.class)
 public class EntityHelperMixin {
 

@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link net.minecraft.client.server.IntegratedServer} to implement {@link dev.ryanhcode.sable.mixinterface.toast.SableToastableServer}, showing toasts for sub-level load/save/physics failures.
+ */
 @Mixin(IntegratedServer.class)
 public class IntegratedServerMixin implements SableToastableServer {
     @Shadow @Final private Minecraft minecraft;

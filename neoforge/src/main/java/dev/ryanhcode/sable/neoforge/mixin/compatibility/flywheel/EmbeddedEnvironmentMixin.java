@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link dev.engine_room.flywheel.backend.engine.embed.EmbeddedEnvironment} to write scene and sky light uniforms for sub-level embeddings.
+ */
+
 @Mixin(EmbeddedEnvironment.class)
 public class EmbeddedEnvironmentMixin implements EmbeddedEnvironmentExtension {
 

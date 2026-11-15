@@ -14,6 +14,10 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.actors.harvester.HarvesterRenderer} to drive harvester animations with smoothed sub-level speed.
+ */
+
 @Mixin(HarvesterRenderer.class)
 public class HarvesterRendererMixin {
 

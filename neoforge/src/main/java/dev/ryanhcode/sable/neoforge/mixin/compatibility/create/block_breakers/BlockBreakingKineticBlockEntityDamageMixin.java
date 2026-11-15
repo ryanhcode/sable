@@ -18,6 +18,10 @@ import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.saw.SawBlock} and {@link com.simibubi.create.content.kinetics.drill.DrillBlock} to compute damage checks against entities in sub-levels using oriented bounding boxes.
+ */
+
 @Mixin({SawBlock.class, DrillBlock.class})
 public class BlockBreakingKineticBlockEntityDamageMixin {
 

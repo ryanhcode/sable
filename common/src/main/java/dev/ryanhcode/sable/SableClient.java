@@ -14,6 +14,10 @@ import foundry.veil.api.client.render.VeilRenderSystem;
 import foundry.veil.platform.VeilEventPlatform;
 import net.minecraft.client.Minecraft;
 
+/**
+ * Client-side entry point for the Sable mod: registers shader pre-processors, the sky-light shadow pass, gizmo
+ * handling, and the ImGui sub-level container inspector.
+ */
 public class SableClient {
 
     public static final SableClientGizmoHandler GIZMO_HANDLER = new SableClientGizmoHandler();

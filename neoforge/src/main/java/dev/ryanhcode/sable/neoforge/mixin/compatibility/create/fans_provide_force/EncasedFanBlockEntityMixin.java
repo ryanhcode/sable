@@ -13,6 +13,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.fan.EncasedFanBlockEntity} to act as a propeller providing airflow and thrust in sub-levels.
+ */
+
 @Mixin(EncasedFanBlockEntity.class)
 public class EncasedFanBlockEntityMixin extends KineticBlockEntity implements BlockEntitySubLevelPropellerActor, BlockEntityPropeller {
 

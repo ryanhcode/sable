@@ -18,6 +18,10 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link net.createmod.catnip.outliner.LineOutline} so line outlines can render across sub-levels.
+ */
+
 @Mixin(LineOutline.class)
 public abstract class LineOutlineMixin extends Outline {
 

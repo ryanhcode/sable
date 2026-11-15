@@ -14,6 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+/**
+ * Loader-specific render hooks for tessellating sub-level blocks and attaching renderer-specific visuals.
+ */
 @ApiStatus.Internal
 public interface SableSubLevelRenderPlatform {
     SableSubLevelRenderPlatform INSTANCE = SablePlatformUtil.load(SableSubLevelRenderPlatform.class);

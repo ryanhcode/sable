@@ -27,6 +27,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.LevelRenderer} to render entities inside sub-levels using the sub-level's render pose.
+ */
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
 

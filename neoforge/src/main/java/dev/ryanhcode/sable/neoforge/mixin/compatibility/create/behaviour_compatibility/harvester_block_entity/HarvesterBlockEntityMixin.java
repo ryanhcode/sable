@@ -17,6 +17,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.actors.harvester.HarvesterBlockEntity} to add client and sub-level ticks that drive the harvester.
+ */
+
 @Mixin(HarvesterBlockEntity.class)
 public abstract class HarvesterBlockEntityMixin extends CachedRenderBBBlockEntity implements HarvesterLerpedSpeed, BlockEntitySubLevelActor {
 

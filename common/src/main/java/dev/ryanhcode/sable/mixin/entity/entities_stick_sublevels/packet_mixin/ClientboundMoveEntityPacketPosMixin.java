@@ -10,6 +10,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link net.minecraft.network.protocol.game.ClientboundMoveEntityPacket.Pos} to add a flag marking whether the entity is actually inside a sub-level.
+ */
 @Mixin(ClientboundMoveEntityPacket.Pos.class)
 public class ClientboundMoveEntityPacketPosMixin implements PacketActuallyInSubLevelExtension {
     /**

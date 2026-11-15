@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.projectile.ThrownTrident} to kick tridents out of sub-levels when they start returning.
+ */
 @Mixin(ThrownTrident.class)
 public abstract class ThrownTridentMixin extends Entity {
     public ThrownTridentMixin(final EntityType<?> entityType, final Level level) {

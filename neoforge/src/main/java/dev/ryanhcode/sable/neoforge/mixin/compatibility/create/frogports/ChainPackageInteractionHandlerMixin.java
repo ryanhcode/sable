@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.chainConveyor.ChainPackageInteractionHandler} so package interaction rays account for sub-levels.
+ */
+
 @Mixin(ChainPackageInteractionHandler.class)
 public class ChainPackageInteractionHandlerMixin {
 

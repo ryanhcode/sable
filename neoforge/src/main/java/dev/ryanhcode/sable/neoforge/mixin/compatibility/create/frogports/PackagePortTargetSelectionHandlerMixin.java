@@ -16,6 +16,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.packagePort.PackagePortTargetSelectionHandler} so package port target validation accounts for sub-levels.
+ */
+
 @Mixin(PackagePortTargetSelectionHandler.class)
 public class PackagePortTargetSelectionHandlerMixin {
     @Shadow

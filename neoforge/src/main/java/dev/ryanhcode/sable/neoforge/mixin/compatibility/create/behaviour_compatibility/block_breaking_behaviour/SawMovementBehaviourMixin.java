@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.saw.SawMovementBehaviour} so saw drop item speed and distance calculations are correct across sub-levels.
+ */
+
 @Mixin(SawMovementBehaviour.class)
 public class SawMovementBehaviourMixin {
     @Redirect(method = "dropItemFromCutTree", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceTo(Lnet/minecraft/world/phys/Vec3;)D"))

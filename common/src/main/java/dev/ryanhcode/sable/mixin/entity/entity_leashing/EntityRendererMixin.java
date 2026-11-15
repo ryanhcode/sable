@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link net.minecraft.client.renderer.entity.EntityRenderer} so leash rendering correctly handles entities inside sub-levels.
+ */
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
 

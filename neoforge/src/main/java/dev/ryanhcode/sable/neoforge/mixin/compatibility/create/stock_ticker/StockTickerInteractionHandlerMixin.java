@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.logistics.stockTicker.StockTickerInteractionHandler} to use the vehicle position when riding sub-level contraptions.
+ */
+
 @Mixin(StockTickerInteractionHandler.class)
 public class StockTickerInteractionHandlerMixin {
 

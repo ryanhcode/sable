@@ -22,6 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.pathfinder.FlyNodeEvaluator} so flying pathfinding computes the start node in local coordinates on sub-levels.
+ */
 @Mixin(FlyNodeEvaluator.class)
 public abstract class FlyNodeEvaluatorMixin extends NodeEvaluator {
 

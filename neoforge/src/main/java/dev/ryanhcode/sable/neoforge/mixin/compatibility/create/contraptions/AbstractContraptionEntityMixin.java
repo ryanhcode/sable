@@ -46,6 +46,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.contraptions.AbstractContraptionEntity} to connect Create contraptions to sub-level physics as kinematic rigid bodies.
+ */
+
 @Mixin(AbstractContraptionEntity.class)
 public abstract class AbstractContraptionEntityMixin extends Entity implements KinematicContraption {
 

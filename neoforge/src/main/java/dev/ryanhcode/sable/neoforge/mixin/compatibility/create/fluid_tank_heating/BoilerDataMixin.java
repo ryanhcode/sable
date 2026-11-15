@@ -16,6 +16,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.fluids.tank.BoilerData} so the boiler can find heat sources in sub-levels and force temperature refreshes.
+ */
+
 @Mixin(BoilerData.class)
 public class BoilerDataMixin {
 

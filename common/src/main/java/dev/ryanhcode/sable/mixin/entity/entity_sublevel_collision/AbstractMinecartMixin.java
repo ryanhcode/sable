@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link net.minecraft.world.entity.vehicle.AbstractMinecart} to destroy minecarts tagged as destroy-when-leaving-plot once they leave the sub-level plot.
+ */
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends Entity {
 

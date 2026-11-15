@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+/**
+ * Mixin into {@link net.minecraft.server.level.ServerEntity} to correctly record the passenger list of entities inside sub-levels.
+ */
 @Mixin(ServerEntity.class)
 public abstract class ServerEntityMixin {
 

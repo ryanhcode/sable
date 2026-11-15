@@ -14,6 +14,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Mixin into {@link dev.protomanly.pmweather.render.RadarRenderer} (Protomanly's Weather) so radar rendering accounts for sub-levels.
+ */
+
 @Mixin(RadarRenderer.class)
 public class RadarRendererMixin {
 

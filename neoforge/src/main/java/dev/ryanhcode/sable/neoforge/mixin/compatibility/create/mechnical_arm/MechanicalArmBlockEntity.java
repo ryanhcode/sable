@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity} to force mechanical arms to load sub-level areas.
+ */
+
 @Mixin(ArmBlockEntity.class)
 public abstract class MechanicalArmBlockEntity extends SmartBlockEntity {
 

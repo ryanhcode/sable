@@ -29,6 +29,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin into {@link com.simibubi.create.content.trains.track.TrackBlockOutline} so track outline rendering and picking account for sub-levels.
+ */
+
 @Mixin(TrackBlockOutline.class)
 public class TrackBlockOutlineMixin {
 

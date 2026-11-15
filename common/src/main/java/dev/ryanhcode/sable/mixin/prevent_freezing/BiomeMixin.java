@@ -12,6 +12,9 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import org.spongepowered.asm.mixin.Mixin;
 
+/**
+ * Mixin into {@link net.minecraft.world.level.biome.Biome} to prevent water from freezing beneath sub-level blocks projected into the same space.
+ */
 @Mixin(Biome.class)
 public class BiomeMixin {
 
