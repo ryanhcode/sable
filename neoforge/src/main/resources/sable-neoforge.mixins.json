@@ -60,6 +60,7 @@
     "compatibility.flywheel.RenderDispatcherImplMixin",
     "compatibility.flywheel.ShaderSourcesMixin",
     "compatibility.flywheel.VisualManagerImplMixin",
+    "compatibility.iris.ModelBlockRendererMixin",
     "compatibility.pmweather.RadarRendererMixin",
     "compatibility.sodiumextras.EmbyToolsMixin",
     "dynamic_directional_shading.SectionCompilerMixin",
