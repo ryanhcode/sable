@@ -2,6 +2,7 @@ package dev.ryanhcode.sable.mixin.block_placement;
 
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.api.entity.TargetLocalInteractionEntity;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
 import dev.ryanhcode.sable.api.math.LevelReusedVectors;
@@ -40,6 +41,16 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
     @Shadow
     protected boolean replaceClicked;
 
+    @Unique
+    private static boolean sable$isAlreadyTargetLocal(
+            final Entity entity,
+            final SubLevel targetSubLevel
+    ) {
+        return entity instanceof
+                final TargetLocalInteractionEntity localEntity
+                && localEntity.sable$isAlreadyLocalTo(targetSubLevel);
+    }
+
     public BlockPlaceContextMixin(final Player pPlayer, final InteractionHand pHand, final BlockHitResult pHitResult) {
         super(pPlayer, pHand, pHitResult);
     }
@@ -51,6 +62,7 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
     private Direction sable$getFacingAxis(final Entity player, final Direction.Axis axis) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.getLevel(), this.getClickedPos());
 
+        if(subLevel==null||sable$isAlreadyTargetLocal(player, subLevel)) return Direction.getFacingAxis(player,axis);
         if (subLevel != null) {
             SubLevelHelper.pushEntityLocal(subLevel, player);
             final Direction facingAxis = Direction.getFacingAxis(player, axis);
@@ -65,14 +77,13 @@ public abstract class BlockPlaceContextMixin extends UseOnContext {
     private Direction[] sable$orderedByNearest(final Entity player) {
         final SubLevel subLevel = Sable.HELPER.getContaining(this.getLevel(), this.getClickedPos());
 
-        if (subLevel != null) {
-            SubLevelHelper.pushEntityLocal(subLevel, player);
-            final Direction[] nearest = Direction.orderedByNearest(player);
-            SubLevelHelper.popEntityLocal(subLevel, player);
-            return nearest;
-        }
+        if (subLevel == null || sable$isAlreadyTargetLocal(player, subLevel)) return Direction.orderedByNearest(player);
 
-        return Direction.orderedByNearest(player);
+        SubLevelHelper.pushEntityLocal(subLevel, player);
+        final Direction[] nearest = Direction.orderedByNearest(player);
+        SubLevelHelper.popEntityLocal(subLevel, player);
+        return nearest;
+
     }
 
     @Inject(method = "canPlace", at = @At("HEAD"), cancellable = true)
