@@ -140,12 +140,12 @@ public class ServerChunkCacheMixin {
         if (container.inBounds(pos)) {
             final PlotChunkHolder holder = container.getChunkHolder(pos);
 
-            if (holder == null) {
-                throw new UnsupportedOperationException("Cannot change blocks in nonexistent plot holder");
+            if (holder != null) {
+                holder.blockChanged(blockPos);
+                ci.cancel();
             }
-
-            holder.blockChanged(blockPos);
-            ci.cancel();
+            // holder being null means no plot owns this chunk
+            // let the vanilla blockChanged handle it instead of crashing
         }
     }
 
