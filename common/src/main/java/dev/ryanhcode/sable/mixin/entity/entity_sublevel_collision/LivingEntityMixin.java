@@ -62,7 +62,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityMo
                 final SubLevelEntityCollision.FirstCollisionInfo collisionInfo = firstCollision.getValue();
                 final SubLevel subLevel = firstCollision.getKey();
 
-                if (!collisionInfo.horizontal() || subLevel == info.preTrackingSubLevel) {
+                if (!collisionInfo.horizontal() || subLevel == info.preTrackingSubLevel || subLevel.isRemoved()) {
                     continue;
                 }
 
