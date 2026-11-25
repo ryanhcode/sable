@@ -226,11 +226,25 @@ public class SubLevelEntityCollision {
                 rotatedContextBounds.transformInverse(lastPose, bakedMatrix, localBounds);
                 rotatedContextBounds.transformInverse(logicalPose, bakedMatrix, localBounds2);
 
-                localBounds.expandTo(localBounds2, localBounds);
+                // Only the union of the two poses is ever oversized: each one on its own is about the size of
+                // the entity, because that is what it is — the same box seen from two frames a substep apart.
+                // When a pose jump makes the union span the gap, keep the current-pose box. Collision against
+                // where the sub-level actually is keeps working; only the sweep back to where it used to be
+                // is dropped, which is the part that protects against tunnelling through a fast rotation.
+                if (localBounds.expandTo(localBounds2, localBounds).volume() > SubLevelCollisionConstants.MAX_LOCAL_COLLISION_VOLUME) {
+                    localBounds.set(localBounds2);
+                }
 
-                if (localBounds.volume() > 500 * 500 * 500) {
+                if (localBounds.volume() > SubLevelCollisionConstants.MAX_LOCAL_COLLISION_VOLUME) {
                     Sable.LOGGER.info("Enormous local sub-level collision bounds, quitting.");
-                    continue;
+                    // This pass cannot describe a region worth colliding against, and the motion it was asked
+                    // to resolve is what made the region enormous in the first place. Returning that motion
+                    // unchanged hands vanilla collision — and any modded block-collision iterator behind it —
+                    // a swept AABB spanning millions of blocks, which never finishes. Nothing has been
+                    // collided at this point (collisionMotion is only accumulated inside the walk below), so
+                    // returning it zeroed is the honest result: the entity simply does not move this pass.
+                    collisionInfo.motion = Vec3.ZERO;
+                    return collisionInfo;
                 }
 
                 // We subtract 1 from y to allow for fences and similar blocks
